@@ -1,0 +1,20 @@
+{
+  "name": "@loop/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --experimental-strip-types src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "hono": "^4"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1",
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "nextNumber": 2,
+  "specs": [
+    {
+      "number": 1,
+      "slug": "repo-cleanup-loop-setup",
+      "title": "Repo Cleanup & Loop Setup",
+      "created": "2026-02-18",
+      "status": "ideation"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-server/
+dist-obsidian/
+*.tsbuildinfo
+.source/
+
+# Generated docs (openapi.json is committed for Vercel builds)
+
+# Turborepo
+.turbo/
+
+# Test & coverage
+coverage/
+
+# Environment & secrets
+.env
+
+# Tooling caches
+.eslintcache
+*.timestamp-*
+.playwright-mcp
+
+# OS files
+.DS_Store
+
+# Project working files
+.plan
+.scratch/
+.temp
+roadmap/specs

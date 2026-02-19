@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "nextNumber": 3,
+  "decisions": [
+    {
+      "number": 1,
+      "slug": "use-hono-over-express",
+      "title": "Use Hono over Express for the Loop API",
+      "status": "draft",
+      "created": "2026-02-18",
+      "extractedFrom": "repo-cleanup-loop-setup",
+      "specSlug": "repo-cleanup-loop-setup"
+    },
+    {
+      "number": 2,
+      "slug": "deploy-two-vercel-projects",
+      "title": "Deploy as two Vercel projects from one monorepo",
+      "status": "draft",
+      "created": "2026-02-18",
+      "extractedFrom": "repo-cleanup-loop-setup",
+      "specSlug": "repo-cleanup-loop-setup"
+    }
+  ]
+}

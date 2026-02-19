@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "getting-started",
+    "guides",
+    "concepts",
+    "integrations",
+    "api",
+    "self-hosting",
+    "contributing",
+    "changelog"
+  ]
+}
