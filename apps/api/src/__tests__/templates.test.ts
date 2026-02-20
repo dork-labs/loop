@@ -6,7 +6,7 @@ import { apiKeyAuth } from '../middleware/auth'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import { eq } from 'drizzle-orm'
-import type { TestAppEnv } from './setup'
+import type { AppEnv } from '../types'
 import type { Hono } from 'hono'
 
 const AUTH_HEADER = { Authorization: `Bearer ${process.env.LOOP_API_KEY}` }
@@ -31,7 +31,7 @@ function buildApp() {
 
 /** Helper to create a template via the API. */
 async function createTemplate(
-  app: Hono<TestAppEnv>,
+  app: Hono<AppEnv>,
   body: Record<string, unknown> = {
     slug: 'test-template',
     name: 'Test Template',
@@ -46,7 +46,7 @@ async function createTemplate(
 
 /** Helper to create a version via the API. */
 async function createVersion(
-  app: Hono<TestAppEnv>,
+  app: Hono<AppEnv>,
   templateId: string,
   body: Record<string, unknown> = {
     content: 'You are a helpful assistant.',

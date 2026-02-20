@@ -11,21 +11,16 @@ import * as schema from '../db/schema'
 // This mirrors the LOOP_API_KEY secret used in production.
 process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'test-api-key'
 
+import type { AppEnv } from '../types'
+
 /**
  * Drizzle database instance type used throughout the API.
  * Typed against the full schema for relational query support.
  */
 export type DbType = ReturnType<typeof drizzle<typeof schema>>
 
-/**
- * Hono environment type that includes the injected database.
- * Use this as the generic parameter when typing route handlers in tests.
- */
-export type TestAppEnv = {
-  Variables: {
-    db: DbType
-  }
-}
+/** @deprecated Use `AppEnv` from `../types` directly. Kept for test compatibility. */
+export type TestAppEnv = AppEnv
 
 /** Shared database variable reset before each test by `withTestDb`. */
 let db: DbType

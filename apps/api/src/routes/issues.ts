@@ -11,7 +11,7 @@ import {
   labels,
   issueRelations,
 } from '../db/schema'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -73,7 +73,7 @@ const listIssuesSchema = z.object({
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 /** Issues CRUD routes — mounted at `/issues` under the authenticated API group. */
-export const issueRoutes = new Hono<TestAppEnv>()
+export const issueRoutes = new Hono<AppEnv>()
 
 /** GET / — List issues with filtering and pagination, excluding soft-deleted. */
 issueRoutes.get('/', zValidator('query', listIssuesSchema), async (c) => {

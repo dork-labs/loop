@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { eq } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { issueRelations, relationTypeValues, issues } from '../db/schema'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -16,13 +16,13 @@ const createRelationSchema = z.object({
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 /** Issue relations routes — relation creation nested under `/issues/:id/relations`, deletion at `/relations/:id`. */
-export const relationRoutes = new Hono<TestAppEnv>()
+export const relationRoutes = new Hono<AppEnv>()
 
 /**
  * Relation creation routes nested under issues.
  * Mounted at `/issues` so that POST `/issues/:id/relations` works.
  */
-export const issueRelationRoutes = new Hono<TestAppEnv>()
+export const issueRelationRoutes = new Hono<AppEnv>()
 
 /** POST /:id/relations — Create a relation between two issues. */
 issueRelationRoutes.post(

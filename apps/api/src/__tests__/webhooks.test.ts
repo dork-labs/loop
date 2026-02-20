@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto'
 import type { MiddlewareHandler } from 'hono'
 import { Hono } from 'hono'
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
-import type { AppEnv } from '../app'
+import type { AppEnv } from '../types'
 import {
   verifyGitHubWebhook,
   verifySentryWebhook,

@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { eq, isNull, count } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { goals, goalStatusValues } from '../db/schema/projects'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 const createGoalSchema = z.object({
   title: z.string().min(1).max(500),
@@ -34,7 +34,7 @@ const paginationSchema = z.object({
 })
 
 /** Goals CRUD route handler. */
-export const goalRoutes = new Hono<TestAppEnv>()
+export const goalRoutes = new Hono<AppEnv>()
 
 /** GET / — List goals with pagination, excluding soft-deleted. */
 goalRoutes.get('/', zValidator('query', paginationSchema), async (c) => {

@@ -5,7 +5,7 @@ import { goals, projects, issues } from '../db/schema'
 import { apiKeyAuth } from '../middleware/auth'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import type { TestAppEnv } from './setup'
+import type { AppEnv } from '../types'
 
 const AUTH_HEADER = { Authorization: `Bearer ${process.env.LOOP_API_KEY}` }
 
@@ -25,7 +25,7 @@ function buildApp() {
 
 /** Helper to create a project via the API. */
 async function createProject(
-  app: Hono<TestAppEnv>,
+  app: Hono<AppEnv>,
   body: Record<string, unknown> = { name: 'Test Project' },
 ) {
   const res = await app.request('/projects', {

@@ -10,7 +10,7 @@ import {
   goals,
   issues,
 } from '../db/schema'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ const paginationSchema = z.object({
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 /** Projects CRUD routes — mounted at `/projects` under the authenticated API group. */
-export const projectRoutes = new Hono<TestAppEnv>()
+export const projectRoutes = new Hono<AppEnv>()
 
 /** GET / — List projects with pagination, excluding soft-deleted. */
 projectRoutes.get('/', zValidator('query', paginationSchema), async (c) => {

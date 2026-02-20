@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import { signals, signalSeverityValues } from '../db/schema/signals'
 import { issues } from '../db/schema/issues'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schema ──────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ function deriveIssueTitle(source: string, type: string, payload: Record<string, 
  * Signal ingestion routes — generic POST endpoint for creating signals.
  * Each signal atomically creates a corresponding triage issue in a transaction.
  */
-export const signalRoutes = new Hono<TestAppEnv>()
+export const signalRoutes = new Hono<AppEnv>()
 
 /** POST / — Ingest a signal and atomically create a linked triage issue. */
 signalRoutes.post('/', zValidator('json', createSignalSchema), async (c) => {

@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { eq } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { comments, authorTypeValues, issues } from '../db/schema'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ const createCommentSchema = z.object({
  * Issue comments routes — mounted at `/issues` so that
  * GET/POST `/issues/:id/comments` works.
  */
-export const commentRoutes = new Hono<TestAppEnv>()
+export const commentRoutes = new Hono<AppEnv>()
 
 /** GET /:id/comments — List comments for an issue, ordered by creation time. */
 commentRoutes.get('/:id/comments', async (c) => {

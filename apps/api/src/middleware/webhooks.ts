@@ -1,7 +1,7 @@
 import { createMiddleware } from 'hono/factory'
 import { HTTPException } from 'hono/http-exception'
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import type { AppEnv } from '../app'
+import type { AppEnv } from '../types'
 
 /**
  * Compares two strings using timing-safe equality to prevent timing attacks.

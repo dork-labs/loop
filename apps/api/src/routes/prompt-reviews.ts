@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { eq, avg, sql } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { promptVersions, promptReviews, authorTypeValues } from '../db/schema'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ const createReviewSchema = z.object({
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 /** Prompt review routes — mounted at `/prompt-reviews` under the authenticated API group. */
-export const promptReviewRoutes = new Hono<TestAppEnv>()
+export const promptReviewRoutes = new Hono<AppEnv>()
 
 /** POST / — Submit a prompt review and update the version's review_score. */
 promptReviewRoutes.post('/', zValidator('json', createReviewSchema), async (c) => {

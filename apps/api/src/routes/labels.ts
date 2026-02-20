@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { eq, isNull, sql } from 'drizzle-orm'
 import { labels } from '../db/schema'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -18,7 +18,7 @@ const paginationSchema = z.object({
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 
-export const labelRoutes = new Hono<TestAppEnv>()
+export const labelRoutes = new Hono<AppEnv>()
 
 /** GET / — List labels with pagination, excluding soft-deleted. */
 labelRoutes.get('/', async (c) => {

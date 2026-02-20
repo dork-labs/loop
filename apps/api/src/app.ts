@@ -3,7 +3,6 @@ import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import { apiKeyAuth } from './middleware/auth'
 import { db } from './db'
-import type { Database } from './db'
 import { issueRoutes } from './routes/issues'
 import { projectRoutes } from './routes/projects'
 import { goalRoutes } from './routes/goals'
@@ -14,12 +13,7 @@ import { signalRoutes } from './routes/signals'
 import { templateRoutes } from './routes/templates'
 import { promptReviewRoutes } from './routes/prompt-reviews'
 import { webhookRoutes } from './routes/webhooks'
-
-export type AppEnv = {
-  Variables: {
-    db: Database
-  }
-}
+import type { AppEnv } from './types'
 
 const app = new Hono<AppEnv>()
 

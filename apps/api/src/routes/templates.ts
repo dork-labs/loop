@@ -9,7 +9,7 @@ import {
   promptReviews,
   authorTypeValues,
 } from '../db/schema'
-import type { TestAppEnv } from '../__tests__/setup'
+import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ const paginationSchema = z.object({
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 /** Template and version CRUD routes — mounted at `/templates` under the authenticated API group. */
-export const templateRoutes = new Hono<TestAppEnv>()
+export const templateRoutes = new Hono<AppEnv>()
 
 /** GET / — List templates with pagination, excluding soft-deleted. */
 templateRoutes.get('/', zValidator('query', paginationSchema), async (c) => {

@@ -6,7 +6,7 @@ import {
   verifySentryWebhook,
   verifyPostHogWebhook,
 } from '../middleware/webhooks'
-import type { AppEnv } from '../app'
+import type { AppEnv, AnyDb } from '../types'
 import type { signalSeverityValues } from '../db/schema/signals'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ webhookRoutes.post('/posthog', verifyPostHogWebhook, async (c) => {
   const title = `PostHog: ${metricName} ${changePercent}% (${timeframe})`
   const payload = body as Record<string, unknown>
 
-  const result = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx: AnyDb) => {
     const [issue] = await tx
       .insert(issues)
       .values({
@@ -132,7 +132,7 @@ webhookRoutes.post('/github', verifyGitHubWebhook, async (c) => {
   const sourceId = body.action ? `${eventType}.${body.action}` : eventType
   const payload = body as Record<string, unknown>
 
-  const result = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx: AnyDb) => {
     const [issue] = await tx
       .insert(issues)
       .values({
@@ -179,7 +179,7 @@ webhookRoutes.post('/sentry', verifySentryWebhook, async (c) => {
   const sourceId = issueId ? String(issueId) : null
   const payload = body as Record<string, unknown>
 
-  const result = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx: AnyDb) => {
     const [issue] = await tx
       .insert(issues)
       .values({

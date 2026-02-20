@@ -1,7 +1,7 @@
 import { createMiddleware } from 'hono/factory'
 import { HTTPException } from 'hono/http-exception'
 import { timingSafeEqual } from 'node:crypto'
-import type { AppEnv } from '../app'
+import type { AppEnv } from '../types'
 
 /** Bearer token auth middleware that validates requests against LOOP_API_KEY. */
 export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {

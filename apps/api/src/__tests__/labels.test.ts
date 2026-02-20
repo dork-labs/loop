@@ -5,7 +5,7 @@ import { labels } from '../db/schema'
 import { apiKeyAuth } from '../middleware/auth'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
-import type { TestAppEnv } from './setup'
+import type { AppEnv } from '../types'
 import type { Hono } from 'hono'
 
 const AUTH_HEADER = { Authorization: `Bearer ${process.env.LOOP_API_KEY}` }
@@ -29,7 +29,7 @@ function buildApp() {
 
 /** Helper to create a label via the API. */
 async function createLabel(
-  app: Hono<TestAppEnv>,
+  app: Hono<AppEnv>,
   body: Record<string, unknown> = { name: 'Bug', color: '#ff0000' },
 ) {
   return app.request('/labels', {
