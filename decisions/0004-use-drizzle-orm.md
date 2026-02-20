@@ -1,7 +1,7 @@
 ---
 number: 4
 title: Use Drizzle ORM for database access
-status: draft
+status: proposed
 created: 2026-02-19
 spec: data-layer-core-api
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: data-layer-core-api)
+Proposed
 
 ## Context
 

@@ -1,7 +1,7 @@
 ---
 number: 17
 title: Use custom ~/.loop/config.json over XDG-compliant conf package
-status: draft
+status: proposed
 created: 2026-02-20
 spec: mvp-phase-4-cli-tool
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: mvp-phase-4-cli-tool)
+Proposed
 
 ## Context
 

@@ -1,7 +1,7 @@
 ---
 number: 10
 title: Use EWMA for prompt review score tracking
-status: draft
+status: proposed
 created: 2026-02-20
 spec: prompt-dispatch-engine
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: prompt-dispatch-engine)
+Proposed
 
 ## Context
 

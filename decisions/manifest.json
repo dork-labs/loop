@@ -6,7 +6,7 @@
       "number": 1,
       "slug": "use-hono-over-express",
       "title": "Use Hono over Express for the Loop API",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-18",
       "extractedFrom": "repo-cleanup-loop-setup",
       "specSlug": "repo-cleanup-loop-setup"
@@ -15,7 +15,7 @@
       "number": 2,
       "slug": "deploy-two-vercel-projects",
       "title": "Deploy as two Vercel projects from one monorepo",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-18",
       "extractedFrom": "repo-cleanup-loop-setup",
       "specSlug": "repo-cleanup-loop-setup"
@@ -24,7 +24,7 @@
       "number": 3,
       "slug": "use-neon-postgresql",
       "title": "Use Neon PostgreSQL as the database provider",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-19",
       "extractedFrom": "data-layer-core-api",
       "specSlug": "data-layer-core-api"
@@ -33,7 +33,7 @@
       "number": 4,
       "slug": "use-drizzle-orm",
       "title": "Use Drizzle ORM for database access",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-19",
       "extractedFrom": "data-layer-core-api",
       "specSlug": "data-layer-core-api"
@@ -42,7 +42,7 @@
       "number": 5,
       "slug": "use-cuid2-primary-keys",
       "title": "Use CUID2 text primary keys for all entities",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-19",
       "extractedFrom": "data-layer-core-api",
       "specSlug": "data-layer-core-api"
@@ -51,7 +51,7 @@
       "number": 6,
       "slug": "use-soft-delete",
       "title": "Use soft delete with deletedAt column for auditability",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-19",
       "extractedFrom": "data-layer-core-api",
       "specSlug": "data-layer-core-api"
@@ -60,7 +60,7 @@
       "number": 7,
       "slug": "use-pglite-for-testing",
       "title": "Use PGLite for test database instead of Docker",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-19",
       "extractedFrom": "data-layer-core-api",
       "specSlug": "data-layer-core-api"
@@ -69,7 +69,7 @@
       "number": 8,
       "slug": "use-handlebars-for-prompt-hydration",
       "title": "Use Handlebars for prompt template hydration",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "prompt-dispatch-engine",
       "specSlug": "prompt-dispatch-engine"
@@ -78,7 +78,7 @@
       "number": 9,
       "slug": "use-skip-locked-for-dispatch",
       "title": "Use FOR UPDATE SKIP LOCKED for atomic dispatch claiming",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "prompt-dispatch-engine",
       "specSlug": "prompt-dispatch-engine"
@@ -87,7 +87,7 @@
       "number": 10,
       "slug": "use-ewma-for-review-scoring",
       "title": "Use EWMA for prompt review score tracking",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "prompt-dispatch-engine",
       "specSlug": "prompt-dispatch-engine"
@@ -96,7 +96,7 @@
       "number": 11,
       "slug": "seed-templates-via-migration",
       "title": "Seed default prompt templates via custom Drizzle migration",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "prompt-dispatch-engine",
       "specSlug": "prompt-dispatch-engine"
@@ -105,16 +105,7 @@
       "number": 12,
       "slug": "use-tanstack-router-for-dashboard",
       "title": "Use TanStack Router over React Router for the dashboard",
-      "status": "draft",
-      "created": "2026-02-20",
-      "extractedFrom": "mvp-phase-3-react-dashboard",
-      "specSlug": "mvp-phase-3-react-dashboard"
-    },
-    {
-      "number": 13,
-      "slug": "use-ky-for-api-client",
-      "title": "Use ky over Axios as the frontend HTTP client",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "mvp-phase-3-react-dashboard",
       "specSlug": "mvp-phase-3-react-dashboard"
@@ -123,7 +114,7 @@
       "number": 14,
       "slug": "pre-assemble-signal-chains-server-side",
       "title": "Pre-assemble signal chains server-side for Loop Activity view",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "mvp-phase-3-react-dashboard",
       "specSlug": "mvp-phase-3-react-dashboard"
@@ -132,16 +123,7 @@
       "number": 15,
       "slug": "use-commander-for-cli",
       "title": "Use Commander.js over oclif for the CLI framework",
-      "status": "draft",
-      "created": "2026-02-20",
-      "extractedFrom": "mvp-phase-4-cli-tool",
-      "specSlug": "mvp-phase-4-cli-tool"
-    },
-    {
-      "number": 16,
-      "slug": "use-tsup-for-cli-bundling",
-      "title": "Use tsup for CLI bundling with ESM output",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "mvp-phase-4-cli-tool",
       "specSlug": "mvp-phase-4-cli-tool"
@@ -150,7 +132,7 @@
       "number": 17,
       "slug": "use-custom-config-over-xdg",
       "title": "Use custom ~/.loop/config.json over XDG-compliant conf package",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "mvp-phase-4-cli-tool",
       "specSlug": "mvp-phase-4-cli-tool"

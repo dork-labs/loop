@@ -1,7 +1,7 @@
 ---
 number: 12
 title: Use TanStack Router over React Router for the dashboard
-status: draft
+status: proposed
 created: 2026-02-20
 spec: mvp-phase-3-react-dashboard
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: mvp-phase-3-react-dashboard)
+Proposed
 
 ## Context
 

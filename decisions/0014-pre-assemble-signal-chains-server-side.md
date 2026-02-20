@@ -1,7 +1,7 @@
 ---
 number: 14
 title: Pre-assemble signal chains server-side for Loop Activity view
-status: draft
+status: proposed
 created: 2026-02-20
 spec: mvp-phase-3-react-dashboard
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: mvp-phase-3-react-dashboard)
+Proposed
 
 ## Context
 
