@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 15,
+  "nextNumber": 18,
   "decisions": [
     {
       "number": 1,
@@ -127,6 +127,33 @@
       "created": "2026-02-20",
       "extractedFrom": "mvp-phase-3-react-dashboard",
       "specSlug": "mvp-phase-3-react-dashboard"
+    },
+    {
+      "number": 15,
+      "slug": "use-commander-for-cli",
+      "title": "Use Commander.js over oclif for the CLI framework",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "mvp-phase-4-cli-tool",
+      "specSlug": "mvp-phase-4-cli-tool"
+    },
+    {
+      "number": 16,
+      "slug": "use-tsup-for-cli-bundling",
+      "title": "Use tsup for CLI bundling with ESM output",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "mvp-phase-4-cli-tool",
+      "specSlug": "mvp-phase-4-cli-tool"
+    },
+    {
+      "number": 17,
+      "slug": "use-custom-config-over-xdg",
+      "title": "Use custom ~/.loop/config.json over XDG-compliant conf package",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "mvp-phase-4-cli-tool",
+      "specSlug": "mvp-phase-4-cli-tool"
     }
   ]
 }

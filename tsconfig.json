@@ -10,6 +10,7 @@
   "references": [
     { "path": "./apps/api" },
     { "path": "./apps/app" },
+    { "path": "./apps/cli" },
     { "path": "./apps/web" }
   ],
   "exclude": ["node_modules"]
