@@ -1,15 +1,5 @@
-import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-
-const app = new Hono()
-
-app.get('/health', (c) => {
-  return c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() })
-})
-
-app.get('/', (c) => {
-  return c.json({ name: 'Loop API', version: '0.1.0' })
-})
+import { app } from './app'
 
 // Local dev server (Vercel uses the default export)
 if (process.env.NODE_ENV !== 'production') {

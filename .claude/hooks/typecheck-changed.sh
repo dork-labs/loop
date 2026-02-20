@@ -14,7 +14,9 @@ fi
 echo "📘 Type-checking $FILE_PATH" >&2
 
 # Detect which workspace the file belongs to and run tsc from there
-if [[ "$FILE_PATH" =~ ^apps/server/ ]]; then
+if [[ "$FILE_PATH" =~ ^apps/api/ ]]; then
+  WORKSPACE_DIR="apps/api"
+elif [[ "$FILE_PATH" =~ ^apps/server/ ]]; then
   WORKSPACE_DIR="apps/server"
 elif [[ "$FILE_PATH" =~ ^apps/client/ ]]; then
   WORKSPACE_DIR="apps/client"

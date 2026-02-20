@@ -13,6 +13,12 @@ into issues, and tells AI agents exactly what to do next.
 - **Marketing:** Next.js 16 + Fumadocs
 - **Monorepo:** Turborepo
 
+## Links
+
+- **Repo:** https://github.com/dork-labs/loop
+- **Marketing:** https://www.looped.me
+- **App:** https://app.looped.me
+
 ## Getting Started
 
 npm install
@@ -21,6 +27,6 @@ npm run dev
 ## Structure
 
 apps/
-  api/     # Hono API (app.looped.me)
-  app/     # React dashboard (app.looped.me)
-  web/     # Marketing site (www.looped.me)
+  api/     # Hono API
+  app/     # React dashboard → app.looped.me
+  web/     # Marketing site → www.looped.me

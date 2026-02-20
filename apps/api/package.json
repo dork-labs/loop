@@ -7,14 +7,29 @@
     "dev": "node --watch --experimental-strip-types src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --experimental-strip-types src/db/migrate.ts",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest run"
   },
   "dependencies": {
-    "hono": "^4"
+    "@hono/zod-validator": "^0.7.6",
+    "@neondatabase/serverless": "^1.0.2",
+    "@paralleldrive/cuid2": "^3.3.0",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.3.15",
     "@hono/node-server": "^1",
     "@types/node": "^20",
+    "@types/ws": "^8.18.1",
+    "drizzle-kit": "^0.31.9",
     "typescript": "^5"
   }
 }

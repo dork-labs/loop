@@ -62,11 +62,11 @@
           },
           {
             "type": "command",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" && .claude/hooks/check-docs-changed.sh"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" && node .claude/hooks/autonomous-check.mjs"
           },
           {
             "type": "command",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" && node .claude/hooks/autonomous-check.mjs"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" && .claude/hooks/check-docs-changed.sh"
           }
         ]
       }
