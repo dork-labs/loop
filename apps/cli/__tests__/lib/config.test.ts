@@ -182,10 +182,17 @@ describe('maskToken', () => {
     expect(maskToken('short')).toBe('****')
   })
 
-  it('handles 9-character tokens (minimum to show partial)', async () => {
+  it('returns **** for tokens with 9-12 characters', async () => {
     const { maskToken } = await loadModule()
 
-    expect(maskToken('123456789')).toBe('1234****6789')
+    expect(maskToken('123456789')).toBe('****')
+    expect(maskToken('123456789012')).toBe('****')
+  })
+
+  it('shows first 4 and last 4 for tokens over 12 characters', async () => {
+    const { maskToken } = await loadModule()
+
+    expect(maskToken('1234567890123')).toBe('1234****0123')
   })
 
   it('handles empty string', async () => {

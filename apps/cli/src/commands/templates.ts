@@ -84,7 +84,7 @@ export function registerTemplatesCommand(program: Command): void {
           .post(`api/templates/${templateId}/versions/${versionId}/promote`)
           .json<SingleResponse<PromptVersion>>()
 
-        output(result.data, globalOpts, () => {
+        output(result, globalOpts, () => {
           console.log(
             pc.green(`Promoted version ${result.data.version} to active for template ${templateId}`),
           )

@@ -51,11 +51,11 @@ export function registerDispatchCommand(program: Command): void {
         })
 
         // Fetch the updated issue details
-        const { data: issue } = await api
+        const result = await api
           .get(`api/issues/${id}`)
           .json<{ data: Issue }>()
 
-        output(issue, globalOpts, () => renderClaimedIssue(issue))
+        output(result, globalOpts, () => renderClaimedIssue(result.data))
       })
     })
 }

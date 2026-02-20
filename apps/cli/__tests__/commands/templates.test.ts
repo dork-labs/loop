@@ -306,7 +306,7 @@ describe('templates command', () => {
       ])
 
       expect(output).toHaveBeenCalledWith(
-        PROMOTED_VERSION,
+        { data: PROMOTED_VERSION },
         expect.any(Object),
         expect.any(Function),
       )
@@ -332,7 +332,7 @@ describe('templates command', () => {
       ])
 
       expect(output).toHaveBeenCalledWith(
-        PROMOTED_VERSION,
+        { data: PROMOTED_VERSION },
         expect.objectContaining({ json: true }),
         expect.any(Function),
       )

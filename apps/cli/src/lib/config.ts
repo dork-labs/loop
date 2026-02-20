@@ -44,6 +44,6 @@ export function resolveConfig(globalOpts?: GlobalOptions): { url?: string; token
 
 /** Mask a token string showing first 4 + last 4 chars. */
 export function maskToken(token: string): string {
-  if (token.length <= 8) return '****'
+  if (token.length <= 12) return '****'
   return `${token.slice(0, 4)}****${token.slice(-4)}`
 }

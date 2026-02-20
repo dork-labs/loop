@@ -53,11 +53,15 @@ export function registerTriageCommand(program: Command): void {
           .json<SingleResponse<Issue>>()
 
         if (reason) {
-          await api
-            .post(`api/issues/${id}/comments`, {
-              json: { body: reason, authorName: 'looped-cli', authorType: 'human' },
-            })
-            .json()
+          try {
+            await api
+              .post(`api/issues/${id}/comments`, {
+                json: { body: reason, authorName: 'looped-cli', authorType: 'human' },
+              })
+              .json()
+          } catch {
+            console.error('Warning: issue declined but reason comment could not be saved.')
+          }
         }
 
         output(result, globalOpts, () => {

@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { createApiClient } from '../lib/api-client.js'
 import { withErrorHandler } from '../lib/errors.js'
 import { output } from '../lib/output.js'
-import type { Signal, SingleResponse } from '../types.js'
+import type { Signal, Issue, SingleResponse } from '../types.js'
 
 /** Register the `signal` command for submitting manual signals. */
 export function registerSignalCommand(program: Command): void {
@@ -29,12 +29,11 @@ export function registerSignalCommand(program: Command): void {
 
         const result = await api
           .post('api/signals', { json: body })
-          .json<SingleResponse<Signal>>()
+          .json<SingleResponse<{ signal: Signal; issue: Issue }>>()
 
         output(result, globalOpts, () => {
-          const signal = result.data
-          console.log(`Signal created: ${signal.id}`)
-          console.log(`Linked issue: ${signal.issueId}`)
+          console.log(`Signal created: ${result.data.signal.id}`)
+          console.log(`Linked issue: #${result.data.issue.number} ${result.data.issue.title}`)
         })
       })
     })

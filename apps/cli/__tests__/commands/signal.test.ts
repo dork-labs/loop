@@ -20,14 +20,26 @@ import { registerSignalCommand } from '../../src/commands/signal.js'
 
 const MOCK_SIGNAL_RESPONSE = {
   data: {
-    id: 'sig_abc123',
-    source: 'manual',
-    sourceId: null,
-    type: 'manual-signal',
-    severity: 'medium',
-    payload: { message: 'Error rate spike' },
-    issueId: 'iss_xyz789',
-    createdAt: '2026-02-20T10:00:00Z',
+    signal: {
+      id: 'sig_abc123',
+      source: 'manual',
+      sourceId: null,
+      type: 'manual-signal',
+      severity: 'medium',
+      payload: { message: 'Error rate spike' },
+      issueId: 'iss_xyz789',
+      createdAt: '2026-02-20T10:00:00Z',
+    },
+    issue: {
+      id: 'iss_xyz789',
+      number: 42,
+      title: 'Error rate spike',
+      type: 'signal',
+      status: 'triage',
+      priority: 3,
+      createdAt: '2026-02-20T10:00:00Z',
+      updatedAt: '2026-02-20T10:00:00Z',
+    },
   },
 }
 
@@ -126,7 +138,7 @@ describe('signal command', () => {
     renderFn(MOCK_SIGNAL_RESPONSE)
 
     expect(consoleSpy).toHaveBeenCalledWith('Signal created: sig_abc123')
-    expect(consoleSpy).toHaveBeenCalledWith('Linked issue: iss_xyz789')
+    expect(consoleSpy).toHaveBeenCalledWith('Linked issue: #42 Error rate spike')
   })
 
   it('outputs raw JSON when --json flag is set', async () => {

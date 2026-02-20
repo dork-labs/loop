@@ -222,7 +222,7 @@ describe('dispatch commands', () => {
       await program.parseAsync(['node', 'looped', 'dispatch', 'iss_1'])
 
       expect(output).toHaveBeenCalledWith(
-        MOCK_ISSUE,
+        { data: MOCK_ISSUE },
         expect.any(Object),
         expect.any(Function),
       )
@@ -232,7 +232,7 @@ describe('dispatch commands', () => {
       await program.parseAsync(['node', 'looped', '--json', 'dispatch', 'iss_1'])
 
       expect(output).toHaveBeenCalledWith(
-        MOCK_ISSUE,
+        { data: MOCK_ISSUE },
         expect.objectContaining({ json: true }),
         expect.any(Function),
       )

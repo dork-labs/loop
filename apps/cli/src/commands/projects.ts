@@ -26,7 +26,7 @@ const PROJECT_STATUS_COLOR: Record<string, (s: string) => string> = {
 /** Render a list of projects as a formatted table. */
 function renderProjectTable(projects: Project[]): void {
   const table = new Table({
-    head: ['NAME', 'STATUS', 'HEALTH', 'CREATED'],
+    head: ['ID', 'NAME', 'STATUS', 'HEALTH', 'CREATED'],
     style: { head: ['cyan'] },
   })
 
@@ -35,6 +35,7 @@ function renderProjectTable(projects: Project[]): void {
     const healthColor = HEALTH_COLOR[project.health] ?? pc.white
 
     table.push([
+      pc.dim(project.id.slice(0, 8)),
       truncate(project.name, 40),
       statusColor(project.status),
       healthColor(project.health),
