@@ -65,8 +65,9 @@ export function useKeyboardShortcuts({ onHelpOpen }: UseKeyboardShortcutsOptions
           // First "g" — arm the chord and start a reset timer
           gPressed.current = true
           gTimeout.current = setTimeout(clearGState, 1500)
+          return
         }
-        return
+        // Second "g" — fall through to the chord switch below (g+g → /goals)
       }
 
       // If "g" was previously pressed, check for the second chord key
