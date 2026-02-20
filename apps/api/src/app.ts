@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import { apiKeyAuth } from './middleware/auth'
@@ -13,10 +14,22 @@ import { signalRoutes } from './routes/signals'
 import { templateRoutes } from './routes/templates'
 import { promptReviewRoutes } from './routes/prompt-reviews'
 import { dispatchRoutes } from './routes/dispatch'
+import { dashboardRoutes } from './routes/dashboard'
 import { webhookRoutes } from './routes/webhooks'
 import type { AppEnv } from './types'
 
 const app = new Hono<AppEnv>()
+
+// CORS — allow the React dashboard and production app origins.
+app.use(
+  '*',
+  cors({
+    origin: ['http://localhost:3000', 'https://app.looped.me'],
+    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Authorization', 'Content-Type'],
+    maxAge: 86400,
+  })
+)
 
 /** Global error handler for HTTPException, ZodError, and unexpected errors. */
 app.onError((err, c) => {
@@ -58,6 +71,7 @@ api.route('/signals', signalRoutes)
 api.route('/templates', templateRoutes)
 api.route('/prompt-reviews', promptReviewRoutes)
 api.route('/dispatch', dispatchRoutes)
+api.route('/dashboard', dashboardRoutes)
 
 app.route('/api', api)
 

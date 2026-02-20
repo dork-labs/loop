@@ -58,7 +58,7 @@ npm run db:studio        # Launch Drizzle Studio GUI for browsing data
 ## Tech Stack
 
 - **API:** Hono (TypeScript) — lightweight, runs on Vercel Functions in production, Node.js locally
-- **Frontend:** React 19 + Vite 6 + Tailwind CSS 4 + shadcn/ui
+- **Frontend:** React 19 + Vite 6 + Tailwind CSS 4 + shadcn/ui + TanStack Router + TanStack Query + ky + Recharts
 - **Marketing:** Next.js 16 + Fumadocs
 - **Database:** PostgreSQL (Neon) + Drizzle ORM
 - **Monorepo:** Turborepo
@@ -131,6 +131,9 @@ PostgreSQL via [Neon](https://neon.tech) serverless driver + Drizzle ORM. Schema
 | `POST` | `/api/templates/:id/versions/:versionId/promote` | Promote a version to active |
 | `GET` | `/api/templates/:id/reviews` | List reviews across all versions |
 | `POST` | `/api/prompt-reviews` | Create a prompt review |
+| `GET` | `/api/dashboard/stats` | System health metrics |
+| `GET` | `/api/dashboard/activity` | Signal chains for activity timeline |
+| `GET` | `/api/dashboard/prompts` | Template health with scores |
 
 **Webhooks (`/api/signals/*` -- provider-specific auth, not Bearer token):**
 
@@ -142,8 +145,15 @@ PostgreSQL via [Neon](https://neon.tech) serverless driver + Drizzle ORM. Schema
 
 ### App (`apps/app/`)
 
-React 19 + Vite 6 + Tailwind CSS 4 SPA on port 3000. This will become the Loop dashboard (app.looped.me).
+React 19 + Vite 6 + Tailwind CSS 4 dashboard SPA on port 3000 (app.looped.me). Dark mode only.
 
+- **Routing:** TanStack Router with file-based routing (`src/routes/`) and code splitting via lazy routes
+- **Data fetching:** TanStack Query with query key factories (`src/lib/query-keys.ts`) and per-resource staleTime tuning
+- **API client:** ky with auth hooks (`src/lib/api-client.ts`)
+- **UI components:** shadcn/ui (15 components in `src/components/ui/`)
+- **Charts:** Recharts for sparklines and activity graphs
+- **Views:** Issue List, Issue Detail, Activity Timeline, Goals Dashboard, Prompt Health
+- **Keyboard shortcuts:** `g+i` Issues, `g+a` Activity, `g+g` Goals, `g+p` Prompts, `Cmd+B` Toggle sidebar, `?` Help
 - Path alias: `@/*` maps to `./src/*`
 - Build: `vite build` outputs to `dist/`
 
@@ -171,6 +181,13 @@ The API requires the following environment variables (see `apps/api/.env.example
 | `GITHUB_WEBHOOK_SECRET` | For webhooks | HMAC secret for GitHub webhook signature verification |
 | `SENTRY_CLIENT_SECRET` | For webhooks | HMAC secret for Sentry webhook signature verification |
 | `POSTHOG_WEBHOOK_SECRET` | For webhooks | Shared secret for PostHog webhook verification |
+
+The App requires the following environment variables (see `apps/app/.env.example`):
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | No | API base URL (defaults to `http://localhost:4242`) |
+| `VITE_LOOP_API_KEY` | Yes | Bearer token for authenticating dashboard API requests |
 
 ## Testing
 
