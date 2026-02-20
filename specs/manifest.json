@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 3,
+  "nextNumber": 5,
   "specs": [
     {
       "number": 1,
@@ -14,6 +14,20 @@
       "slug": "data-layer-core-api",
       "title": "Data Layer & Core API",
       "created": "2026-02-19",
+      "status": "specification"
+    },
+    {
+      "number": 3,
+      "slug": "prompt-dispatch-engine",
+      "title": "Prompt & Dispatch Engine",
+      "created": "2026-02-20",
+      "status": "specification"
+    },
+    {
+      "number": 4,
+      "slug": "mvp-phase-3-react-dashboard",
+      "title": "MVP Phase 3: React Dashboard",
+      "created": "2026-02-20",
       "status": "specification"
     }
   ]

@@ -12,6 +12,7 @@ import { commentRoutes } from './routes/comments'
 import { signalRoutes } from './routes/signals'
 import { templateRoutes } from './routes/templates'
 import { promptReviewRoutes } from './routes/prompt-reviews'
+import { dispatchRoutes } from './routes/dispatch'
 import { webhookRoutes } from './routes/webhooks'
 import type { AppEnv } from './types'
 
@@ -56,6 +57,7 @@ api.route('/relations', relationRoutes)
 api.route('/signals', signalRoutes)
 api.route('/templates', templateRoutes)
 api.route('/prompt-reviews', promptReviewRoutes)
+api.route('/dispatch', dispatchRoutes)
 
 app.route('/api', api)
 

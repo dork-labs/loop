@@ -15,6 +15,13 @@
       "when": 1771597855045,
       "tag": "0001_real_famine",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771601577519,
+      "tag": "0002_purple_selene",
+      "breakpoints": true
     }
   ]
 }

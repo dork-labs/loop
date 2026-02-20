@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { createTestApp, withTestDb, getTestDb } from './setup'
 import { promptReviewRoutes } from '../routes/prompt-reviews'
-import { promptTemplates, promptVersions } from '../db/schema'
+import { promptTemplates, promptVersions, issues } from '../db/schema'
 import { apiKeyAuth } from '../middleware/auth'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
-import { eq } from 'drizzle-orm'
+import { count, eq, isNull, sql } from 'drizzle-orm'
 
 const AUTH_HEADER = { Authorization: `Bearer ${process.env.LOOP_API_KEY}` }
 const JSON_HEADERS = { ...AUTH_HEADER, 'Content-Type': 'application/json' }
@@ -86,12 +86,13 @@ describe('prompt reviews', () => {
     expect(data.id).toBeDefined()
   })
 
-  it('updates the version review_score after creating a review', async () => {
+  it('updates the version review_score using EWMA after creating a review', async () => {
     const db = getTestDb()
     const { version } = await seedTemplateAndVersion()
     const app = buildApp()
 
-    // Submit first review: clarity=3, completeness=3, relevance=3 → avg = 3.0
+    // Submit first review: clarity=3, completeness=3, relevance=3 → composite = 3.0
+    // First review with no prior score → reviewScore = composite = 3.0
     await app.request('/prompt-reviews', {
       method: 'POST',
       headers: JSON_HEADERS,
@@ -111,8 +112,8 @@ describe('prompt reviews', () => {
       .where(eq(promptVersions.id, version.id))
     expect(v1.reviewScore).toBeCloseTo(3.0, 1)
 
-    // Submit second review: clarity=5, completeness=5, relevance=5 → avg = 5.0
-    // Overall average: (3.0 + 5.0) / 2 = 4.0
+    // Submit second review: clarity=5, completeness=5, relevance=5 → composite = 5.0
+    // EWMA: 0.3 * 5.0 + 0.7 * 3.0 = 1.5 + 2.1 = 3.6
     await app.request('/prompt-reviews', {
       method: 'POST',
       headers: JSON_HEADERS,
@@ -130,7 +131,7 @@ describe('prompt reviews', () => {
       .select()
       .from(promptVersions)
       .where(eq(promptVersions.id, version.id))
-    expect(v2.reviewScore).toBeCloseTo(4.0, 1)
+    expect(v2.reviewScore).toBeCloseTo(3.6, 1)
   })
 
   it('returns 404 when version does not exist', async () => {
@@ -289,5 +290,174 @@ describe('prompt reviews', () => {
     expect(res.status).toBe(201)
     const { data } = await res.json()
     expect(data.authorType).toBe('agent')
+  })
+
+  // ─── EWMA scoring ─────────────────────────────────────────────────────────
+
+  it('updates EWMA score correctly with different composite values', async () => {
+    const db = getTestDb()
+    const { version } = await seedTemplateAndVersion()
+    const app = buildApp()
+
+    // First review: clarity=4, completeness=5, relevance=3 → composite = 4.0
+    // No prior score → reviewScore set directly to 4.0
+    await app.request('/prompt-reviews', {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        versionId: version.id,
+        issueId: 'issue-ewma-1',
+        clarity: 4,
+        completeness: 5,
+        relevance: 3,
+        authorType: 'human',
+      }),
+    })
+
+    const [v1] = await db
+      .select()
+      .from(promptVersions)
+      .where(eq(promptVersions.id, version.id))
+    expect(v1.reviewScore).toBeCloseTo(4.0, 1)
+
+    // Second review: clarity=2, completeness=2, relevance=2 → composite = 2.0
+    // EWMA: 0.3 * 2.0 + 0.7 * 4.0 = 0.6 + 2.8 = 3.4
+    await app.request('/prompt-reviews', {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        versionId: version.id,
+        issueId: 'issue-ewma-2',
+        clarity: 2,
+        completeness: 2,
+        relevance: 2,
+        authorType: 'human',
+      }),
+    })
+
+    const [v2] = await db
+      .select()
+      .from(promptVersions)
+      .where(eq(promptVersions.id, version.id))
+    expect(v2.reviewScore).toBeCloseTo(3.4, 1)
+  })
+
+  // ─── Improvement loop ─────────────────────────────────────────────────────
+
+  it('auto-creates an improvement issue after 3 low-score reviews', async () => {
+    const db = getTestDb()
+    const { template, version } = await seedTemplateAndVersion()
+    const app = buildApp()
+
+    // Submit 3 low-score reviews (all 2/5) so EWMA stays well below 3.5
+    for (let i = 1; i <= 3; i++) {
+      await app.request('/prompt-reviews', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({
+          versionId: version.id,
+          issueId: `issue-low-${i}`,
+          clarity: 2,
+          completeness: 2,
+          relevance: 2,
+          authorType: 'human',
+        }),
+      })
+    }
+
+    // An improvement issue should have been created for this template
+    const improvementIssues = await db
+      .select()
+      .from(issues)
+      .where(
+        sql`${issues.title} LIKE ${'Improve prompt template: ' + template.slug + '%'}`,
+      )
+
+    expect(improvementIssues).toHaveLength(1)
+    expect(improvementIssues[0].type).toBe('task')
+    expect(improvementIssues[0].status).toBe('todo')
+    expect(improvementIssues[0].title).toContain('Improve prompt template')
+  })
+
+  it('does not create a duplicate improvement issue on subsequent low-score reviews', async () => {
+    const db = getTestDb()
+    const { template, version } = await seedTemplateAndVersion()
+    const app = buildApp()
+
+    // Submit 4 low-score reviews; the 3rd triggers the issue, the 4th should not duplicate it
+    for (let i = 1; i <= 4; i++) {
+      await app.request('/prompt-reviews', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({
+          versionId: version.id,
+          issueId: `issue-dup-${i}`,
+          clarity: 2,
+          completeness: 2,
+          relevance: 2,
+          authorType: 'human',
+        }),
+      })
+    }
+
+    const improvementIssues = await db
+      .select()
+      .from(issues)
+      .where(
+        sql`${issues.title} LIKE ${'Improve prompt template: ' + template.slug + '%'}`,
+      )
+
+    // Exactly 1 improvement issue, not 2
+    expect(improvementIssues).toHaveLength(1)
+  })
+
+  it('does not create an improvement issue before REVIEW_MIN_SAMPLES is reached', async () => {
+    const db = getTestDb()
+    const { template, version } = await seedTemplateAndVersion()
+    const app = buildApp()
+
+    // Submit 1 review with the worst possible score
+    await app.request('/prompt-reviews', {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        versionId: version.id,
+        issueId: 'issue-min-1',
+        clarity: 1,
+        completeness: 1,
+        relevance: 1,
+        authorType: 'human',
+      }),
+    })
+
+    const afterOne = await db
+      .select()
+      .from(issues)
+      .where(
+        sql`${issues.title} LIKE ${'Improve prompt template: ' + template.slug + '%'}`,
+      )
+    expect(afterOne).toHaveLength(0)
+
+    // Submit a second low-score review (still below REVIEW_MIN_SAMPLES=3)
+    await app.request('/prompt-reviews', {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        versionId: version.id,
+        issueId: 'issue-min-2',
+        clarity: 1,
+        completeness: 1,
+        relevance: 1,
+        authorType: 'human',
+      }),
+    })
+
+    const afterTwo = await db
+      .select()
+      .from(issues)
+      .where(
+        sql`${issues.title} LIKE ${'Improve prompt template: ' + template.slug + '%'}`,
+      )
+    expect(afterTwo).toHaveLength(0)
   })
 })

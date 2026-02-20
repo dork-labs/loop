@@ -126,8 +126,9 @@ describe('templates CRUD', () => {
 
     expect(res.status).toBe(200)
     const { data, total } = await res.json()
-    expect(total).toBe(2)
-    expect(data).toHaveLength(2)
+    // 5 default templates from seed migration + 2 user-created (1 deleted, excluded)
+    expect(total).toBe(7)
+    expect(data).toHaveLength(7)
   })
 
   it('paginates results correctly', async () => {
@@ -139,13 +140,14 @@ describe('templates CRUD', () => {
     ])
 
     const app = buildApp()
+    // 5 default + 3 user-created = 8 total
     const res = await app.request('/templates?limit=2&offset=1', {
       headers: AUTH_HEADER,
     })
 
     expect(res.status).toBe(200)
     const { data, total } = await res.json()
-    expect(total).toBe(3)
+    expect(total).toBe(8)
     expect(data).toHaveLength(2)
   })
 
@@ -227,10 +229,10 @@ describe('templates CRUD', () => {
     })
     expect(delRes.status).toBe(204)
 
-    // Should not appear in list
+    // Should not appear in list (5 seed templates remain)
     const listRes = await app.request('/templates', { headers: AUTH_HEADER })
     const { total } = await listRes.json()
-    expect(total).toBe(0)
+    expect(total).toBe(5)
   })
 
   it('returns 404 when deleting a non-existent template', async () => {

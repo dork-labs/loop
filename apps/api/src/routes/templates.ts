@@ -8,7 +8,19 @@ import {
   promptVersions,
   promptReviews,
   authorTypeValues,
+  issues,
+  labels,
+  issueLabels,
 } from '../db/schema'
+import {
+  TemplateConditionsSchema,
+  selectTemplate,
+  buildHydrationContext,
+  hydrateTemplate,
+  type IssueContext,
+  type TemplateCandidate,
+  type TemplateConditions,
+} from '../lib/prompt-engine'
 import type { AppEnv } from '../types'
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
@@ -21,7 +33,7 @@ const createTemplateSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens'),
   name: z.string().min(1).max(500),
   description: z.string().optional(),
-  conditions: z.record(z.string(), z.unknown()).default({}),
+  conditions: TemplateConditionsSchema.default({}),
   specificity: z.number().int().min(0).max(100).default(10),
   projectId: z.string().optional(),
 })
@@ -29,7 +41,7 @@ const createTemplateSchema = z.object({
 const updateTemplateSchema = z.object({
   name: z.string().min(1).max(500).optional(),
   description: z.string().optional(),
-  conditions: z.record(z.string(), z.unknown()).optional(),
+  conditions: TemplateConditionsSchema.optional(),
   specificity: z.number().int().min(0).max(100).optional(),
   projectId: z.string().nullable().optional(),
 })
@@ -90,6 +102,127 @@ templateRoutes.post('/', zValidator('json', createTemplateSchema), async (c) => 
   const [template] = await db.insert(promptTemplates).values(body).returning()
 
   return c.json({ data: template }, 201)
+})
+
+// ─── Preview route (must be before /:id to avoid route conflict) ─────────────
+
+/** GET /preview/:issueId — Preview template selection + hydration for an issue. */
+templateRoutes.get('/preview/:issueId', async (c) => {
+  const db = c.get('db')
+  const issueId = c.req.param('issueId')
+
+  // 1. Fetch issue
+  const [issue] = await db
+    .select()
+    .from(issues)
+    .where(and(eq(issues.id, issueId), isNull(issues.deletedAt)))
+
+  if (!issue) {
+    throw new HTTPException(404, { message: 'Issue not found' })
+  }
+
+  // 2. Build IssueContext (same logic as dispatch buildIssueContext)
+  const [labelRows, failedSessionRows] = await Promise.all([
+    db
+      .select({ name: labels.name })
+      .from(issueLabels)
+      .innerJoin(labels, eq(issueLabels.labelId, labels.id))
+      .where(eq(issueLabels.issueId, issue.id)),
+    issue.parentId
+      ? db
+          .select({ id: issues.id })
+          .from(issues)
+          .where(
+            and(
+              eq(issues.parentId, issue.parentId),
+              eq(issues.status, 'canceled'),
+              isNull(issues.deletedAt),
+              sql`${issues.agentSummary} IS NOT NULL`,
+            ),
+          )
+      : Promise.resolve([]),
+  ])
+
+  const issueContext: IssueContext = {
+    type: issue.type,
+    signalSource: issue.signalSource ?? null,
+    labels: labelRows.map((l) => l.name),
+    projectId: issue.projectId ?? null,
+    hasFailedSessions: failedSessionRows.length > 0,
+    hypothesisConfidence: issue.hypothesis?.confidence ?? null,
+  }
+
+  // 3. Fetch all non-deleted templates
+  const allTemplates = await db
+    .select()
+    .from(promptTemplates)
+    .where(isNull(promptTemplates.deletedAt))
+
+  const candidates: TemplateCandidate[] = allTemplates.map((t) => ({
+    id: t.id,
+    slug: t.slug,
+    conditions: t.conditions as TemplateConditions,
+    specificity: t.specificity,
+    projectId: t.projectId ?? null,
+    activeVersionId: t.activeVersionId ?? null,
+  }))
+
+  // 4. Select template with fallback
+  let selected = selectTemplate(candidates, issueContext)
+  if (!selected) {
+    selected =
+      candidates.find(
+        (t) => (t.conditions as TemplateConditions).type === issue.type && t.activeVersionId,
+      ) ?? null
+  }
+
+  // 5. No template found
+  if (!selected || !selected.activeVersionId) {
+    return c.json({
+      issue: { id: issue.id, number: issue.number, title: issue.title, type: issue.type },
+      template: null,
+      version: null,
+      prompt: null,
+      message: 'No matching template found',
+    })
+  }
+
+  // 6. Fetch version, build context, hydrate
+  const [version] = await db
+    .select()
+    .from(promptVersions)
+    .where(eq(promptVersions.id, selected.activeVersionId))
+
+  if (!version) {
+    return c.json({
+      issue: { id: issue.id, number: issue.number, title: issue.title, type: issue.type },
+      template: null,
+      version: null,
+      prompt: null,
+      message: 'Active version not found',
+    })
+  }
+
+  const hydrationContext = await buildHydrationContext(
+    db,
+    issue,
+    { id: selected.id, slug: selected.slug },
+    { id: version.id, version: version.version },
+  )
+  const prompt = hydrateTemplate(version.id, version.content, hydrationContext)
+
+  return c.json({
+    issue: { id: issue.id, number: issue.number, title: issue.title, type: issue.type },
+    template: {
+      id: selected.id,
+      slug: selected.slug,
+      name: allTemplates.find((t) => t.id === selected!.id)?.name,
+      conditions: selected.conditions,
+      specificity: selected.specificity,
+    },
+    version: { id: version.id, version: version.version },
+    prompt,
+  })
 })
 
 /** GET /:id — Get a template with its active version. */
@@ -217,6 +350,14 @@ templateRoutes.post(
 
     if (!template) {
       throw new HTTPException(404, { message: 'Template not found' })
+    }
+
+    // Reject raw triple-brace syntax — use Handlebars double-brace with helpers instead
+    if (body.content.includes('{{{')) {
+      throw new HTTPException(422, {
+        message:
+          'Triple-brace syntax ({{{) is not allowed. Use double-brace Handlebars expressions instead.',
+      })
     }
 
     // Determine next version number

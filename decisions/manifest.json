@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 8,
+  "nextNumber": 15,
   "decisions": [
     {
       "number": 1,
@@ -64,6 +64,69 @@
       "created": "2026-02-19",
       "extractedFrom": "data-layer-core-api",
       "specSlug": "data-layer-core-api"
+    },
+    {
+      "number": 8,
+      "slug": "use-handlebars-for-prompt-hydration",
+      "title": "Use Handlebars for prompt template hydration",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "prompt-dispatch-engine",
+      "specSlug": "prompt-dispatch-engine"
+    },
+    {
+      "number": 9,
+      "slug": "use-skip-locked-for-dispatch",
+      "title": "Use FOR UPDATE SKIP LOCKED for atomic dispatch claiming",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "prompt-dispatch-engine",
+      "specSlug": "prompt-dispatch-engine"
+    },
+    {
+      "number": 10,
+      "slug": "use-ewma-for-review-scoring",
+      "title": "Use EWMA for prompt review score tracking",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "prompt-dispatch-engine",
+      "specSlug": "prompt-dispatch-engine"
+    },
+    {
+      "number": 11,
+      "slug": "seed-templates-via-migration",
+      "title": "Seed default prompt templates via custom Drizzle migration",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "prompt-dispatch-engine",
+      "specSlug": "prompt-dispatch-engine"
+    },
+    {
+      "number": 12,
+      "slug": "use-tanstack-router-for-dashboard",
+      "title": "Use TanStack Router over React Router for the dashboard",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "mvp-phase-3-react-dashboard",
+      "specSlug": "mvp-phase-3-react-dashboard"
+    },
+    {
+      "number": 13,
+      "slug": "use-ky-for-api-client",
+      "title": "Use ky over Axios as the frontend HTTP client",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "mvp-phase-3-react-dashboard",
+      "specSlug": "mvp-phase-3-react-dashboard"
+    },
+    {
+      "number": 14,
+      "slug": "pre-assemble-signal-chains-server-side",
+      "title": "Pre-assemble signal chains server-side for Loop Activity view",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "mvp-phase-3-react-dashboard",
+      "specSlug": "mvp-phase-3-react-dashboard"
     }
   ]
 }
