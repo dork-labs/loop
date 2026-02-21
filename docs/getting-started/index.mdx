@@ -16,8 +16,10 @@ Loop is fully deterministic. It makes **zero LLM calls** — no embeddings, no g
 Before you begin, make sure you have:
 
 - **Node.js 20+** installed
-- **PostgreSQL** database ([Neon](https://neon.tech) serverless recommended)
+- **Docker** installed and running (for local PostgreSQL)
 - **npm** (comes with Node.js)
+
+For production, you will need a [Neon](https://neon.tech) PostgreSQL database. For local development, Loop provides a Docker Compose config that runs PostgreSQL automatically.
 
 ## What you will learn
 

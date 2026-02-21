@@ -46,6 +46,15 @@ npm run format:check     # Check formatting without writing
 
 Run a single test file: `npx vitest run apps/api/src/__tests__/example.test.ts`
 
+### Developer Setup Commands
+
+```bash
+npm run setup            # First-time setup (install, env, docker, migrate)
+npm run dx               # Start local PostgreSQL (Docker Compose)
+npm run dx:down          # Stop local PostgreSQL
+npm run dx:reset         # Stop and delete local database volume
+```
+
 ### Database Commands (from `apps/api/`)
 
 ```bash
@@ -73,7 +82,7 @@ Hono API server on port 4242 (local dev). Uses `@hono/node-server` for local dev
 
 #### Database
 
-PostgreSQL via [Neon](https://neon.tech) serverless driver + Drizzle ORM. Schema files live in `apps/api/src/db/schema/` and migrations are generated into `apps/api/drizzle/migrations/`.
+PostgreSQL via [Neon](https://neon.tech) serverless driver (production) or standard `pg` driver (local dev) + Drizzle ORM. The driver is selected at runtime via `NODE_ENV` in `apps/api/src/db/index.ts`. Schema files live in `apps/api/src/db/schema/` and migrations are generated into `apps/api/drizzle/migrations/`.
 
 **Schema files:**
 
@@ -171,6 +180,8 @@ Next.js 16 marketing site with Fumadocs for documentation. Serves the public-fac
 Configured in each app's `tsconfig.json` (for IDE/tsc) and `vite.config.ts` (for bundling).
 
 ## Environment Variables
+
+Each app validates environment variables at startup using Zod (`env.ts`). Missing or invalid vars produce formatted error messages. Import `env` from `@/env` (or `../env`) instead of accessing `process.env` directly.
 
 The API requires the following environment variables (see `apps/api/.env.example`):
 

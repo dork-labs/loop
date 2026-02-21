@@ -12,52 +12,29 @@ import { Callout } from 'fumadocs-ui/components/callout'
 This tutorial walks you through the core Loop workflow: ingest a signal, see it become a triage issue, and dispatch it with a hydrated prompt for an AI agent.
 
 <Callout type="info">
-  This guide assumes you have Node.js 20+, npm, and a PostgreSQL database ready. [Neon](https://neon.tech) offers a free tier that works perfectly.
+  This guide assumes you have Node.js 20+, npm, and Docker installed. No external database needed — Docker provides a local PostgreSQL instance.
 </Callout>
 
 <Steps>
 
 <Step>
-### Clone the repository and install dependencies
+### Clone and run the automated setup
+
+The setup script installs dependencies, copies environment files with working defaults, starts a local PostgreSQL database via Docker, and runs migrations.
 
 ```bash
 git clone https://github.com/dork-labs/loop.git
 cd loop
-npm install
-```
-</Step>
-
-<Step>
-### Configure your environment
-
-Copy the example environment file and fill in your database connection string and API key.
-
-```bash
-cp apps/api/.env.example apps/api/.env
+npm run setup
 ```
 
-Edit `apps/api/.env` with your values:
-
-```bash
-DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
-LOOP_API_KEY="your-api-key-here"
-```
+<Callout type="info">
+  The `.env.example` files contain pre-filled defaults that work immediately for local development. No manual editing required.
+</Callout>
 
 <Callout type="warning">
   Never commit your `.env` file. It is already in `.gitignore`, but always double-check before pushing.
 </Callout>
-</Step>
-
-<Step>
-### Run database migrations
-
-Apply the schema to your PostgreSQL database:
-
-```bash
-npm run db:migrate -w apps/api
-```
-
-This creates all the tables Loop needs: issues, signals, projects, goals, prompt templates, and more.
 </Step>
 
 <Step>

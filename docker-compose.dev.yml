@@ -1,0 +1,21 @@
+# docker-compose.dev.yml — Local development services
+# Usage: npm run dx (start) | npm run dx:down (stop) | npm run dx:reset (nuke)
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: loop
+      POSTGRES_PASSWORD: loop
+      POSTGRES_DB: loop
+    ports:
+      - "54320:5432"
+    volumes:
+      - loop_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loop -d loop"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  loop_postgres_data:

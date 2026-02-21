@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 8,
+  "nextNumber": 9,
   "specs": [
     {
       "number": 1,
@@ -49,6 +49,13 @@
       "slug": "mvp-homepage-update",
       "title": "Update Marketing Homepage Post-MVP",
       "created": "2026-02-20",
+      "status": "specification"
+    },
+    {
+      "number": 8,
+      "slug": "dev-setup-dx",
+      "title": "Developer Setup & DX Improvements",
+      "created": "2026-02-21",
       "status": "specification"
     }
   ]

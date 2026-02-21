@@ -2,6 +2,7 @@ import { createMiddleware } from 'hono/factory'
 import { HTTPException } from 'hono/http-exception'
 import { timingSafeEqual } from 'node:crypto'
 import type { AppEnv } from '../types'
+import { env } from '../env'
 
 /** Bearer token auth middleware that validates requests against LOOP_API_KEY. */
 export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {
@@ -13,11 +14,7 @@ export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {
   }
 
   const token = authHeader.slice(7)
-  const expected = process.env.LOOP_API_KEY
-
-  if (!expected) {
-    throw new HTTPException(500, { message: 'LOOP_API_KEY not configured' })
-  }
+  const expected = env.LOOP_API_KEY
 
   const tokenBuf = Buffer.from(token)
   const expectedBuf = Buffer.from(expected)

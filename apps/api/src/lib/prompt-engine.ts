@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { eq, and, ne, isNull } from 'drizzle-orm'
 import { issueTypeValues, issues, projects, goals, issueLabels, labels, issueRelations } from '../db/schema'
 import { PARTIALS } from './partials'
+import { env } from '../env'
 import type { AnyDb } from '../types'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -273,8 +274,8 @@ export async function buildHydrationContext(
     blocking: blockingResults,
     blockedBy: blockedByResults,
     previousSessions,
-    loopUrl: process.env.LOOP_URL ?? 'http://localhost:4242',
-    loopToken: process.env.LOOP_API_KEY ?? '',
+    loopUrl: env.LOOP_URL,
+    loopToken: env.LOOP_API_KEY,
     meta: {
       templateId: template.id,
       templateSlug: template.slug,

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 19,
+  "nextNumber": 21,
   "decisions": [
     {
       "number": 1,
@@ -145,6 +145,24 @@
       "created": "2026-02-20",
       "extractedFrom": "docs-update-post-mvp",
       "specSlug": "docs-update-post-mvp"
+    },
+    {
+      "number": 19,
+      "slug": "conditional-driver-swap-for-local-dev",
+      "title": "Use conditional driver swap for local PostgreSQL development",
+      "status": "draft",
+      "created": "2026-02-21",
+      "extractedFrom": "dev-setup-dx",
+      "specSlug": "dev-setup-dx"
+    },
+    {
+      "number": 20,
+      "slug": "use-raw-zod-for-env-validation",
+      "title": "Use raw Zod safeParse for environment variable validation",
+      "status": "draft",
+      "created": "2026-02-21",
+      "extractedFrom": "dev-setup-dx",
+      "specSlug": "dev-setup-dx"
     }
   ]
 }

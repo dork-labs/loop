@@ -7,7 +7,9 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 # Environment Variables
 
-Loop uses environment variables for all configuration. No config files are required beyond a `.env` file (or your platform's environment variable settings).
+Loop uses environment variables for all configuration. Each app validates its environment variables at startup using Zod — missing or invalid variables produce clear, formatted error messages instead of cryptic runtime errors.
+
+For local development, pre-filled `.env.example` files with working defaults are provided. Run `cp apps/api/.env.example apps/api/.env` (or use `npm run setup` which does this automatically).
 
 ## API Server (`@loop/api`)
 
@@ -27,19 +29,21 @@ Never commit secrets to version control. Use your platform's secret management (
 
 ### `DATABASE_URL`
 
-The PostgreSQL connection string. Loop uses the [Neon serverless driver](https://neon.tech/docs/serverless/serverless-driver) with Drizzle ORM.
+The PostgreSQL connection string. Loop automatically selects the right driver based on `NODE_ENV`: the [Neon serverless driver](https://neon.tech/docs/serverless/serverless-driver) in production, or the standard `pg` driver for local development.
 
-**Neon (recommended):**
+**Production (Neon):**
 
 ```
 DATABASE_URL=postgresql://user:password@ep-cool-darkness-123456.us-east-2.aws.neon.tech/loopdb?sslmode=require
 ```
 
-**Self-hosted PostgreSQL:**
+**Local development (Docker):**
 
 ```
-DATABASE_URL=postgresql://loop:secretpassword@localhost:5432/loop
+DATABASE_URL=postgresql://loop:loop@localhost:54320/loop
 ```
+
+The local default connects to the PostgreSQL container started by `npm run dx`.
 
 ### `LOOP_API_KEY`
 

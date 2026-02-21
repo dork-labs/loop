@@ -352,5 +352,5 @@ Build a `loop` CLI tool that provides command-line access to the Loop API. This 
 
 - [x] Phase 1: `/ideate` → `/ideate-to-spec` → `/spec:decompose` → `/spec:execute`
 - [x] Phase 2: `/ideate` → `/ideate-to-spec` → `/spec:decompose` → `/spec:execute`
-- [~] Phase 3: `/ideate` → `/ideate-to-spec` → `/spec:decompose` → `/spec:execute`
-- [~] Phase 4: `/ideate` → `/ideate-to-spec` → `/spec:decompose` → `/spec:execute`
+- [x] Phase 3: `/ideate` → `/ideate-to-spec` → `/spec:decompose` → `/spec:execute`
+- [x] Phase 4: `/ideate` → `/ideate-to-spec` → `/spec:decompose` → `/spec:execute`

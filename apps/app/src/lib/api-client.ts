@@ -1,13 +1,14 @@
 import ky from 'ky'
+import { env } from '@/env'
 import type { Issue, PaginatedResponse, Comment, Label } from '@/types/issues'
 import type { Project, Goal } from '@/types/projects'
 import type { PromptTemplate, PromptVersion, PromptReview } from '@/types/prompts'
 import type { DashboardStats, DashboardActivity, DashboardPromptHealth } from '@/types/dashboard'
 
 export const api = ky.create({
-  prefixUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:4242',
+  prefixUrl: env.VITE_API_URL,
   headers: {
-    Authorization: `Bearer ${import.meta.env.VITE_LOOP_API_KEY}`,
+    Authorization: `Bearer ${env.VITE_LOOP_API_KEY}`,
   },
   hooks: {
     afterResponse: [

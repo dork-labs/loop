@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { apiKeyAuth } from '../middleware/auth'
+import { env } from '../env'
 
 /**
  * Sets up a minimal Hono app with the auth middleware guarding a test route.
@@ -22,16 +23,6 @@ function createAuthTestApp() {
 }
 
 describe('apiKeyAuth middleware', () => {
-  const ORIGINAL_API_KEY = process.env.LOOP_API_KEY
-
-  beforeEach(() => {
-    process.env.LOOP_API_KEY = 'test-api-key'
-  })
-
-  afterEach(() => {
-    process.env.LOOP_API_KEY = ORIGINAL_API_KEY
-  })
-
   it('rejects requests with no Authorization header with 401', async () => {
     const app = createAuthTestApp()
     const res = await app.request('/protected/resource')
@@ -44,7 +35,7 @@ describe('apiKeyAuth middleware', () => {
   it('rejects requests with malformed Authorization header (no Bearer prefix) with 401', async () => {
     const app = createAuthTestApp()
     const res = await app.request('/protected/resource', {
-      headers: { Authorization: 'Basic test-api-key' },
+      headers: { Authorization: 'Basic some-key' },
     })
 
     expect(res.status).toBe(401)
@@ -66,24 +57,11 @@ describe('apiKeyAuth middleware', () => {
   it('passes requests with a valid API key through to the handler', async () => {
     const app = createAuthTestApp()
     const res = await app.request('/protected/resource', {
-      headers: { Authorization: 'Bearer test-api-key' },
+      headers: { Authorization: `Bearer ${env.LOOP_API_KEY}` },
     })
 
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.ok).toBe(true)
-  })
-
-  it('returns 500 when LOOP_API_KEY is not configured', async () => {
-    delete process.env.LOOP_API_KEY
-
-    const app = createAuthTestApp()
-    const res = await app.request('/protected/resource', {
-      headers: { Authorization: 'Bearer some-key' },
-    })
-
-    expect(res.status).toBe(500)
-    const body = await res.json()
-    expect(body.error).toBe('LOOP_API_KEY not configured')
   })
 })

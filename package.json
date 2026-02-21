@@ -15,7 +15,11 @@
     "lint": "turbo lint",
     "lint:fix": "turbo lint -- --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "dx": "docker compose -f docker-compose.dev.yml up -d",
+    "dx:down": "docker compose -f docker-compose.dev.yml down",
+    "dx:reset": "docker compose -f docker-compose.dev.yml down -v",
+    "setup": "bash scripts/setup.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
