@@ -14,7 +14,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:4242",
+      "url": "http://localhost:5667",
       "description": "Local development"
     },
     {

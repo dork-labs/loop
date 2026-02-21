@@ -143,7 +143,7 @@ const mockContext: HydrationContext = {
   blocking: [{ number: 45, title: 'Blocked Task' }],
   blockedBy: [],
   previousSessions: [],
-  loopUrl: 'http://localhost:4242',
+  loopUrl: 'http://localhost:5667',
   loopToken: 'test-token',
   meta: {
     templateId: 'tpl_1',

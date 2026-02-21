@@ -199,7 +199,7 @@ function BrowserChrome() {
       {/* Address bar */}
       <div className="flex-1 flex items-center rounded px-3 font-mono" style={{ height: 26, background: 'var(--cream-tertiary)', border: '1px solid var(--border-warm)', fontSize: 11, color: 'var(--warm-gray-light)', maxWidth: 320, margin: '0 auto' }}>
         <span style={{ color: 'var(--brand-green)', marginRight: 4, fontSize: 10 }}>●</span>
-        localhost:4242
+        localhost:5667
       </div>
     </div>
   )

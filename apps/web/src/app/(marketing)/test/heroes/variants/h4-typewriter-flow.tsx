@@ -27,7 +27,7 @@ const TERMINAL_LINES = [
   },
   {
     prompt: '$ loop --dir ~/my-project',
-    outputs: ['✓ Server running on :4242'],
+    outputs: ['✓ Server running on :5667'],
   },
   {
     prompt: '$ # Your agents are now working...',

@@ -25,7 +25,7 @@ const app = new Hono<AppEnv>()
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:3000', 'https://app.looped.me'],
+    origin: ['http://localhost:5668', 'https://app.looped.me'],
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Authorization', 'Content-Type'],
     maxAge: 86400,

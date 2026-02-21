@@ -41,8 +41,8 @@ describe('API env schema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.NODE_ENV).toBe('development')
-      expect(result.data.PORT).toBe(4242)
-      expect(result.data.LOOP_URL).toBe('http://localhost:4242')
+      expect(result.data.PORT).toBe(5667)
+      expect(result.data.LOOP_URL).toBe('http://localhost:5667')
     }
   })
 

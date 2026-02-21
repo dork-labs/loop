@@ -31,7 +31,7 @@ function buildAppWithCors() {
   app.use(
     '*',
     cors({
-      origin: ['http://localhost:3000', 'https://app.looped.me'],
+      origin: ['http://localhost:5668', 'https://app.looped.me'],
       allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Authorization', 'Content-Type'],
       maxAge: 86400,
@@ -190,16 +190,16 @@ describe('dashboard API', () => {
   })
 
   describe('CORS', () => {
-    it('includes CORS headers for allowed origin (localhost:3000)', async () => {
+    it('includes CORS headers for allowed origin (localhost:5668)', async () => {
       const app = buildAppWithCors()
 
       const res = await app.request('/dashboard/stats', {
-        headers: { ...AUTH_HEADER, Origin: 'http://localhost:3000' },
+        headers: { ...AUTH_HEADER, Origin: 'http://localhost:5668' },
       })
 
       expect(res.status).toBe(200)
       expect(res.headers.get('access-control-allow-origin')).toBe(
-        'http://localhost:3000'
+        'http://localhost:5668'
       )
     })
 
@@ -232,7 +232,7 @@ describe('dashboard API', () => {
       const res = await app.request('/dashboard/stats', {
         method: 'OPTIONS',
         headers: {
-          Origin: 'http://localhost:3000',
+          Origin: 'http://localhost:5668',
           'Access-Control-Request-Method': 'GET',
           'Access-Control-Request-Headers': 'Authorization, Content-Type',
         },
@@ -240,7 +240,7 @@ describe('dashboard API', () => {
 
       expect(res.status).toBe(204)
       expect(res.headers.get('access-control-allow-origin')).toBe(
-        'http://localhost:3000'
+        'http://localhost:5668'
       )
       expect(res.headers.get('access-control-allow-methods')).toContain('GET')
       expect(res.headers.get('access-control-allow-headers')).toContain(

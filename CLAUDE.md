@@ -78,7 +78,7 @@ npm run db:studio        # Launch Drizzle Studio GUI for browsing data
 
 ### API (`apps/api/`)
 
-Hono API server on port 4242 (local dev). Uses `@hono/node-server` for local development; deploys as Vercel Functions in production with zero config (Hono auto-detects the runtime).
+Hono API server on port 5667 (local dev). Uses `@hono/node-server` for local development; deploys as Vercel Functions in production with zero config (Hono auto-detects the runtime).
 
 #### Database
 
@@ -154,7 +154,7 @@ PostgreSQL via [Neon](https://neon.tech) serverless driver (production) or stand
 
 ### App (`apps/app/`)
 
-React 19 + Vite 6 + Tailwind CSS 4 dashboard SPA on port 3000 (app.looped.me). Dark mode only.
+React 19 + Vite 6 + Tailwind CSS 4 dashboard SPA on port 5668 (app.looped.me). Dark mode only.
 
 - **Routing:** TanStack Router with file-based routing (`src/routes/`) and code splitting via lazy routes
 - **Data fetching:** TanStack Query with query key factories (`src/lib/query-keys.ts`) and per-resource staleTime tuning
@@ -197,7 +197,7 @@ The App requires the following environment variables (see `apps/app/.env.example
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `VITE_API_URL` | No | API base URL (defaults to `http://localhost:4242`) |
+| `VITE_API_URL` | No | API base URL (defaults to `http://localhost:5667`) |
 | `VITE_LOOP_API_KEY` | Yes | Bearer token for authenticating dashboard API requests |
 
 ## Testing

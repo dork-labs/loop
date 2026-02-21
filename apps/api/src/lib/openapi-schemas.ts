@@ -1470,7 +1470,7 @@ export function generateOpenApiDocument() {
       },
     },
     servers: [
-      { url: 'http://localhost:4242', description: 'Local development' },
+      { url: 'http://localhost:5667', description: 'Local development' },
       { url: 'https://api.looped.me', description: 'Production' },
     ],
     tags: [

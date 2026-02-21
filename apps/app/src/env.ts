@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const appEnvSchema = z.object({
-  VITE_API_URL: z.string().url().default('http://localhost:4242'),
+  VITE_API_URL: z.string().url().default('http://localhost:5667'),
   VITE_LOOP_API_KEY: z.string().min(1),
 })
 

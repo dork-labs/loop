@@ -161,7 +161,7 @@ function DesktopFrame() {
         <span className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
         <span className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
         <div className="flex-1 mx-auto max-w-[180px] rounded-[3px] px-2 py-0.5 font-mono text-[9px] text-center" style={{ background: CREAM_PRIMARY, color: WARM_GRAY }}>
-          localhost:4242
+          localhost:5667
         </div>
       </div>
       {/* App body */}

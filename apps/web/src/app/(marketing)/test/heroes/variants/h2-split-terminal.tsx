@@ -31,7 +31,7 @@ const TERMINAL_LINES: TerminalLine[] = [
   { type: 'blank', text: '', pauseBefore: 80 },
   { type: 'input', prompt: '$ ', text: 'loop --dir ~/projects', pauseBefore: 600 },
   { type: 'blank', text: '', pauseBefore: 120 },
-  { type: 'output', text: '✓ Loop running on http://localhost:4242', pauseBefore: 0 },
+  { type: 'output', text: '✓ Loop running on http://localhost:5667', pauseBefore: 0 },
 ]
 
 /** Characters per second for input lines; output lines appear instantly */
@@ -263,7 +263,7 @@ function BrowserWindow() {
             margin: '0 auto',
           }}
         >
-          localhost:4242
+          localhost:5667
         </div>
       </div>
 
