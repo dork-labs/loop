@@ -2,12 +2,12 @@
   "title": "Documentation",
   "pages": [
     "getting-started",
-    "guides",
     "concepts",
+    "guides",
     "integrations",
     "api",
+    "cli",
     "self-hosting",
-    "contributing",
-    "changelog"
+    "contributing"
   ]
 }

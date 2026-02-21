@@ -1,0 +1,113 @@
+---
+title: PostHog
+description: Receive PostHog metric alerts as signals in Loop.
+---
+
+# PostHog Integration
+
+The PostHog integration receives webhook alerts for metric changes, creating signals in Loop with severity derived from the magnitude of the change.
+
+## Endpoint
+
+```
+POST /api/signals/posthog
+```
+
+## Authentication
+
+PostHog webhooks use a **shared secret** sent as a header value. Loop compares the header directly against the configured secret.
+
+- **Header:** `X-PostHog-Secret`
+- **Format:** Raw secret string (no HMAC computation)
+- **Comparison:** Timing-safe (`crypto.timingSafeEqual`)
+
+If the header is missing or the secret does not match, Loop responds with `401`.
+
+This is simpler than the HMAC-based verification used by GitHub and Sentry. PostHog sends the secret itself in the header rather than a computed signature.
+
+## Severity Mapping
+
+Loop derives severity from the absolute percentage change in the metric:
+
+| Change Magnitude | Severity |
+|---|---|
+| >= 50% | `critical` |
+| >= 25% | `high` |
+| >= 10% | `medium` |
+| < 10% | `low` |
+
+## What Gets Created
+
+Each webhook delivery creates:
+
+- A **signal** record with `source: "posthog"`, type `metric_change`, severity, and full payload.
+- A linked **issue** with type `signal`, status `triage`, and a title like `PostHog: page_load_time 35% (last_7_days)`.
+
+The issue title includes the metric name, percentage change, and timeframe.
+
+## Setup
+
+<Steps>
+
+<Step>
+### Generate a webhook secret
+
+Create a random secret string:
+
+```bash
+openssl rand -hex 32
+```
+
+Save this value for both PostHog and your Loop environment.
+</Step>
+
+<Step>
+### Set the environment variable
+
+Add the secret to your Loop API environment:
+
+```bash
+POSTHOG_WEBHOOK_SECRET=your_generated_secret_here
+```
+
+This variable must be available to the Loop API process at runtime.
+</Step>
+
+<Step>
+### Configure the webhook in PostHog
+
+1. In PostHog, go to **Data pipelines > Destinations** (or **Project Settings > Webhooks** depending on your PostHog version).
+2. Add a new webhook destination.
+3. Set the **URL** to your Loop endpoint:
+   ```
+   https://your-loop-api.example.com/api/signals/posthog
+   ```
+4. Configure the webhook to include the header `X-PostHog-Secret` with the same secret value you used for `POSTHOG_WEBHOOK_SECRET`.
+5. Select which actions or alerts should trigger the webhook (e.g., metric threshold alerts).
+6. Save and enable the destination.
+</Step>
+
+<Step>
+### Verify the connection
+
+Trigger a test event in PostHog or use a tool like `curl` to send a test payload:
+
+```bash
+curl -X POST https://your-loop-api.example.com/api/signals/posthog \
+  -H "Content-Type: application/json" \
+  -H "X-PostHog-Secret: your_generated_secret_here" \
+  -d '{"name": "test_metric", "value": 15, "timeframe": "last_7_days"}'
+```
+
+Check your Loop instance for a new signal with source `posthog`.
+</Step>
+
+</Steps>
+
+## Example Payload
+
+Loop reads the following fields from the PostHog webhook payload:
+
+- `event.name` or `name` -- the metric name, used in the issue title
+- `value` -- the percentage change, used for severity calculation and the issue title
+- `timeframe` -- the time period, used in the issue title (defaults to `recent`)

@@ -1,0 +1,128 @@
+---
+title: API Reference
+description: Complete REST API reference for the Loop autonomous improvement engine. Manage issues, signals, templates, dispatch, and more.
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card'
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# API Reference
+
+The Loop API is a REST API that exposes every capability of the engine — ingesting signals, managing issues, dispatching work to agents, and monitoring system health.
+
+## Base URL
+
+| Environment | URL |
+|-------------|-----|
+| Production | `https://api.looped.me` |
+| Local development | `http://localhost:4242` |
+
+## Authentication
+
+All `/api/*` endpoints require a Bearer token in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer <LOOP_API_KEY>" \
+  https://api.looped.me/api/issues
+```
+
+Webhook endpoints (`/api/signals/github`, `/api/signals/sentry`, `/api/signals/posthog`) use provider-specific signature verification instead of Bearer tokens.
+
+<Callout title="Full authentication guide" type="info">
+See [Authentication](/docs/getting-started/authentication) for setup instructions, webhook signature verification, and key rotation.
+</Callout>
+
+## Response Format
+
+**List endpoints** return paginated results:
+
+```json
+{
+  "data": [{ "id": "...", "..." : "..." }],
+  "total": 42
+}
+```
+
+**Single-item endpoints** return the resource directly:
+
+```json
+{
+  "data": { "id": "...", "..." : "..." }
+}
+```
+
+## Pagination
+
+List endpoints accept `page` and `limit` query parameters:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `page` | `1` | Page number (1-indexed) |
+| `limit` | `20` | Items per page |
+
+## Error Format
+
+Errors return a standard shape with an appropriate HTTP status code:
+
+```json
+{
+  "error": "Human-readable error message"
+}
+```
+
+Common status codes: `400` validation error, `401` missing or invalid token, `404` resource not found, `500` internal error.
+
+## Endpoints
+
+<Cards>
+  <Card
+    title="Issues"
+    description="Create, list, update, and delete issues. Filter by status, type, or project. Manage comments and relations."
+    href="/docs/api/api/issues/get"
+  />
+  <Card
+    title="Projects"
+    description="Organize issues into projects. Each project tracks an optional goal and aggregates issue counts."
+    href="/docs/api/api/projects/get"
+  />
+  <Card
+    title="Goals"
+    description="Define measurable goals with target values and deadlines. Link goals to projects to track progress."
+    href="/docs/api/api/goals/get"
+  />
+  <Card
+    title="Labels"
+    description="Create and manage labels for categorizing issues across projects."
+    href="/docs/api/api/labels/get"
+  />
+  <Card
+    title="Signals"
+    description="Ingest signals via the generic endpoint or through provider-specific webhooks for GitHub, Sentry, and PostHog."
+    href="/docs/api/api/signals/post"
+  />
+  <Card
+    title="Templates"
+    description="Manage prompt templates with full version history. Create versions, promote to active, and review quality."
+    href="/docs/api/api/templates/get"
+  />
+  <Card
+    title="Prompt Reviews"
+    description="Submit agent reviews of prompt quality. Reviews feed into EWMA scoring to track template health over time."
+    href="/docs/api/api/prompt-reviews/post"
+  />
+  <Card
+    title="Dispatch"
+    description="Preview the priority queue or atomically claim the next unblocked issue with a hydrated prompt."
+    href="/docs/api/api/dispatch/queue/get"
+  />
+  <Card
+    title="Dashboard"
+    description="System health stats, activity timeline with signal chains, and prompt health metrics."
+    href="/docs/api/api/dashboard/stats/get"
+  />
+  <Card
+    title="System"
+    description="Health check and service info endpoints. No authentication required."
+    href="/docs/api/health/get"
+  />
+</Cards>

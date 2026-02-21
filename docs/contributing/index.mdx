@@ -1,0 +1,268 @@
+---
+title: Contributing
+description: How to set up your development environment, run tests, maintain code quality, and contribute to Loop.
+---
+
+# Contributing to Loop
+
+This guide covers everything you need to contribute to Loop: setting up the monorepo, running tests, maintaining code quality, writing ADRs, and submitting pull requests.
+
+## Development setup
+
+### Prerequisites
+
+- **Node.js 20+**
+- **npm** (comes with Node.js)
+- **PostgreSQL** database for local development ([Neon](https://neon.tech) serverless recommended)
+
+### Clone and install
+
+```bash
+git clone https://github.com/dork-labs/loop.git
+cd loop
+npm install
+```
+
+### Environment variables
+
+Copy the example env file and fill in your values:
+
+```bash
+cp apps/api/.env.example apps/api/.env
+```
+
+The API requires the following environment variables:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `LOOP_API_KEY` | Yes | Bearer token for API authentication |
+
+Webhook secrets (`GITHUB_WEBHOOK_SECRET`, `SENTRY_CLIENT_SECRET`, `POSTHOG_WEBHOOK_SECRET`) are only needed if you are working on webhook integrations.
+
+### Start the dev servers
+
+```bash
+npm run dev
+```
+
+This starts all apps via Turborepo:
+
+- **API** at `http://localhost:4242`
+- **App** at `http://localhost:3000`
+- **Web** at `http://localhost:3001`
+
+## Monorepo structure
+
+Loop is a Turborepo monorepo with three apps:
+
+```
+loop/
+├── apps/
+│   ├── api/         # Hono API (TypeScript, Vercel Functions)
+│   ├── app/         # React 19 SPA (Vite 6, Tailwind CSS 4)
+│   └── web/         # Marketing site & docs (Next.js 16, Fumadocs)
+├── decisions/       # Architecture Decision Records (ADRs)
+├── docs/            # External docs (MDX for Fumadocs)
+├── specs/           # Feature specifications
+├── turbo.json
+└── package.json
+```
+
+Each app has its own `package.json`, `tsconfig.json`, and build configuration. The `@/*` path alias resolves to `./src/*` within each app.
+
+### Database
+
+The API uses PostgreSQL via Neon's serverless driver and Drizzle ORM. Schema files live in `apps/api/src/db/schema/` and migrations are generated into `apps/api/drizzle/migrations/`.
+
+Database commands (run from `apps/api/`):
+
+```bash
+npm run db:generate   # Generate migrations from schema changes
+npm run db:migrate    # Apply pending migrations
+npm run db:push       # Push schema directly (skips migration files)
+npm run db:studio     # Launch Drizzle Studio GUI
+```
+
+## Testing
+
+Loop uses Vitest for all tests. The workspace config at `vitest.workspace.ts` defines test projects for `apps/api`, `apps/app`, and `apps/cli`.
+
+### Running tests
+
+```bash
+npm test                                           # Run all tests
+npx vitest run apps/api/src/__tests__/example.test.ts  # Run a single file
+```
+
+### PGlite: in-memory PostgreSQL for tests
+
+API tests use **PGlite** (`@electric-sql/pglite`) instead of Docker or a live database. PGlite is a WebAssembly build of PostgreSQL that runs entirely in-process, giving you full SQL fidelity without any external dependencies.
+
+Each test gets a fresh, isolated in-memory database with all migrations applied. This means:
+
+- **No Docker required** -- tests run with zero external dependencies
+- **Full Postgres behavior** -- constraints, enums, indexes, and JSONB all work
+- **Complete isolation** -- each test starts with a clean database
+- **Fast** -- no network I/O, no container startup
+
+#### Writing a database test
+
+Use the `withTestDb()` helper to spin up an isolated database for your describe block, and `createTestApp()` to get a Hono app with the test database injected:
+
+```ts
+import { describe, expect, it } from 'vitest'
+import { withTestDb, createTestApp } from './setup'
+import { myRoute } from '../routes/my-route'
+
+describe('my route', () => {
+  withTestDb()
+
+  it('returns data', async () => {
+    const app = createTestApp()
+    app.route('/api', myRoute)
+
+    const res = await app.request('/api/my-endpoint', {
+      headers: { Authorization: `Bearer ${process.env.LOOP_API_KEY}` },
+    })
+
+    expect(res.status).toBe(200)
+  })
+})
+```
+
+The test infrastructure lives in `apps/api/src/__tests__/setup.ts`. Key exports:
+
+- `withTestDb()` -- registers `beforeEach`/`afterEach` hooks that create and tear down an isolated PGlite instance
+- `createTestApp()` -- returns a Hono app with the test database injected into request context via `c.get('db')`
+- `getTestDb()` -- returns the current test database instance for direct queries
+
+## Code quality
+
+### Linting and formatting
+
+Loop uses ESLint 9 (flat config) and Prettier. Tailwind classes are auto-sorted by `prettier-plugin-tailwindcss`.
+
+```bash
+npm run lint           # Check for lint issues
+npm run lint:fix       # Auto-fix lint issues
+npm run format:check   # Check formatting
+npm run format         # Auto-format all files
+npm run typecheck      # Type-check all packages
+```
+
+### TSDoc conventions
+
+Exported functions and classes require TSDoc comments (enforced by `eslint-plugin-jsdoc`). Use TSDoc syntax without `{type}` annotations -- TypeScript provides the types:
+
+```ts
+/**
+ * Send a message and stream the response via SSE.
+ *
+ * @param sessionId - Target session UUID
+ * @param content - User message text
+ */
+export function sendMessage(sessionId: string, content: string): Promise<void> {
+```
+
+Skip TSDoc for self-explanatory functions, simple CRUD operations, and test files (the linter rule is disabled for `__tests__/`).
+
+### Code guidelines
+
+- **File size**: Keep files under 300 lines. Files over 500 lines must be split.
+- **Complexity**: Max cyclomatic complexity of 15 per function, max 50 lines per function, max 4 levels of nesting.
+- **Naming**: Functions use verb+noun (`fetchSessions`), booleans use `is`/`has`/`should` prefix, constants use `SCREAMING_SNAKE_CASE`.
+- **DRY**: Extract logic that appears 3 or more times.
+
+## Architecture Decision Records
+
+Significant architectural decisions are documented as ADRs in the `decisions/` directory. ADRs follow the [Michael Nygard format](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) with YAML frontmatter.
+
+### ADR format
+
+Each ADR file is named `NNNN-short-description.md` and follows this structure:
+
+```markdown
+---
+number: 7
+title: Use PGLite for test database instead of Docker
+status: proposed
+created: 2026-02-19
+spec: data-layer-core-api
+superseded-by: null
+---
+
+# 7. Use PGLite for test database instead of Docker
+
+## Status
+
+Proposed
+
+## Context
+
+Why this decision was needed.
+
+## Decision
+
+What was decided.
+
+## Consequences
+
+### Positive
+
+- Good outcomes
+
+### Negative
+
+- Trade-offs
+```
+
+**Statuses**: `proposed`, `accepted`, `deprecated`, `superseded`
+
+The `decisions/manifest.json` file tracks all ADRs and assigns sequential numbers via `nextNumber`.
+
+### When to write an ADR
+
+Write an ADR when you are making a decision that:
+
+- Introduces a new technology or library
+- Changes the project structure or deployment model
+- Establishes a pattern that other contributors should follow
+- Involves trade-offs that future contributors should understand
+
+## Pull request guidelines
+
+### Before submitting
+
+1. **Run the full check suite** to catch issues early:
+
+   ```bash
+   npm run typecheck && npm run lint && npm test
+   ```
+
+2. **Write tests** for new features and bug fixes. API tests should use the PGlite test infrastructure described above.
+
+3. **Keep PRs focused** -- one feature or fix per PR. If a change touches multiple concerns, split it into separate PRs.
+
+4. **Update documentation** if your change affects public APIs, configuration, or developer workflows.
+
+### PR structure
+
+- **Title**: Short, descriptive summary (under 70 characters)
+- **Description**: Explain what changed and why. Link to any relevant issues or specs.
+- **Test plan**: Describe how the change was tested.
+
+### Commit messages
+
+Use conventional-style prefixes:
+
+- `feat:` -- new feature
+- `fix:` -- bug fix
+- `refactor:` -- code change that neither fixes a bug nor adds a feature
+- `docs:` -- documentation changes
+- `test:` -- adding or updating tests
+- `chore:` -- build, CI, or tooling changes
+
+### Specifications
+
+Feature specifications live in `specs/` with a manifest at `specs/manifest.json`. Each spec has its own directory containing ideation, specification, and task documents. Reference the relevant spec in your PR description when implementing a specified feature.

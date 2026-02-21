@@ -1,0 +1,72 @@
+---
+title: How Loop Works
+description: The core feedback loop that turns signals into validated outcomes through deterministic issue orchestration.
+---
+
+# How Loop Works
+
+Loop is an autonomous improvement engine -- an open-source data layer and prompt engine that collects signals, organizes work into issues, and tells AI agents exactly what to do next. It closes the feedback loop between observing a problem and validating that the fix worked.
+
+## The Core Loop
+
+Everything in Loop follows a single repeating cycle: observe, hypothesize, plan, execute, and verify.
+
+```
+         Signals               Triage              Hypothesize
+    +--------------+     +---------------+     +----------------+
+    | PostHog      |     | Agent picks   |     | Agent forms    |
+    | Sentry       | --> | up signal,    | --> | hypothesis     |
+    | GitHub       |     | accepts or    |     | from signal    |
+    | Manual       |     | declines      |     | + context      |
+    +--------------+     +---------------+     +----------------+
+                                                      |
+    +--------------+     +---------------+     +------v---------+
+    | Outcomes     |     | Agent writes  |     | Agent breaks   |
+    | feed back in | <-- | code, creates | <-- | hypothesis     |
+    | as new       |     | PRs, ships    |     | into tasks     |
+    | signals      |     |               |     |                |
+    +--------------+     +---------------+     +----------------+
+         Monitor              Execute                Plan
+```
+
+A signal arrives from an external source like PostHog, Sentry, or GitHub. Loop creates a triage issue. An AI agent picks it up, analyzes the signal, and either declines it as noise or creates a hypothesis. The hypothesis is broken into concrete tasks. Agents execute the tasks, ship code, and create monitoring issues to verify the outcomes. Those outcomes feed back as new signals, and the loop continues.
+
+## No AI Inside
+
+Loop contains zero LLM calls. No embeddings, no inference, no token costs, no model dependencies. Loop is a fully deterministic data system with a prompt layer.
+
+When an agent calls Loop's dispatch endpoint, Loop returns the highest-priority unblocked issue along with a hydrated prompt that tells the agent exactly what to do. The agent executes those instructions using whatever model it runs on. Loop never needs to know which model is reading its prompts.
+
+This means Loop automatically improves every time a better AI model is released -- without changing a single line of code. The quality of Loop's output depends on two things: the human-authored prompt templates stored in Loop, and the model reading them.
+
+## Five Issue Types
+
+Every unit of work in Loop is an issue. There are five types, each representing a stage in the loop:
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| **Signal** | Raw event from an external source, awaiting triage | "PostHog: sign-up conversion -12% (24h)" |
+| **Hypothesis** | A proposed explanation for a signal, with confidence and validation criteria | "OAuth redirect adds 1.5-3s blank screen, causing abandonment" |
+| **Plan** | A decomposition of a hypothesis into implementable work | "Fix OAuth redirect: add loading state, add tracking, monitor recovery" |
+| **Task** | A single unit of implementable work, completable in one agent session | "Add loading spinner to OAuth redirect page" |
+| **Monitor** | A verification check to validate or invalidate a hypothesis | "Check if conversion recovers to >3.4% within 48 hours" |
+
+These types form a progression. Signals become hypotheses. Hypotheses produce plans. Plans break down into tasks. Tasks are monitored. And monitoring outcomes feed back as new signals.
+
+## Pull Architecture
+
+Loop does not push work to agents. Agents pull work from Loop on a schedule by calling `GET /api/dispatch/next`. Loop evaluates the backlog, filters out blocked issues, scores candidates by priority, goal alignment, age, and type, and returns the highest-scoring issue with a fully hydrated prompt. The agent executes, reports back, and on the next poll receives new work. Any agent that can make HTTP calls works with Loop.
+
+## The Issue Queue Is the Orchestration Layer
+
+There is no workflow engine, no state machine, and no complex orchestration system. The issue queue itself is the orchestration layer. This gives Loop full auditability (every decision is a linked chain of issues), human override at any point (create, modify, or cancel any issue), and a unified system where planning, execution, and monitoring share the same dispatch mechanism.
+
+## What Comes Next
+
+The following pages explain each concept in detail:
+
+- [Issues](/docs/concepts/issues) -- the five issue types, lifecycle, hierarchy, and relations
+- [Signals](/docs/concepts/signals) -- how external events enter Loop and create triage work
+- [Dispatch](/docs/concepts/dispatch) -- priority scoring, template selection, and atomic claiming
+- [Prompts](/docs/concepts/prompts) -- template versioning, Handlebars hydration, and self-improving instructions
+- [Projects and Goals](/docs/concepts/projects-and-goals) -- organizing work and measuring outcomes

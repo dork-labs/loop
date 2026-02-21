@@ -1,0 +1,98 @@
+---
+title: Dashboard
+description: Navigate the Loop dashboard to monitor issues, track activity, manage goals, and review prompt health.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Dashboard
+
+The Loop dashboard is a dark-mode SPA built with React and TanStack Router. It gives you a real-time view of your issues, activity feed, goals, and prompt health from a single interface. The sidebar provides navigation between views and collapses on mobile into a hamburger menu.
+
+## Issue List
+
+The default view when you open the dashboard. It shows all issues in a filterable, paginated data table.
+
+### Filters
+
+Use the filter bar above the table to narrow results by:
+
+- **Status** — `backlog`, `todo`, `in_progress`, `done`, `canceled`
+- **Type** — `signal`, `hypothesis`, `plan`, `task`, `monitor`
+- **Project** — scope to a specific project
+- **Label** — filter by any label applied to issues
+- **Priority** — `0` (none) through `4` (low), `3` (medium), `2` (high), `1` (urgent)
+
+Filters are reflected in the URL query string, so you can bookmark or share filtered views.
+
+### Pagination
+
+The table defaults to 50 items per page. Page and limit are controlled via query parameters (`?page=1&limit=50`).
+
+## Issue Detail
+
+Click any issue in the list to open its detail view. The layout uses a two-column grid on large screens: main content on the left, metadata sidebar on the right.
+
+### Main content
+
+- **Header** — issue number, title, type badge, and status
+- **Description** — rendered as Markdown
+- **Signal data** — for `signal`-type issues, displays the source and raw payload
+- **Hypothesis data** — for `hypothesis`-type issues, shows the statement, confidence score, and validation criteria
+- **Agent results** — agent summary, linked commits, and pull requests (when an agent has worked the issue)
+- **Child issues** — sub-issues created under this parent
+- **Comments** — threaded discussion attached to the issue
+
+### Sidebar
+
+- **Metadata** — status, priority, type, project, creation date, and labels
+- **Relations** — `blocks` and `blocked_by` links to other issues
+
+<Callout type="info">
+Use the back arrow or the browser back button to return to the filtered issue list. Your filters are preserved in the URL.
+</Callout>
+
+## Activity Timeline
+
+The Activity view shows signal chains — the full lifecycle from an incoming signal through the issues it created. Each chain groups a signal with its downstream issues so you can trace how raw data turned into work.
+
+When the timeline is empty, the dashboard displays a placeholder indicating the loop is waiting for signals.
+
+## Goals
+
+The Goals view displays all defined goals in a two-column card grid. Each goal card shows:
+
+- **Title** — the goal name
+- **Progress** — current value vs. target value with units (e.g., `72ms / 50ms`)
+- **Status** — `active`, `completed`, or `paused`
+
+Goals are tied to projects and influence issue prioritization. Issues in a project with an active goal receive a scoring bonus during dispatch.
+
+## Prompt Health
+
+The Prompt Health view lists every prompt template registered in the system. Each card surfaces:
+
+- **Template name and slug** — identifies the template
+- **Active version** — which version is currently being dispatched
+- **Usage count** — how many times the active version has been used
+- **Review scores** — EWMA-weighted averages for clarity, completeness, and relevance (1-5 scale)
+- **Overall score** — combined health metric
+
+Templates appear here automatically when the dispatch engine begins using them. If no templates exist yet, the view shows a placeholder.
+
+## Keyboard Shortcuts
+
+The dashboard supports keyboard shortcuts for fast navigation. Press `?` at any time to open the shortcuts help dialog.
+
+| Shortcut | Action |
+|----------|--------|
+| `g` then `i` | Go to Issues |
+| `g` then `a` | Go to Activity |
+| `g` then `g` | Go to Goals |
+| `g` then `p` | Go to Prompts |
+| `Cmd+B` / `Ctrl+B` | Toggle sidebar |
+| `?` | Open keyboard shortcuts help |
+
+<Callout type="info">
+Navigation shortcuts use a two-key sequence: press `g` first, then the second key. The sidebar toggle uses the platform modifier key — `Cmd` on macOS, `Ctrl` on Windows and Linux.
+</Callout>

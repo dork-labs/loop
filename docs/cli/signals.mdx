@@ -1,0 +1,112 @@
+---
+title: Signals
+description: Submit manual signals from the command line using the looped CLI.
+---
+
+# Signals
+
+The `signal` command submits a manual signal to Loop. A signal represents raw data from an external source (error, metric, user feedback). When submitted, Loop creates both a Signal record and a linked triage Issue automatically.
+
+## looped signal
+
+```bash
+looped signal <message> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `message` | Signal message text (required) |
+
+### Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--source <s>` | `manual` | Signal source identifier |
+| `--severity <sev>` | `medium` | Severity level: `critical`, `high`, `medium`, `low` |
+| `--project <id>` | none | Project ID to associate with |
+
+### Examples
+
+Submit a basic signal:
+
+```bash
+looped signal "Checkout error rate spike: 5.2% to 12.1%"
+```
+
+Submit a high-severity signal:
+
+```bash
+looped signal "Database connection pool exhausted" --severity high
+```
+
+Submit with a custom source and project:
+
+```bash
+looped signal "Memory usage exceeding 90% threshold" \
+  --source monitoring \
+  --severity critical \
+  --project clx1abc2def3ghi4jkl5mnop
+```
+
+Use in a CI pipeline with environment variables:
+
+```bash
+LOOP_API_URL=https://api.looped.me \
+LOOP_API_TOKEN=tok_... \
+looped signal --severity high "Deploy failed: exit code 1"
+```
+
+Output as JSON:
+
+```bash
+looped signal "Test failure in auth module" --json
+```
+
+### Sample output
+
+```
+Signal created: clx7sig1nal2abc3def4ghij
+Linked issue: #46 Checkout error rate spike: 5.2% to 12.1%
+```
+
+### JSON output
+
+When using `--json`, the full response is printed:
+
+```json
+{
+  "data": {
+    "signal": {
+      "id": "clx7sig1nal2abc3def4ghij",
+      "source": "manual",
+      "type": "manual-signal",
+      "severity": "medium",
+      "payload": {
+        "message": "Checkout error rate spike: 5.2% to 12.1%"
+      },
+      "issueId": "clx8iss2uea3bcd4efg5hijk",
+      "createdAt": "2026-02-20T10:30:00.000Z"
+    },
+    "issue": {
+      "id": "clx8iss2uea3bcd4efg5hijk",
+      "number": 46,
+      "title": "Checkout error rate spike: 5.2% to 12.1%",
+      "type": "signal",
+      "status": "triage",
+      "priority": 3
+    }
+  }
+}
+```
+
+### How signals work
+
+When you submit a signal, the API:
+
+1. Creates a **Signal** record with the source, severity, and payload
+2. Creates a linked **Issue** with `type: signal` and `status: triage`
+3. Returns both the signal and the issue
+
+The new issue appears in the triage queue, where it can be reviewed with [`looped triage`](/docs/cli/triage).

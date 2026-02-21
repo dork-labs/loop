@@ -1,0 +1,90 @@
+---
+title: Issues
+description: The atomic unit of work in Loop -- five types representing every stage of the feedback loop.
+---
+
+# Issues
+
+Everything in Loop is an issue. Signals, hypotheses, plans, tasks, and monitors are all the same entity with different types. This single abstraction replaces the need for separate systems for event processing, project planning, task management, and outcome verification.
+
+## Issue Types
+
+Each issue type represents a stage in the feedback loop:
+
+**Signal** -- A raw event from an external source that needs triage. Signals carry metadata about their source (PostHog, Sentry, GitHub, manual) and the raw event payload. When ingested, Loop automatically creates a triage issue.
+
+**Hypothesis** -- A proposed explanation for a signal, including a statement, confidence level (0.0-1.0), supporting evidence, and validation criteria. An agent triaging a signal creates a hypothesis as a child issue.
+
+**Plan** -- A decomposition step that breaks a hypothesis into implementable work. The agent creates sibling task issues and sets up blocking relations to define execution order.
+
+**Task** -- A single unit of implementable work, completable in one agent session. If a task is too large for one session, it should be broken into smaller tasks.
+
+**Monitor** -- A verification check that observes outcomes after tasks are completed. If the hypothesis's validation criteria are met, the hypothesis is validated. If not, the monitor creates a new signal, triggering another loop iteration.
+
+## Issue Lifecycle
+
+Every issue moves through a status progression:
+
+| Status | Meaning |
+|--------|---------|
+| `triage` | Newly created, awaiting initial review (default for signals) |
+| `backlog` | Accepted but not yet prioritized for work |
+| `todo` | Ready for dispatch -- only `todo` issues are eligible for `GET /api/dispatch/next` |
+| `in_progress` | Claimed by an agent and currently being worked on |
+| `done` | Completed successfully |
+| `canceled` | Declined, abandoned, or invalidated |
+
+The dispatch endpoint only selects issues with `todo` status. When an issue is claimed, its status is atomically set to `in_progress` to prevent double-dispatch. Agents report completion by updating the status to `done` or `canceled` via `PATCH /api/issues/:id`.
+
+## Priority
+
+Issues carry an integer priority from 0 to 4:
+
+| Value | Label | Score Weight |
+|-------|-------|-------------|
+| 1 | Urgent | 100 |
+| 2 | High | 75 |
+| 3 | Medium | 50 |
+| 4 | Low | 25 |
+| 0 | None | 10 |
+
+Priority is one of four factors used by the dispatch scoring algorithm. The others are goal alignment, issue age, and issue type. See [Dispatch](/docs/concepts/dispatch) for the full scoring formula.
+
+## Hierarchy: One Level Deep
+
+Issues support parent-child relationships, but only one level deep. An issue with a parent cannot itself be a parent. This constraint keeps the data model flat and predictable.
+
+```
+Signal #31: "PostHog: sign-up conversion -12%"
+  |-- Hypothesis #35: "OAuth redirect caused conversion drop"
+  |-- Task #42: "Add loading spinner" (blocks #46)
+  |-- Task #43: "Add PostHog tracking"
+  |-- Monitor #46: "Monitor conversion recovery" (blocked by #42)
+```
+
+All children are siblings under a common parent. The loop chain (signal to hypothesis to tasks to monitor) is expressed as sibling issues with relations, not as a deep tree. This means agents never need to reason about deep hierarchies, the dispatch endpoint requires no recursive queries, and the dashboard remains simple.
+
+## Relations
+
+Issues can be linked to each other through four relation types:
+
+| Type | Meaning |
+|------|---------|
+| `blocks` | This issue must complete before the target can be dispatched |
+| `blocked_by` | This issue cannot be dispatched until the source completes |
+| `related` | Informational link providing context |
+| `duplicate` | This issue duplicates the target |
+
+The `blocks` and `blocked_by` relations are critical for dispatch. The dispatch endpoint excludes any issue where an unresolved `blocked_by` relation points to an issue that is not yet `done` or `canceled`. This is how execution ordering works without a workflow engine.
+
+## Labels
+
+Labels provide flat categorization for issues. Some labels are system-managed: `prompt-improvement` marks issues auto-created by the prompt improvement loop, and `meta` marks issues about Loop itself. Labels are assigned via a many-to-many join table and can be used as conditions in prompt template selection.
+
+## Comments
+
+Both agents and humans communicate on issues through threaded comments. Each comment has an `authorType` field (`human` or `agent`) so the system can distinguish between human guidance and agent reports. Comments support threading via a `parentId` field for reply chains.
+
+## Soft Delete
+
+Deleting an issue sets a `deletedAt` timestamp rather than removing the row. Soft-deleted issues are excluded from list queries and the dispatch queue but remain in the database for auditability. The full history of every issue, including deleted ones, is preserved.

@@ -16,6 +16,7 @@ import { promptReviewRoutes } from './routes/prompt-reviews'
 import { dispatchRoutes } from './routes/dispatch'
 import { dashboardRoutes } from './routes/dashboard'
 import { webhookRoutes } from './routes/webhooks'
+import { openapiRoutes } from './routes/openapi'
 import type { AppEnv } from './types'
 
 const app = new Hono<AppEnv>()
@@ -48,6 +49,9 @@ app.get('/health', (c) =>
   c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() })
 )
 app.get('/', (c) => c.json({ name: 'Loop API', version: '0.1.0' }))
+
+// OpenAPI spec (no auth — public documentation endpoint)
+app.route('/api/openapi.json', openapiRoutes)
 
 // Protected API routes — all /api/* endpoints require a valid Bearer token.
 const api = new Hono<AppEnv>()

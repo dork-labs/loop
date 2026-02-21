@@ -1,0 +1,64 @@
+---
+title: Projects and Goals
+description: How Loop organizes issues into projects and measures outcomes against measurable goals.
+---
+
+# Projects and Goals
+
+Projects and goals provide strategic structure to Loop's issue queue. Without them, the loop optimizes locally -- fixing the latest bug, triaging the newest signal. With projects and goals, agents have context for prioritization and a way to measure whether the work they are doing is actually producing results.
+
+## Projects
+
+A project groups related issues toward a shared objective. A project called "Improve onboarding" collects all the signals, hypotheses, and tasks related to that effort into a single filterable view.
+
+Projects have a name, an optional description (in Markdown for project briefs), and standard timestamps. Issues are linked to projects via a `projectId` foreign key. An issue can belong to at most one project, or to no project at all.
+
+Projects serve three purposes in Loop:
+
+**Organization** -- The dashboard can filter issues by project, giving a focused view of all work related to a specific effort. The dispatch queue can also be filtered by project using the `projectId` query parameter on `/api/dispatch/next`, allowing teams to dedicate agent capacity to specific projects.
+
+**Template scoping** -- Prompt templates can be scoped to a project via the template's `projectId` field. A project-scoped template always takes priority over a non-scoped template during dispatch, regardless of specificity scores. This lets teams customize agent instructions for specific projects without affecting the global templates.
+
+**Priority boost** -- When a project has an active goal attached, all issues in that project receive a +20 goal alignment bonus in the dispatch scoring formula. This biases the dispatch queue toward work that is strategically aligned, without requiring manual priority adjustments on individual issues.
+
+## Goals
+
+A goal is a measurable success indicator attached to a project. Goals answer the fundamental question: is the work we are doing actually improving things?
+
+Each goal stores:
+
+| Field | Description |
+|-------|-------------|
+| `title` | Human-readable objective, such as "Increase sign-up conversion to 4%" |
+| `description` | Optional context about why this goal matters |
+| `targetDate` | Optional deadline for achieving the goal |
+| `status` | `active`, `completed`, or `cancelled` |
+| `projectId` | The project this goal belongs to (optional) |
+
+Goals are linked to projects. A project can have one associated goal, giving the project a measurable definition of success.
+
+## How Goals Affect the Loop
+
+Goals influence Loop's behavior in two ways:
+
+**Dispatch scoring** -- Issues belonging to a project with an active goal receive a +20 bonus in the priority scoring formula. This means that when two issues have equal priority, type, and age, the one aligned with an active goal will be dispatched first. The bonus is modest enough that urgent issues still take precedence, but consistent enough to maintain strategic focus.
+
+**Agent context** -- When a prompt template is hydrated, the goal's details are included in the context. The `{{goal.*}}` variables give the agent visibility into what the project is trying to achieve, including the target value, current value, unit, and status. This context helps agents make better decisions about scope and approach.
+
+For example, an agent working on a task within the "Improve onboarding" project sees the goal title, current progress (3.2%), and target (4.0%), giving it strategic context for implementation decisions.
+
+## The Measurement Feedback Loop
+
+Goals close the outer measurement loop. The inner loop runs from signal to hypothesis to tasks to monitoring. The outer loop asks: across all of those inner cycles, are we making progress toward our objectives?
+
+When a monitoring issue checks outcomes, it can update the goal's progress via the API. The dashboard shows this progress over time. If progress stalls, teams can review whether the loop is producing strategically valuable work.
+
+## Projects Without Goals
+
+Not every project needs a goal. Exploratory projects, maintenance work, and infrastructure improvements may not have a single measurable metric. Issues in these projects still benefit from project-level organization and template scoping; they just do not receive the goal alignment bonus during dispatch.
+
+## Dashboard and API
+
+The goals dashboard provides an overview of all active goals with progress indicators, linked project status, and contributing issues. The issue list can be filtered by project for a focused view of all work related to a specific effort.
+
+Projects and goals are managed through the REST API (`POST /api/projects`, `POST /api/goals`). Issues are linked to projects at creation time or by updating existing issues with a `projectId`.

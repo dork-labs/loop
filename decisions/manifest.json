@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 18,
+  "nextNumber": 19,
   "decisions": [
     {
       "number": 1,
@@ -136,6 +136,15 @@
       "created": "2026-02-20",
       "extractedFrom": "mvp-phase-4-cli-tool",
       "specSlug": "mvp-phase-4-cli-tool"
+    },
+    {
+      "number": 18,
+      "slug": "use-zod-to-openapi-for-api-docs",
+      "title": "Use @asteasolutions/zod-to-openapi for API documentation generation",
+      "status": "draft",
+      "created": "2026-02-20",
+      "extractedFrom": "docs-update-post-mvp",
+      "specSlug": "docs-update-post-mvp"
     }
   ]
 }

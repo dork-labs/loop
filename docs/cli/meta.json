@@ -1,0 +1,4 @@
+{
+  "title": "CLI Reference",
+  "pages": ["issues", "signals", "triage", "templates", "dispatch", "status"]
+}

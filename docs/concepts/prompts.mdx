@@ -1,0 +1,78 @@
+---
+title: Prompts
+description: Template versioning, Handlebars hydration, conditions-based selection, and self-improving instructions through EWMA review scoring.
+---
+
+# Prompts
+
+Loop's prompt system is the core of its value. It selects the right instructions for each issue, fills them with rich context from the database, and improves them over time through agent feedback. The entire system is deterministic -- no AI is involved in template selection or hydration.
+
+## Template Structure
+
+A prompt template has an identity (slug and name), a set of conditions that control when it is used, a specificity score for ranking among matches, and a pointer to its currently active version.
+
+Templates are identified by slug (such as `signal-triage` or `posthog-metric-triage`). Each template can be scoped to a project via `projectId`, making it possible to have project-specific instructions that override the defaults.
+
+## Conditions and Selection
+
+Each template carries a `conditions` object that defines when it should be selected. The available condition fields are:
+
+| Field | Type | Matches When |
+|-------|------|-------------|
+| `type` | string | Issue type equals the specified value |
+| `signalSource` | string | Signal source matches (for signal-type issues) |
+| `labels` | string[] | Issue has all specified labels |
+| `projectId` | string | Issue belongs to the specified project |
+| `hasFailedSessions` | boolean | Issue or its siblings have previous failed agent sessions |
+| `hypothesisConfidence` | number | Hypothesis confidence meets or exceeds the threshold |
+
+All conditions use AND logic: every condition specified must match. An empty conditions object `{}` matches all issues.
+
+The `specificity` field (an integer, typically 10-100) determines priority when multiple templates match. A template with conditions `type: "signal", signalSource: "posthog"` at specificity 20 beats a template with only `type: "signal"` at specificity 10. Project-scoped templates always rank above non-project-scoped templates, regardless of specificity.
+
+This is pattern matching, not AI. The most specific match wins, every time, deterministically.
+
+## Version Management
+
+Template content is versioned. Every edit to a template creates a new `PromptVersion` record with an incrementing version number. A template's `activeVersionId` points to the version currently used for dispatch.
+
+Each version stores:
+
+- **content** -- The Handlebars template text
+- **changelog** -- What changed from the previous version
+- **authorType** -- Whether the version was written by a human or an agent
+- **status** -- `draft`, `active`, or `retired`
+- **usageCount** -- How many times this version has been dispatched
+- **reviewScore** -- The EWMA score computed from agent feedback (see below)
+
+New versions start as `draft`. A human promotes a version to `active` via the API (`POST /api/templates/:id/versions/:versionId/promote`), which also retires the previously active version. This workflow ensures that changes to instructions are reviewed before they affect agent behavior.
+
+## Handlebars Hydration
+
+The active version's content is a Handlebars template. When an issue is dispatched, Loop assembles a context object from the database and renders the template. The context includes `issue.*` (all issue fields), `parent.*`, `siblings`, `children`, `project.*`, `goal.*`, `labels`, `blocking`, `blockedBy`, `previousSessions`, `loopUrl`, `loopToken`, and `meta.*` (template/version IDs for reviews).
+
+Templates use standard Handlebars syntax: `{{issue.title}}` for values, `{{#if parent}}...{{/if}}` for conditionals, `{{#each siblings}}...{{/each}}` for iteration. A `json` helper renders JSONB fields, and a `priority_label` helper converts priority integers to labels.
+
+Shared partials factor out reusable sections: `{{> api_reference}}` (curl examples), `{{> review_instructions}}` (how to submit reviews), `{{> parent_context}}`, and `{{> project_and_goal_context}}`.
+
+## EWMA Review Scoring
+
+After completing work, agents rate the prompt they were given across three dimensions: clarity (1-5), completeness (1-5), and relevance (1-5). These three scores are averaged into a composite score for each review.
+
+Loop tracks prompt quality using an Exponentially Weighted Moving Average (EWMA) rather than a simple arithmetic mean. The EWMA formula is:
+
+```
+new_score = alpha * composite + (1 - alpha) * previous_score
+```
+
+Loop uses an alpha of 0.3, meaning each new review contributes 30% to the updated score and the historical average contributes 70%. For the first review, the composite score becomes the initial EWMA value.
+
+EWMA has two advantages over a simple average. First, it gives more weight to recent reviews, so the score reflects current template quality rather than historical averages that may no longer be relevant. Second, it is computationally simple -- a single multiplication and addition per review, requiring no storage of the full review history for score calculation.
+
+## The Prompt Improvement Loop
+
+When the EWMA score drops below 3.5 (after at least 3 reviews) or a version accumulates 15+ reviews, Loop auto-creates a `task` issue titled "Improve prompt template: \{slug\}" with `prompt-improvement` and `meta` labels. An agent picks it up, reads accumulated feedback, and drafts a new version. This creates a meta-loop: agents use prompts, review them, and improve them through the same dispatch mechanism as all other work.
+
+## Default Templates
+
+Loop ships with five default templates, one per issue type: `signal-triage`, `hypothesis-planning`, `task-execution`, `plan-decomposition`, and `monitor-check`. Each has specificity 10 and matches only on issue type. Teams create more specific templates that override defaults for particular signal sources, projects, or label combinations.

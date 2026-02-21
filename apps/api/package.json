@@ -12,9 +12,11 @@
     "db:migrate": "node --experimental-strip-types src/db/migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "test": "vitest run"
+    "test": "vitest run",
+    "openapi:export": "tsx scripts/export-openapi.ts"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@hono/zod-validator": "^0.7.6",
     "@neondatabase/serverless": "^1.0.2",
     "@paralleldrive/cuid2": "^3.3.0",

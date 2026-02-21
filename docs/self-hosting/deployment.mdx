@@ -1,0 +1,232 @@
+---
+title: Deployment Guide
+description: Step-by-step instructions for deploying Loop on Vercel or manually on your own infrastructure.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+
+# Deployment Guide
+
+Loop is a Turborepo monorepo with three deployable apps. This guide covers deploying the **API server** and **Dashboard**. The marketing site (`@loop/web`) is optional for self-hosting.
+
+## Prerequisites
+
+Before deploying, make sure you have:
+
+- A **PostgreSQL 15+** database (Neon recommended for Vercel deployments)
+- All required [environment variables](/docs/self-hosting/environment) ready
+- **Node.js 20+** installed (for manual deployments)
+
+## Vercel Deployment
+
+Vercel is the recommended deployment platform. The Hono API server auto-detects the Vercel Functions runtime, and the React dashboard deploys as a static site.
+
+### Deploy the API
+
+<Steps>
+<Step>
+### Import the repository
+
+Go to [vercel.com/new](https://vercel.com/new) and import your Loop repository from GitHub.
+</Step>
+
+<Step>
+### Configure the project
+
+Set the **Root Directory** to `apps/api`. Vercel will detect it as a Node.js project.
+
+Set the **Build Command** to:
+```
+npm run build
+```
+
+Set the **Output Directory** to `dist`.
+</Step>
+
+<Step>
+### Set environment variables
+
+In the Vercel project settings, add the following environment variables:
+
+- `DATABASE_URL` -- Your Neon PostgreSQL connection string
+- `LOOP_API_KEY` -- A secure API key (see [Environment Variables](/docs/self-hosting/environment#loop_api_key) for generation instructions)
+
+Add webhook secrets only if you plan to use those integrations:
+- `GITHUB_WEBHOOK_SECRET`
+- `SENTRY_CLIENT_SECRET`
+- `POSTHOG_WEBHOOK_SECRET`
+</Step>
+
+<Step>
+### Run database migrations
+
+After the first deployment, run migrations against your production database. You can do this from your local machine with the production `DATABASE_URL`:
+
+```bash
+DATABASE_URL="your-production-connection-string" npm run db:migrate -w apps/api
+```
+</Step>
+
+<Step>
+### Deploy
+
+Click **Deploy**. Vercel will build the API and deploy it as serverless functions. The API will be available at your Vercel project URL (e.g., `https://loop-api.vercel.app`).
+</Step>
+</Steps>
+
+### Deploy the Dashboard
+
+<Steps>
+<Step>
+### Create a separate Vercel project
+
+Import the same repository again as a new Vercel project. Set the **Root Directory** to `apps/app`.
+
+Set the **Build Command** to:
+```
+npm run build
+```
+
+Set the **Output Directory** to `dist`.
+</Step>
+
+<Step>
+### Set environment variables
+
+- `VITE_API_URL` -- The URL of your deployed API (e.g., `https://loop-api.vercel.app`)
+- `VITE_LOOP_API_KEY` -- The same API key you set as `LOOP_API_KEY` on the API server
+</Step>
+
+<Step>
+### Deploy
+
+Click **Deploy**. The dashboard will be available at your Vercel project URL (e.g., `https://loop-app.vercel.app`).
+</Step>
+</Steps>
+
+<Callout type="warn">
+The dashboard embeds the API key into the client-side bundle at build time. Only deploy the dashboard behind authentication or restrict access to trusted networks.
+</Callout>
+
+## Manual Deployment
+
+For deployments on your own infrastructure (VPS, EC2, bare metal, etc.).
+
+### Build the Apps
+
+From the repository root, install dependencies and build all apps:
+
+```bash
+npm install
+npm run build
+```
+
+This produces:
+- `apps/api/dist/` -- Compiled API server
+- `apps/app/dist/` -- Static dashboard files
+
+### Set Up the Database
+
+<Steps>
+<Step>
+### Provision PostgreSQL
+
+Set up a PostgreSQL 15+ instance. You can use:
+- [Neon](https://neon.tech) (serverless, free tier available)
+- Self-hosted PostgreSQL
+- Any managed PostgreSQL service (AWS RDS, Google Cloud SQL, etc.)
+</Step>
+
+<Step>
+### Configure the connection
+
+Set the `DATABASE_URL` environment variable:
+
+```bash
+export DATABASE_URL="postgresql://user:password@host:5432/loop"
+```
+</Step>
+
+<Step>
+### Run migrations
+
+Apply the database schema:
+
+```bash
+npm run db:migrate -w apps/api
+```
+
+This creates all required tables. Run this command again after pulling updates that include new migrations.
+</Step>
+</Steps>
+
+### Run the API Server
+
+Set the required environment variables and start the server:
+
+```bash
+export DATABASE_URL="postgresql://user:password@host:5432/loop"
+export LOOP_API_KEY="tok_your_secret_key_here"
+
+# Start the API server (port 4242 by default)
+node apps/api/dist/index.js
+```
+
+The API server listens on port 4242 by default. Place it behind a reverse proxy (nginx, Caddy, etc.) for TLS termination and custom domains.
+
+<Callout type="info">
+In production, use a process manager like [PM2](https://pm2.keymetrics.io/) or systemd to keep the API running and restart it on failure.
+</Callout>
+
+### Serve the Dashboard
+
+The dashboard build output (`apps/app/dist/`) is a set of static files. Serve them with any web server:
+
+**Using nginx:**
+
+```nginx
+server {
+    listen 80;
+    server_name app.example.com;
+    root /path/to/loop/apps/app/dist;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+**Using Caddy:**
+
+```
+app.example.com {
+    root * /path/to/loop/apps/app/dist
+    try_files {path} /index.html
+    file_server
+}
+```
+
+The `try_files` directive is required because the dashboard is a single-page application with client-side routing.
+
+<Callout type="info">
+Remember to set `VITE_API_URL` and `VITE_LOOP_API_KEY` before building the dashboard, since these values are embedded at build time.
+</Callout>
+
+### Health Check
+
+Verify the API is running by hitting the health endpoint:
+
+```bash
+curl https://your-api-url/health
+```
+
+Expected response:
+
+```json
+{
+  "ok": true,
+  "service": "loop-api",
+  "timestamp": "2026-02-20T12:00:00.000Z"
+}
+```

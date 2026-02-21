@@ -1,0 +1,40 @@
+---
+title: Integrations
+description: Connect external tools and services to Loop via webhooks.
+---
+
+# Integrations
+
+Loop receives signals from external tools through **webhook endpoints**. Each integration listens for provider-specific events, verifies authenticity, and automatically creates a signal and linked issue in your Loop instance.
+
+## Supported Providers
+
+| Provider | Endpoint | Auth Method | Signal Types |
+|----------|----------|-------------|--------------|
+| [GitHub](/docs/integrations/github) | `POST /api/signals/github` | HMAC-SHA256 (`X-Hub-Signature-256`) | Push, PR, issues, security alerts, Dependabot |
+| [Sentry](/docs/integrations/sentry) | `POST /api/signals/sentry` | HMAC-SHA256 (`Sentry-Hook-Signature`) | Errors, warnings, fatal crashes |
+| [PostHog](/docs/integrations/posthog) | `POST /api/signals/posthog` | Shared secret (`X-PostHog-Secret`) | Metric change alerts |
+
+## How It Works
+
+Every webhook integration follows the same pattern:
+
+1. **Receive** -- Loop receives an HTTP POST from the provider.
+2. **Verify** -- The request signature or secret is checked against your configured environment variable. Invalid requests are rejected with `401`.
+3. **Map** -- The payload is mapped to a severity level (`critical`, `high`, `medium`, `low`) using provider-specific logic.
+4. **Create** -- A `signal` record and a linked `issue` (type `signal`, status `triage`) are created atomically in a database transaction.
+
+The created issue inherits a priority derived from the severity mapping:
+
+| Severity | Priority |
+|----------|----------|
+| `critical` | 1 (urgent) |
+| `high` | 2 |
+| `medium` | 3 |
+| `low` | 4 |
+
+## Security
+
+All webhook endpoints use **timing-safe comparison** (`crypto.timingSafeEqual`) to prevent timing attacks when verifying signatures or secrets. If the corresponding environment variable is not set, the endpoint returns `500` rather than silently accepting unverified requests.
+
+Webhook endpoints use provider-specific authentication and are **not** behind the standard `Authorization: Bearer` API key middleware.

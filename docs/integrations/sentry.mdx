@@ -1,0 +1,101 @@
+---
+title: Sentry
+description: Receive Sentry error alerts as signals in Loop.
+---
+
+# Sentry Integration
+
+The Sentry integration receives webhook alerts for errors and exceptions, creating signals in Loop with severity derived from the error level and event count.
+
+## Endpoint
+
+```
+POST /api/signals/sentry
+```
+
+## Authentication
+
+Sentry signs webhook deliveries with **HMAC-SHA256**. Loop verifies this signature before processing.
+
+- **Header:** `Sentry-Hook-Signature`
+- **Format:** Raw hex digest (no prefix)
+- **Algorithm:** HMAC-SHA256 of the **canonicalized** JSON body using `SENTRY_CLIENT_SECRET`
+- **Canonicalization:** The request body is parsed as JSON and re-serialized with `JSON.stringify` to produce a canonical form before computing the HMAC
+- **Comparison:** Timing-safe (`crypto.timingSafeEqual`)
+
+If the header is missing or the signature does not match, Loop responds with `401`.
+
+## Severity Mapping
+
+Loop derives severity from the Sentry error level and event count:
+
+| Condition | Severity |
+|---|---|
+| Level is `fatal` | `critical` |
+| Level is `error` and count >= 100 | `critical` |
+| Level is `error` | `high` |
+| Level is `warning` | `medium` |
+| All other levels | `low` |
+
+## What Gets Created
+
+Each webhook delivery creates:
+
+- A **signal** record with `source: "sentry"`, the action type (e.g., `event`), severity, and full payload.
+- A linked **issue** with type `signal`, status `triage`, and a title like `Sentry: TypeError: undefined is not a function (523 events)`.
+
+The signal's `sourceId` is set to the Sentry issue ID when available.
+
+## Setup
+
+<Steps>
+
+<Step>
+### Locate your Sentry client secret
+
+In Sentry, go to **Settings > Developer Settings > Your Internal Integration** (or create a new one). The **Client Secret** is displayed on the integration's credentials page.
+
+Alternatively, for webhook-based integrations under **Settings > Integrations > Webhooks**, Sentry provides a signing secret.
+</Step>
+
+<Step>
+### Set the environment variable
+
+Add the client secret to your Loop API environment:
+
+```bash
+SENTRY_CLIENT_SECRET=your_sentry_client_secret_here
+```
+
+This variable must be available to the Loop API process at runtime.
+</Step>
+
+<Step>
+### Configure the webhook in Sentry
+
+1. Go to **Settings > Developer Settings** and create or edit an internal integration.
+2. Set the **Webhook URL** to your Loop endpoint:
+   ```
+   https://your-loop-api.example.com/api/signals/sentry
+   ```
+3. Under **Webhooks**, enable the event types you want to receive (e.g., `issue`, `error`, `event_alert`).
+4. Save the integration.
+</Step>
+
+<Step>
+### Verify the connection
+
+Trigger a test alert in Sentry or wait for a real error to occur. Check your Loop instance for a new signal with source `sentry`. Verify the issue was created with the correct severity based on the error level and event count.
+</Step>
+
+</Steps>
+
+## Example Payload
+
+Loop reads the following fields from the Sentry webhook payload:
+
+- `data.issue.title` or `data.error.title` -- used in the issue title
+- `data.issue.count` or `data.error.count` -- used for severity calculation
+- `data.issue.level` or `data.error.level` -- used for severity calculation
+- `data.issue.id` -- used as the signal's `sourceId`
+- `action` -- used as the signal's event type (defaults to `event`)

@@ -1,0 +1,108 @@
+---
+title: GitHub
+description: Receive GitHub webhook events as signals in Loop.
+---
+
+# GitHub Integration
+
+The GitHub integration receives webhook events and creates signals in Loop. Security advisories, code scanning alerts, pull requests, issues, and pushes are all supported.
+
+## Endpoint
+
+```
+POST /api/signals/github
+```
+
+## Authentication
+
+GitHub signs every webhook delivery with an **HMAC-SHA256** signature. Loop verifies this signature before processing any payload.
+
+- **Header:** `X-Hub-Signature-256`
+- **Format:** `sha256=<hex-digest>`
+- **Algorithm:** HMAC-SHA256 of the raw request body using `GITHUB_WEBHOOK_SECRET`
+- **Comparison:** Timing-safe (`crypto.timingSafeEqual`) to prevent timing attacks
+
+If the header is missing or the signature does not match, Loop responds with `401`.
+
+## Severity Mapping
+
+Loop maps GitHub event types to severity levels:
+
+| GitHub Event | Severity |
+|---|---|
+| `security_advisory` | `critical` |
+| `code_scanning_alert` | `critical` |
+| `dependabot_alert` | `high` |
+| `issues` | `medium` |
+| `pull_request` | `low` |
+| `push` | `low` |
+| `issue_comment` | `low` |
+| Other events | `medium` (default) |
+
+## What Gets Created
+
+Each webhook delivery creates:
+
+- A **signal** record with `source: "github"`, the event type, severity, and full payload.
+- A linked **issue** with type `signal`, status `triage`, and a title like `GitHub: push on acme/repo by octocat`.
+
+The issue title includes the event type, repository full name, and the actor's login.
+
+## Setup
+
+<Steps>
+
+<Step>
+### Generate a webhook secret
+
+Create a random secret string. Use a cryptographically secure method:
+
+```bash
+openssl rand -hex 32
+```
+
+Save this value -- you will need it for both GitHub and your Loop environment.
+</Step>
+
+<Step>
+### Set the environment variable
+
+Add the secret to your Loop API environment:
+
+```bash
+GITHUB_WEBHOOK_SECRET=your_generated_secret_here
+```
+
+This variable must be available to the Loop API process at runtime.
+</Step>
+
+<Step>
+### Configure the webhook in GitHub
+
+1. Go to your repository (or organization) **Settings > Webhooks > Add webhook**.
+2. Set **Payload URL** to your Loop endpoint:
+   ```
+   https://your-loop-api.example.com/api/signals/github
+   ```
+3. Set **Content type** to `application/json`.
+4. Set **Secret** to the same value you used for `GITHUB_WEBHOOK_SECRET`.
+5. Choose which events to send. Recommended: **Send me everything** or select specific events like `push`, `pull_request`, `issues`, `security_advisory`, `code_scanning_alert`, and `dependabot_alert`.
+6. Ensure **Active** is checked and click **Add webhook**.
+</Step>
+
+<Step>
+### Verify the connection
+
+GitHub sends a `ping` event when the webhook is first created. Check your Loop instance for a new signal with source `github`. You can also use the GitHub webhook **Recent Deliveries** tab to confirm a `2xx` response.
+</Step>
+
+</Steps>
+
+## Example Payload
+
+The full GitHub webhook payload is stored in the signal's `payload` field and the issue's `signalPayload` field. Loop reads the following fields:
+
+- `repository.full_name` -- used in the issue title
+- `sender.login` -- used in the issue title
+- `action` -- combined with the event type for the signal's `sourceId`
+- `X-GitHub-Event` header -- determines the event type and severity

@@ -1,0 +1,38 @@
+---
+title: Self-Hosting
+description: Deploy and run Loop on your own infrastructure. Understand the system requirements, architecture, and deployment options.
+---
+
+# Self-Hosting
+
+Loop is fully open source and designed to be self-hosted. You can deploy it on Vercel with zero configuration, run it on any Node.js server, or containerize it for your own infrastructure.
+
+## Architecture
+
+A Loop deployment consists of three components:
+
+- **API server** (`@loop/api`) -- A Hono TypeScript API that handles all data operations, signal ingestion, and prompt dispatch. Runs as Vercel Functions in production or as a standalone Node.js process.
+- **Dashboard** (`@loop/app`) -- A React 19 SPA that provides a visual interface for managing issues, viewing activity, and monitoring prompt health. Deployed as static files.
+- **Marketing site** (`@loop/web`) -- A Next.js site with Fumadocs for documentation. Optional for self-hosting.
+
+The only external dependency is a **PostgreSQL database**. Loop recommends [Neon](https://neon.tech) for serverless PostgreSQL, but any PostgreSQL 15+ instance works.
+
+## System Requirements
+
+| Requirement | Minimum |
+|-------------|---------|
+| Node.js | 20+ |
+| PostgreSQL | 15+ |
+| npm | 10+ (ships with Node.js 20) |
+
+## Deployment Options
+
+Loop supports two deployment paths:
+
+- [**Vercel**](/docs/self-hosting/deployment#vercel-deployment) (recommended) -- Import the monorepo, configure environment variables, and deploy. Hono auto-detects the Vercel Functions runtime.
+- [**Manual**](/docs/self-hosting/deployment#manual-deployment) -- Build the apps locally and run the API as a Node.js process. Serve the dashboard as static files behind any web server.
+
+## Next Steps
+
+- [**Environment Variables**](/docs/self-hosting/environment) -- Complete reference for all configuration variables across the API and dashboard.
+- [**Deployment Guide**](/docs/self-hosting/deployment) -- Step-by-step instructions for Vercel and manual deployments.

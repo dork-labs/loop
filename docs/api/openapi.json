@@ -1,0 +1,4599 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Loop API",
+    "version": "0.1.0",
+    "description": "The Loop Autonomous Improvement Engine API. Collects signals, organizes work into issues, and dispatches AI agents with hydrated prompts.",
+    "contact": {
+      "name": "Loop by Dork Labs",
+      "url": "https://www.looped.me"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4242",
+      "description": "Local development"
+    },
+    {
+      "url": "https://api.looped.me",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System",
+      "description": "Health check and service info"
+    },
+    {
+      "name": "Issues",
+      "description": "Issue management — CRUD, labels"
+    },
+    {
+      "name": "Relations",
+      "description": "Issue relation management (blocks, relates_to, duplicates)"
+    },
+    {
+      "name": "Comments",
+      "description": "Issue comments (threaded)"
+    },
+    {
+      "name": "Projects",
+      "description": "Project management"
+    },
+    {
+      "name": "Goals",
+      "description": "Goal tracking linked to projects"
+    },
+    {
+      "name": "Labels",
+      "description": "Label management"
+    },
+    {
+      "name": "Signals",
+      "description": "Signal ingestion from external tools"
+    },
+    {
+      "name": "Templates",
+      "description": "Prompt template management and versioning"
+    },
+    {
+      "name": "Prompt Reviews",
+      "description": "Quality reviews for prompt versions"
+    },
+    {
+      "name": "Dispatch",
+      "description": "AI agent work dispatch and queue preview"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Aggregated system health metrics"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Provider-specific inbound webhooks (PostHog, GitHub, Sentry)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key passed as Bearer token in the Authorization header"
+      }
+    },
+    "schemas": {
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "number": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "[PostHog] error_rate: Login failures spiked"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Auth failure rate exceeded 20% over the last hour."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "signal",
+              "hypothesis",
+              "plan",
+              "task",
+              "monitor"
+            ],
+            "example": "signal"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "triage",
+              "backlog",
+              "todo",
+              "in_progress",
+              "done",
+              "canceled"
+            ],
+            "example": "triage"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4,
+            "example": 2
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "signalSource": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "posthog"
+          },
+          "signalPayload": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "example": {
+              "event": "error_rate",
+              "value": 0.22
+            }
+          },
+          "hypothesis": {
+            "$ref": "#/components/schemas/HypothesisData"
+          },
+          "agentSessionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "agentSummary": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": null
+          },
+          "commits": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CommitRef"
+            }
+          },
+          "pullRequests": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PullRequestRef"
+            }
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": null
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": null
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "title",
+          "description",
+          "type",
+          "status",
+          "priority",
+          "parentId",
+          "projectId",
+          "signalSource",
+          "signalPayload",
+          "hypothesis",
+          "agentSessionId",
+          "agentSummary",
+          "commits",
+          "pullRequests",
+          "completedAt",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "HypothesisData": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "statement": {
+            "type": "string",
+            "example": "Switching to a new auth provider will reduce login failures by 30%"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.75
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Login failure rate up 20%",
+              "PostHog session data shows 15% drop-off"
+            ]
+          },
+          "validationCriteria": {
+            "type": "string",
+            "example": "Login failure rate drops below 5% within 30 days"
+          },
+          "prediction": {
+            "type": "string",
+            "example": "Failure rate reduced to ~2%"
+          }
+        },
+        "required": [
+          "statement",
+          "confidence",
+          "evidence",
+          "validationCriteria"
+        ]
+      },
+      "CommitRef": {
+        "type": "object",
+        "properties": {
+          "sha": {
+            "type": "string",
+            "example": "abc123def456"
+          },
+          "message": {
+            "type": "string",
+            "example": "fix: correct auth token expiry"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://github.com/org/repo/commit/abc123"
+          },
+          "author": {
+            "type": "string",
+            "example": "agent-claude"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2026-02-20T10:00:00Z"
+          }
+        },
+        "required": [
+          "sha",
+          "message"
+        ]
+      },
+      "PullRequestRef": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "number",
+            "example": 42
+          },
+          "title": {
+            "type": "string",
+            "example": "fix: correct auth token expiry"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://github.com/org/repo/pull/42"
+          },
+          "state": {
+            "type": "string",
+            "example": "merged"
+          },
+          "mergedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "2026-02-20T11:00:00Z"
+          }
+        },
+        "required": [
+          "number",
+          "title"
+        ]
+      },
+      "Label": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "name": {
+            "type": "string",
+            "example": "frontend"
+          },
+          "color": {
+            "type": "string",
+            "example": "#ff6b6b"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color",
+          "createdAt",
+          "deletedAt"
+        ]
+      },
+      "IssueRelation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "blocks",
+              "blocked_by",
+              "related",
+              "duplicate"
+            ],
+            "example": "blocks"
+          },
+          "issueId": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "relatedIssueId": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "issueId",
+          "relatedIssueId",
+          "createdAt"
+        ]
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "body": {
+            "type": "string",
+            "example": "Investigated — this is caused by an expired JWT secret."
+          },
+          "issueId": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "authorName": {
+            "type": "string",
+            "example": "claude-agent"
+          },
+          "authorType": {
+            "type": "string",
+            "enum": [
+              "human",
+              "agent"
+            ],
+            "example": "agent"
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "cuid2_abc123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "issueId",
+          "authorName",
+          "authorType",
+          "parentId",
+          "createdAt"
+        ]
+      },
+      "Goal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "title": {
+            "type": "string",
+            "example": "Reduce login failure rate to < 5%"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Track auth failure rates from PostHog."
+          },
+          "metric": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "login_failure_rate"
+          },
+          "targetValue": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.05
+          },
+          "currentValue": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": 0.18
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "ratio"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "achieved",
+              "abandoned"
+            ],
+            "example": "active"
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "cuid2_abc123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "metric",
+          "targetValue",
+          "currentValue",
+          "unit",
+          "status",
+          "projectId",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "name": {
+            "type": "string",
+            "example": "Auth Reliability"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Improve authentication reliability and reduce failures."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "backlog",
+              "planned",
+              "active",
+              "paused",
+              "completed",
+              "canceled"
+            ],
+            "example": "active"
+          },
+          "health": {
+            "type": "string",
+            "enum": [
+              "on_track",
+              "at_risk",
+              "off_track"
+            ],
+            "example": "on_track"
+          },
+          "goalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "cuid2_abc123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "status",
+          "health",
+          "goalId",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "Signal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "source": {
+            "type": "string",
+            "example": "posthog"
+          },
+          "sourceId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "evt_12345"
+          },
+          "type": {
+            "type": "string",
+            "example": "error_rate"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "example": "high"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {},
+            "example": {
+              "event": "error_rate",
+              "value": 0.22
+            }
+          },
+          "issueId": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "sourceId",
+          "type",
+          "severity",
+          "payload",
+          "issueId",
+          "createdAt"
+        ]
+      },
+      "PromptTemplate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "slug": {
+            "type": "string",
+            "example": "signal-triage"
+          },
+          "name": {
+            "type": "string",
+            "example": "Signal Triage"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Default template for triaging incoming signals."
+          },
+          "conditions": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "signal",
+                  "hypothesis",
+                  "plan",
+                  "task",
+                  "monitor"
+                ]
+              },
+              "signalSource": {
+                "type": "string"
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "projectId": {
+                "type": "string"
+              },
+              "hasFailedSessions": {
+                "type": "boolean"
+              },
+              "hypothesisConfidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "description": "Conditions that determine when this template is selected",
+            "example": {
+              "type": "signal"
+            }
+          },
+          "specificity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 10
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "cuid2_abc123"
+          },
+          "activeVersionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "cuid2_abc123"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "conditions",
+          "specificity",
+          "projectId",
+          "activeVersionId",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "PromptVersion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "templateId": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "version": {
+            "type": "integer",
+            "example": 1
+          },
+          "content": {
+            "type": "string",
+            "example": "# Signal Triage: {{issue.title}}\n\nYou are triaging signal #{{issue.number}}."
+          },
+          "changelog": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Initial version"
+          },
+          "authorType": {
+            "type": "string",
+            "enum": [
+              "human",
+              "agent"
+            ],
+            "example": "human"
+          },
+          "authorName": {
+            "type": "string",
+            "example": "system"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "draft",
+              "retired"
+            ],
+            "example": "active"
+          },
+          "usageCount": {
+            "type": "integer",
+            "example": 0
+          },
+          "completionRate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": null
+          },
+          "avgDurationMs": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": null
+          },
+          "reviewScore": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "example": null
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "templateId",
+          "version",
+          "content",
+          "changelog",
+          "authorType",
+          "authorName",
+          "status",
+          "usageCount",
+          "completionRate",
+          "avgDurationMs",
+          "reviewScore",
+          "createdAt"
+        ]
+      },
+      "PromptReview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "versionId": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "issueId": {
+            "type": "string",
+            "example": "cuid2_abc123"
+          },
+          "clarity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 4
+          },
+          "completeness": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          },
+          "relevance": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 3
+          },
+          "feedback": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Instructions were clear but missing error handling steps."
+          },
+          "authorType": {
+            "type": "string",
+            "enum": [
+              "human",
+              "agent"
+            ],
+            "example": "agent"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-20T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "versionId",
+          "issueId",
+          "clarity",
+          "completeness",
+          "relevance",
+          "feedback",
+          "authorType",
+          "createdAt"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health check",
+        "description": "Returns service health status. No authentication required.",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "service": {
+                      "type": "string",
+                      "example": "loop-api"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-02-20T12:00:00.000Z"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "service",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Service info",
+        "description": "Returns service name and version. No authentication required.",
+        "responses": {
+          "200": {
+            "description": "Service information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Loop API"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "0.1.0"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "version"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "List issues",
+        "description": "Returns a paginated list of issues, filterable by status, type, projectId, labelId, priority, and parentId.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated list of statuses to filter by",
+              "example": "todo,in_progress"
+            },
+            "required": false,
+            "description": "Comma-separated list of statuses to filter by",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated list of types to filter by",
+              "example": "signal,task"
+            },
+            "required": false,
+            "description": "Comma-separated list of types to filter by",
+            "name": "type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_proj"
+            },
+            "required": false,
+            "name": "projectId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_label"
+            },
+            "required": false,
+            "name": "labelId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 4,
+              "example": 2
+            },
+            "required": false,
+            "name": "priority",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_parent"
+            },
+            "required": false,
+            "name": "parentId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "example": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "example": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of issues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Issue"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing Bearer token"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Create an issue",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "example": "Investigate login failure spike"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Auth failure rate exceeded 20% over the last hour."
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "signal",
+                      "hypothesis",
+                      "plan",
+                      "task",
+                      "monitor"
+                    ],
+                    "example": "signal"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "triage",
+                      "backlog",
+                      "todo",
+                      "in_progress",
+                      "done",
+                      "canceled"
+                    ],
+                    "default": "triage",
+                    "example": "triage"
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4,
+                    "default": 0,
+                    "example": 2
+                  },
+                  "parentId": {
+                    "type": "string"
+                  },
+                  "projectId": {
+                    "type": "string"
+                  },
+                  "signalSource": {
+                    "type": "string",
+                    "example": "posthog"
+                  },
+                  "signalPayload": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "hypothesis": {
+                    "$ref": "#/components/schemas/HypothesisData"
+                  },
+                  "labelIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": []
+                  }
+                },
+                "required": [
+                  "title",
+                  "type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issue created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Issue"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "422": {
+            "description": "Validation error or parent hierarchy violation"
+          }
+        }
+      }
+    },
+    "/api/issues/{id}": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Get issue by ID",
+        "description": "Returns the issue with its parent, children, labels, and relations.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Issue with related data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/Issue"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "parent": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/Issue"
+                                },
+                                {
+                                  "type": [
+                                    "object",
+                                    "null"
+                                  ]
+                                }
+                              ]
+                            },
+                            "children": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Issue"
+                              }
+                            },
+                            "labels": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Label"
+                              }
+                            },
+                            "relations": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/IssueRelation"
+                              }
+                            }
+                          },
+                          "required": [
+                            "parent",
+                            "children",
+                            "labels",
+                            "relations"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Update an issue",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "signal",
+                      "hypothesis",
+                      "plan",
+                      "task",
+                      "monitor"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "triage",
+                      "backlog",
+                      "todo",
+                      "in_progress",
+                      "done",
+                      "canceled"
+                    ]
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4
+                  },
+                  "parentId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "projectId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "signalSource": {
+                    "type": "string"
+                  },
+                  "signalPayload": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "hypothesis": {
+                    "$ref": "#/components/schemas/HypothesisData"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Issue"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Soft-delete an issue",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Issue deleted"
+          },
+          "404": {
+            "description": "Issue not found"
+          }
+        }
+      }
+    },
+    "/api/issues/{id}/relations": {
+      "post": {
+        "tags": [
+          "Relations"
+        ],
+        "summary": "Create a relation between two issues",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "blocks",
+                      "blocked_by",
+                      "related",
+                      "duplicate"
+                    ],
+                    "example": "blocks"
+                  },
+                  "relatedIssueId": {
+                    "type": "string",
+                    "example": "cuid2_abc123",
+                    "description": "ID of the related issue"
+                  }
+                },
+                "required": [
+                  "type",
+                  "relatedIssueId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Relation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/IssueRelation"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found"
+          },
+          "422": {
+            "description": "Validation error or self-relation"
+          }
+        }
+      }
+    },
+    "/api/relations/{id}": {
+      "delete": {
+        "tags": [
+          "Relations"
+        ],
+        "summary": "Hard-delete a relation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Relation deleted"
+          },
+          "404": {
+            "description": "Relation not found"
+          }
+        }
+      }
+    },
+    "/api/issues/{id}/comments": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "List comments for an issue",
+        "description": "Returns threaded comments (top-level with nested replies).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Threaded comment list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/Comment"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "replies": {
+                                "type": "array",
+                                "items": {
+                                  "$ref": "#/components/schemas/Comment"
+                                }
+                              }
+                            },
+                            "required": [
+                              "replies"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Add a comment to an issue",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "body": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "Investigated the auth logs — found an expired JWT secret."
+                  },
+                  "authorName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "claude-agent"
+                  },
+                  "authorType": {
+                    "type": "string",
+                    "enum": [
+                      "human",
+                      "agent"
+                    ],
+                    "example": "agent"
+                  },
+                  "parentId": {
+                    "type": "string",
+                    "description": "Parent comment ID for threaded replies"
+                  }
+                },
+                "required": [
+                  "body",
+                  "authorName",
+                  "authorType"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Comment"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found"
+          },
+          "422": {
+            "description": "Validation error or parent comment not found"
+          }
+        }
+      }
+    },
+    "/api/labels": {
+      "get": {
+        "tags": [
+          "Labels"
+        ],
+        "summary": "List labels",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum records to return (1–200)",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum records to return (1–200)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of records to skip",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of records to skip",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of labels",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Label"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Labels"
+        ],
+        "summary": "Create a label",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "example": "frontend"
+                  },
+                  "color": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50,
+                    "example": "#ff6b6b"
+                  }
+                },
+                "required": [
+                  "name",
+                  "color"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Label created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Label"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Label name already exists"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/labels/{id}": {
+      "delete": {
+        "tags": [
+          "Labels"
+        ],
+        "summary": "Soft-delete a label",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Label deleted"
+          },
+          "404": {
+            "description": "Label not found"
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "List projects",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum records to return (1–200)",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum records to return (1–200)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of records to skip",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of records to skip",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Project"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Create a project",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "example": "Auth Reliability"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Improve authentication reliability."
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "backlog",
+                      "planned",
+                      "active",
+                      "paused",
+                      "completed",
+                      "canceled"
+                    ],
+                    "default": "backlog",
+                    "example": "active"
+                  },
+                  "health": {
+                    "type": "string",
+                    "enum": [
+                      "on_track",
+                      "at_risk",
+                      "off_track"
+                    ],
+                    "default": "on_track",
+                    "example": "on_track"
+                  },
+                  "goalId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Project"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error or goal not found"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Get project by ID",
+        "description": "Returns the project with linked goal and issue counts by status.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project with goal and issue counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/Project"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "goal": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/Goal"
+                                },
+                                {
+                                  "type": [
+                                    "object",
+                                    "null"
+                                  ]
+                                }
+                              ]
+                            },
+                            "issueCounts": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "number"
+                              },
+                              "example": {
+                                "todo": 3,
+                                "in_progress": 1,
+                                "done": 10
+                              }
+                            }
+                          },
+                          "required": [
+                            "goal",
+                            "issueCounts"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Update a project",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "backlog",
+                      "planned",
+                      "active",
+                      "paused",
+                      "completed",
+                      "canceled"
+                    ]
+                  },
+                  "health": {
+                    "type": "string",
+                    "enum": [
+                      "on_track",
+                      "at_risk",
+                      "off_track"
+                    ]
+                  },
+                  "goalId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Project"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found"
+          },
+          "422": {
+            "description": "Validation error or goal not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Soft-delete a project",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Project deleted"
+          },
+          "404": {
+            "description": "Project not found"
+          }
+        }
+      }
+    },
+    "/api/goals": {
+      "get": {
+        "tags": [
+          "Goals"
+        ],
+        "summary": "List goals",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum records to return (1–200)",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum records to return (1–200)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of records to skip",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of records to skip",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of goals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Goal"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Goals"
+        ],
+        "summary": "Create a goal",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "example": "Reduce login failure rate to < 5%"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "metric": {
+                    "type": "string",
+                    "example": "login_failure_rate"
+                  },
+                  "targetValue": {
+                    "type": "number",
+                    "example": 0.05
+                  },
+                  "currentValue": {
+                    "type": "number",
+                    "example": 0.18
+                  },
+                  "unit": {
+                    "type": "string",
+                    "example": "ratio"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "achieved",
+                      "abandoned"
+                    ],
+                    "default": "active",
+                    "example": "active"
+                  },
+                  "projectId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Goal created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Goal"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/goals/{id}": {
+      "get": {
+        "tags": [
+          "Goals"
+        ],
+        "summary": "Get goal by ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Goal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Goal"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Goal not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Goals"
+        ],
+        "summary": "Update a goal",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "metric": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "targetValue": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "currentValue": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "unit": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "achieved",
+                      "abandoned"
+                    ]
+                  },
+                  "projectId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated goal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Goal"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Goal not found"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Goals"
+        ],
+        "summary": "Soft-delete a goal",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Goal deleted"
+          },
+          "404": {
+            "description": "Goal not found"
+          }
+        }
+      }
+    },
+    "/api/signals": {
+      "post": {
+        "tags": [
+          "Signals"
+        ],
+        "summary": "Ingest a signal",
+        "description": "Creates a signal and atomically creates a linked triage issue.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "posthog"
+                  },
+                  "sourceId": {
+                    "type": "string",
+                    "example": "evt_12345"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "error_rate"
+                  },
+                  "severity": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      "critical"
+                    ],
+                    "example": "high"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": {},
+                    "example": {
+                      "event": "error_rate",
+                      "value": 0.22
+                    }
+                  },
+                  "projectId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "type",
+                  "severity",
+                  "payload"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signal and linked issue created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "signal": {
+                          "$ref": "#/components/schemas/Signal"
+                        },
+                        "issue": {
+                          "$ref": "#/components/schemas/Issue"
+                        }
+                      },
+                      "required": [
+                        "signal",
+                        "issue"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "List prompt templates",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum records to return (1–200)",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum records to return (1–200)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of records to skip",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of records to skip",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of prompt templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PromptTemplate"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Create a prompt template",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "example": "signal-triage"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "example": "Signal Triage"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Default template for triaging signals."
+                  },
+                  "conditions": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "signal",
+                          "hypothesis",
+                          "plan",
+                          "task",
+                          "monitor"
+                        ]
+                      },
+                      "signalSource": {
+                        "type": "string"
+                      },
+                      "labels": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "projectId": {
+                        "type": "string"
+                      },
+                      "hasFailedSessions": {
+                        "type": "boolean"
+                      },
+                      "hypothesisConfidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "default": {},
+                    "description": "Conditions that determine when this template is selected",
+                    "example": {
+                      "type": "signal"
+                    }
+                  },
+                  "specificity": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "default": 10,
+                    "example": 10
+                  },
+                  "projectId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "slug",
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PromptTemplate"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Template slug already exists"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Get template by ID",
+        "description": "Returns the template with its active version.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template with active version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/PromptTemplate"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "activeVersion": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/PromptVersion"
+                                },
+                                {
+                                  "type": [
+                                    "object",
+                                    "null"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "activeVersion"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Update a template",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "conditions": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "signal",
+                          "hypothesis",
+                          "plan",
+                          "task",
+                          "monitor"
+                        ]
+                      },
+                      "signalSource": {
+                        "type": "string"
+                      },
+                      "labels": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "projectId": {
+                        "type": "string"
+                      },
+                      "hasFailedSessions": {
+                        "type": "boolean"
+                      },
+                      "hypothesisConfidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "description": "Conditions that determine when this template is selected",
+                    "example": {
+                      "type": "signal"
+                    }
+                  },
+                  "specificity": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "projectId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PromptTemplate"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Soft-delete a template",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Template deleted"
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/versions": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "List versions for a template",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum records to return (1–200)",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum records to return (1–200)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of records to skip",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of records to skip",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PromptVersion"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Create a new version",
+        "description": "Auto-increments version number. Rejects content containing triple-braces to prevent template injection.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "# Signal Triage: {{issue.title}}\n\n..."
+                  },
+                  "changelog": {
+                    "type": "string",
+                    "example": "Improved instructions for signal analysis."
+                  },
+                  "authorType": {
+                    "type": "string",
+                    "enum": [
+                      "human",
+                      "agent"
+                    ],
+                    "example": "human"
+                  },
+                  "authorName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "dorian"
+                  }
+                },
+                "required": [
+                  "content",
+                  "authorType",
+                  "authorName"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Version created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PromptVersion"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template not found"
+          },
+          "422": {
+            "description": "Triple-brace content rejected"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/versions/{versionId}/promote": {
+      "post": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Promote a version to active",
+        "description": "Sets the version as active and retires the current active version.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "versionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Version promoted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PromptVersion"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template or version not found"
+          },
+          "422": {
+            "description": "Version is already active"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/reviews": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "List reviews for a template",
+        "description": "Returns reviews across all versions of the template.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum records to return (1–200)",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum records to return (1–200)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of records to skip",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of records to skip",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of reviews",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PromptReview"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        }
+      }
+    },
+    "/api/templates/preview/{issueId}": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Preview template selection for an issue",
+        "description": "Selects and hydrates a template for the given issue without claiming it. Useful for debugging template selection.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_abc123"
+            },
+            "required": true,
+            "name": "issueId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template selection preview with hydrated prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "cuid2_abc123"
+                        },
+                        "number": {
+                          "type": "integer"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "signal",
+                            "hypothesis",
+                            "plan",
+                            "task",
+                            "monitor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "title",
+                        "type"
+                      ]
+                    },
+                    "template": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "cuid2_abc123"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "conditions": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "signal",
+                                "hypothesis",
+                                "plan",
+                                "task",
+                                "monitor"
+                              ]
+                            },
+                            "signalSource": {
+                              "type": "string"
+                            },
+                            "labels": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "projectId": {
+                              "type": "string"
+                            },
+                            "hasFailedSessions": {
+                              "type": "boolean"
+                            },
+                            "hypothesisConfidence": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            }
+                          },
+                          "description": "Conditions that determine when this template is selected",
+                          "example": {
+                            "type": "signal"
+                          }
+                        },
+                        "specificity": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "conditions",
+                        "specificity"
+                      ]
+                    },
+                    "version": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "cuid2_abc123"
+                        },
+                        "version": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version"
+                      ]
+                    },
+                    "prompt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Hydrated Handlebars prompt content"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "No matching template found"
+                    }
+                  },
+                  "required": [
+                    "issue",
+                    "template",
+                    "version",
+                    "prompt"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found"
+          }
+        }
+      }
+    },
+    "/api/prompt-reviews": {
+      "post": {
+        "tags": [
+          "Prompt Reviews"
+        ],
+        "summary": "Submit a prompt review",
+        "description": "Submits a quality review for a prompt version. Updates the version's EWMA review score and triggers an improvement issue if quality degrades below threshold.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "versionId": {
+                    "type": "string",
+                    "example": "cuid2_abc123",
+                    "description": "The prompt version being reviewed"
+                  },
+                  "issueId": {
+                    "type": "string",
+                    "example": "cuid2_abc123",
+                    "description": "The issue this prompt was used for"
+                  },
+                  "clarity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "example": 4
+                  },
+                  "completeness": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "example": 5
+                  },
+                  "relevance": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "example": 3
+                  },
+                  "feedback": {
+                    "type": "string",
+                    "example": "Instructions were clear but missing error handling steps."
+                  },
+                  "authorType": {
+                    "type": "string",
+                    "enum": [
+                      "human",
+                      "agent"
+                    ],
+                    "example": "agent"
+                  }
+                },
+                "required": [
+                  "versionId",
+                  "issueId",
+                  "clarity",
+                  "completeness",
+                  "relevance",
+                  "authorType"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Review submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PromptReview"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Version not found"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/dispatch/next": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "summary": "Claim the highest-priority unblocked issue",
+        "description": "Atomically claims the highest-priority unblocked todo issue using FOR UPDATE SKIP LOCKED, sets it to in_progress, selects the best matching template, and returns a hydrated prompt. Returns 204 when queue is empty.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Restrict dispatch to issues in this project",
+              "example": "cuid2_proj"
+            },
+            "required": false,
+            "description": "Restrict dispatch to issues in this project",
+            "name": "projectId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Claimed issue with hydrated prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "cuid2_abc123"
+                        },
+                        "number": {
+                          "type": "integer",
+                          "example": 42
+                        },
+                        "title": {
+                          "type": "string",
+                          "example": "[PostHog] error_rate: Login failures spiked"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "signal",
+                            "hypothesis",
+                            "plan",
+                            "task",
+                            "monitor"
+                          ],
+                          "example": "signal"
+                        },
+                        "priority": {
+                          "type": "integer",
+                          "example": 2
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "triage",
+                            "backlog",
+                            "todo",
+                            "in_progress",
+                            "done",
+                            "canceled"
+                          ],
+                          "example": "in_progress"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "number",
+                        "title",
+                        "type",
+                        "priority",
+                        "status"
+                      ]
+                    },
+                    "prompt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Hydrated prompt text, or null if no template matched"
+                    },
+                    "meta": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "templateSlug": {
+                          "type": "string",
+                          "example": "signal-triage"
+                        },
+                        "templateId": {
+                          "type": "string",
+                          "example": "cuid2_abc123"
+                        },
+                        "versionId": {
+                          "type": "string",
+                          "example": "cuid2_abc123"
+                        },
+                        "versionNumber": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "reviewUrl": {
+                          "type": "string",
+                          "example": "POST /api/prompt-reviews"
+                        }
+                      },
+                      "required": [
+                        "templateSlug",
+                        "templateId",
+                        "versionId",
+                        "versionNumber",
+                        "reviewUrl"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "issue",
+                    "prompt",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No eligible issues in queue"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/dispatch/queue": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "summary": "Preview the priority-ordered dispatch queue",
+        "description": "Returns unblocked todo issues sorted by priority score (does not claim any issues).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "cuid2_proj"
+            },
+            "required": false,
+            "name": "projectId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "example": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "default": 0,
+              "example": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scored issue queue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "issue": {
+                            "$ref": "#/components/schemas/Issue"
+                          },
+                          "score": {
+                            "type": "number",
+                            "example": 148
+                          },
+                          "breakdown": {
+                            "type": "object",
+                            "properties": {
+                              "priorityWeight": {
+                                "type": "number",
+                                "example": 75
+                              },
+                              "goalBonus": {
+                                "type": "number",
+                                "example": 20
+                              },
+                              "ageBonus": {
+                                "type": "number",
+                                "example": 3
+                              },
+                              "typeBonus": {
+                                "type": "number",
+                                "example": 50
+                              }
+                            },
+                            "required": [
+                              "priorityWeight",
+                              "goalBonus",
+                              "ageBonus",
+                              "typeBonus"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "issue",
+                          "score",
+                          "breakdown"
+                        ]
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 25
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/dashboard/stats": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "System health metrics",
+        "description": "Returns aggregated issue counts by status/type, goal counts, and dispatch queue metrics.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "issues": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "example": 120
+                            },
+                            "byStatus": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "number"
+                              },
+                              "example": {
+                                "triage": 5,
+                                "todo": 20,
+                                "in_progress": 3,
+                                "done": 92
+                              }
+                            },
+                            "byType": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "number"
+                              },
+                              "example": {
+                                "signal": 30,
+                                "task": 60,
+                                "hypothesis": 20,
+                                "plan": 8,
+                                "monitor": 2
+                              }
+                            }
+                          },
+                          "required": [
+                            "total",
+                            "byStatus",
+                            "byType"
+                          ]
+                        },
+                        "goals": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "example": 5
+                            },
+                            "active": {
+                              "type": "integer",
+                              "example": 3
+                            },
+                            "achieved": {
+                              "type": "integer",
+                              "example": 2
+                            }
+                          },
+                          "required": [
+                            "total",
+                            "active",
+                            "achieved"
+                          ]
+                        },
+                        "dispatch": {
+                          "type": "object",
+                          "properties": {
+                            "queueDepth": {
+                              "type": "integer",
+                              "example": 20
+                            },
+                            "activeCount": {
+                              "type": "integer",
+                              "example": 3
+                            },
+                            "completedLast24h": {
+                              "type": "integer",
+                              "example": 12
+                            }
+                          },
+                          "required": [
+                            "queueDepth",
+                            "activeCount",
+                            "completedLast24h"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "issues",
+                        "goals",
+                        "dispatch"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/dashboard/activity": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Signal chains for activity timeline",
+        "description": "Returns pre-assembled signal chains (root issues with children and relations), sorted by most recent activity.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 20,
+              "example": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity chains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "root": {
+                            "$ref": "#/components/schemas/Issue"
+                          },
+                          "children": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "issue": {
+                                  "$ref": "#/components/schemas/Issue"
+                                },
+                                "relations": {
+                                  "type": "array",
+                                  "items": {
+                                    "$ref": "#/components/schemas/IssueRelation"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "issue",
+                                "relations"
+                              ]
+                            }
+                          },
+                          "latestActivity": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2026-02-20T12:00:00.000Z"
+                          }
+                        },
+                        "required": [
+                          "root",
+                          "children",
+                          "latestActivity"
+                        ]
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 20
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "total"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/dashboard/prompts": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Template health with scores",
+        "description": "Returns all prompt templates with version history and aggregated review scores.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prompt health data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "template": {
+                            "$ref": "#/components/schemas/PromptTemplate"
+                          },
+                          "activeVersion": {
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/PromptVersion"
+                              },
+                              {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ]
+                              }
+                            ]
+                          },
+                          "recentVersions": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/PromptVersion"
+                            },
+                            "description": "Last 5 versions"
+                          },
+                          "reviewSummary": {
+                            "type": "object",
+                            "properties": {
+                              "totalReviews": {
+                                "type": "integer",
+                                "example": 12
+                              },
+                              "avgClarity": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ],
+                                "example": 4.1
+                              },
+                              "avgCompleteness": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ],
+                                "example": 3.8
+                              },
+                              "avgRelevance": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ],
+                                "example": 4.3
+                              },
+                              "compositeScore": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ],
+                                "example": 4.07
+                              }
+                            },
+                            "required": [
+                              "totalReviews",
+                              "avgClarity",
+                              "avgCompleteness",
+                              "avgRelevance",
+                              "compositeScore"
+                            ]
+                          },
+                          "needsAttention": {
+                            "type": "boolean",
+                            "description": "True when compositeScore < 3.0 or completionRate < 50%",
+                            "example": false
+                          }
+                        },
+                        "required": [
+                          "template",
+                          "activeVersion",
+                          "recentVersions",
+                          "reviewSummary",
+                          "needsAttention"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/signals/posthog": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "PostHog metric alert webhook",
+        "description": "Receives metric alert webhooks from PostHog. Authenticated via POSTHOG_WEBHOOK_SECRET in the Authorization header.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "PostHog webhook payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "signal": {
+                          "$ref": "#/components/schemas/Signal"
+                        },
+                        "issue": {
+                          "$ref": "#/components/schemas/Issue"
+                        }
+                      },
+                      "required": [
+                        "signal",
+                        "issue"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request or payload parsing failure"
+          },
+          "401": {
+            "description": "Invalid PostHog webhook secret"
+          }
+        }
+      }
+    },
+    "/api/signals/github": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "GitHub events webhook",
+        "description": "Receives GitHub events (push, pull_request, issues). Verified via HMAC-SHA256 signature using GITHUB_WEBHOOK_SECRET.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "GitHub webhook payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "signal": {
+                          "$ref": "#/components/schemas/Signal"
+                        },
+                        "issue": {
+                          "$ref": "#/components/schemas/Issue"
+                        }
+                      },
+                      "required": [
+                        "signal",
+                        "issue"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request or signature mismatch"
+          },
+          "401": {
+            "description": "Invalid GitHub webhook signature"
+          }
+        }
+      }
+    },
+    "/api/signals/sentry": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Sentry error alert webhook",
+        "description": "Receives Sentry error alerts. Verified via HMAC-SHA256 signature using SENTRY_CLIENT_SECRET.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "Sentry webhook payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "signal": {
+                          "$ref": "#/components/schemas/Signal"
+                        },
+                        "issue": {
+                          "$ref": "#/components/schemas/Issue"
+                        }
+                      },
+                      "required": [
+                        "signal",
+                        "issue"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request or signature mismatch"
+          },
+          "401": {
+            "description": "Invalid Sentry webhook signature"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

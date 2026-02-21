@@ -1,8 +1,87 @@
 ---
 title: Loop Documentation
-description: Documentation for Loop, the autonomous improvement engine.
+description: Loop is the autonomous improvement engine that closes the feedback loop for AI-powered development. It turns signals into prioritized, actionable work — and tells AI agents exactly what to do next.
 ---
+
+import { Cards, Card } from 'fumadocs-ui/components/card'
+import { Callout } from 'fumadocs-ui/components/callout'
 
 # Loop Documentation
 
-Documentation coming soon.
+Loop is the **autonomous improvement engine** — an open-source data layer and prompt engine that collects signals, organizes work into issues, and tells AI agents exactly what to do next.
+
+It closes the feedback loop for AI-powered development by turning raw data (errors, metrics, user feedback) into prioritized, actionable work items.
+
+```
+Signals  ->  Triage  ->  Hypothesize  ->  Plan  ->  Execute  ->  Monitor
+  ^                                                                 |
+  +-----------------------------------------------------------------+
+```
+
+<Callout title="Loop has no AI" type="info">
+Loop is a fully deterministic data system with a prompt layer. There are zero LLM calls inside Loop — no embeddings, no inference, no token costs, no model dependencies. AI agents pull work from Loop over HTTP. When a better model ships, every Loop installation gets better overnight without changing a single line of code.
+</Callout>
+
+## How It Works
+
+1. **Signals arrive** — webhooks from PostHog, Sentry, GitHub, or any HTTP source create issues for triage
+2. **Agents triage** — an AI agent picks up the signal, decides if it is real or noise
+3. **Hypotheses form** — the agent creates a hypothesis with confidence level and validation criteria
+4. **Plans break down** — the hypothesis becomes concrete, scoped tasks
+5. **Agents execute** — tasks are dispatched one at a time with rich context and instructions
+6. **Outcomes feed back** — monitoring tasks watch for results, creating new signals that restart the loop
+
+The issue queue is the orchestration layer. One unified system, one priority system, full auditability, and human override at any point.
+
+## Explore the Docs
+
+<Cards>
+  <Card
+    title="Getting Started"
+    description="Install Loop, configure your database, and create your first signal in under five minutes."
+    href="/docs/getting-started"
+  />
+  <Card
+    title="Concepts"
+    description="Understand the core building blocks: issues, signals, dispatch, prompt templates, projects, and goals."
+    href="/docs/concepts"
+  />
+  <Card
+    title="Guides"
+    description="Step-by-step walkthroughs for the dashboard, writing prompt templates, and more."
+    href="/docs/guides"
+  />
+  <Card
+    title="Integrations"
+    description="Connect Loop to GitHub, Sentry, PostHog, and other tools via webhooks."
+    href="/docs/integrations"
+  />
+  <Card
+    title="API Reference"
+    description="Complete reference for every REST endpoint — issues, signals, templates, dispatch, and dashboard."
+    href="/docs/api"
+  />
+  <Card
+    title="CLI Reference"
+    description="Manage issues, signals, triage, templates, dispatch, and system status from the command line."
+    href="/docs/cli"
+  />
+  <Card
+    title="Self-Hosting"
+    description="Deploy Loop on your own infrastructure with environment configuration and deployment guides."
+    href="/docs/self-hosting"
+  />
+  <Card
+    title="Contributing"
+    description="Set up the development environment, learn the codebase conventions, and submit your first pull request."
+    href="/docs/contributing"
+  />
+</Cards>
+
+## Key Principles
+
+- **Agent-agnostic** — any AI agent that can make HTTP calls works with Loop. Swap agents or models without touching Loop.
+- **Pull architecture** — agents poll for work on a schedule. Loop never needs to know how to connect to your agent platform.
+- **Self-improving instructions** — agents rate the prompts they receive. When quality drops, Loop creates an issue to improve them.
+- **Everything is an issue** — signals, hypotheses, plans, tasks, and monitors all live in the same priority queue.
+- **Open source** — MIT licensed, fully on-premises capable, no vendor lock-in.

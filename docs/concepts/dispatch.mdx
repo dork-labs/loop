@@ -1,0 +1,88 @@
+---
+title: Dispatch
+description: How Loop selects, scores, and atomically claims the next issue for an AI agent, including SKIP LOCKED concurrency control.
+---
+
+# Dispatch
+
+Dispatch is the mechanism by which AI agents receive work from Loop. An agent calls a single endpoint, and Loop returns the highest-priority unblocked issue along with a fully hydrated prompt containing detailed instructions. The entire process is deterministic, atomic, and safe for concurrent access.
+
+## The Dispatch Endpoint
+
+Loop exposes two dispatch endpoints:
+
+- `GET /api/dispatch/next` -- Atomically claim the next issue. Selects the highest-priority unblocked `todo` issue, sets its status to `in_progress`, and returns it with a hydrated prompt. This is what agents call on a schedule.
+- `GET /api/dispatch/queue` -- Preview the dispatch queue without claiming. Returns a priority-ordered list of unblocked `todo` issues with their score breakdowns. Useful for dashboards and debugging.
+
+An optional `projectId` query parameter filters dispatch to a specific project.
+
+## Priority Scoring
+
+Loop uses a deterministic scoring formula to rank issues. Every unblocked `todo` issue is scored using four factors:
+
+| Factor | Calculation | Purpose |
+|--------|------------|---------|
+| **Priority weight** | Urgent=100, High=75, Medium=50, Low=25, None=10 | Respect explicit priority assignments |
+| **Type bonus** | Signal=50, Hypothesis=40, Plan=30, Task=20, Monitor=10 | Favor earlier loop stages to keep the pipeline moving |
+| **Goal alignment** | +20 if the issue's project has an active goal | Bias toward strategic work |
+| **Age bonus** | +1 per day in `todo` status | Prevent starvation of older issues |
+
+The final score is the sum of all four factors. The issue with the highest total score is dispatched first. In the event of a tie, database ordering provides a consistent tiebreaker.
+
+The type bonus keeps the front of the loop moving -- signals and hypotheses are prioritized over tasks. The age bonus prevents starvation: even low-priority issues eventually rise to the top as their age accumulates.
+
+## Blocking Filter
+
+Before scoring, Loop filters out any issue that has an unresolved `blocked_by` relation. An issue is considered blocked if it has a `blocked_by` relation pointing to another issue whose status is not `done` or `canceled`. Blocked issues are invisible to the dispatch endpoint until their blockers resolve.
+
+This filtering happens in the same SQL query as the scoring and claiming, so there is no race condition between checking blockers and claiming the issue.
+
+## Atomic Claiming with SKIP LOCKED
+
+The critical challenge in dispatch is concurrency: what happens when two agents call `/api/dispatch/next` at the same time? Without protection, both agents could claim the same issue, leading to duplicate work.
+
+Loop solves this using PostgreSQL's `FOR UPDATE SKIP LOCKED` clause. Here is how it works:
+
+1. The dispatch query identifies the highest-scoring unblocked `todo` issue
+2. It attempts to acquire a row-level lock on that issue using `FOR UPDATE`
+3. If the row is already locked by another concurrent transaction, `SKIP LOCKED` causes the query to skip that row and move to the next candidate
+4. The locked row's status is atomically updated to `in_progress` in the same transaction
+5. The lock is released when the transaction commits
+
+This means concurrent agents never block each other and never claim the same issue. If Agent A and Agent B call dispatch simultaneously, one gets the highest-priority issue and the other gets the second-highest. No waiting, no retries, no distributed locking system.
+
+The entire operation -- finding candidates, filtering blocked issues, scoring, locking, and claiming -- happens in a single SQL statement:
+
+```sql
+WITH unblocked AS (
+  SELECT i.id
+  FROM issues i
+  WHERE i.status = 'todo'
+    AND i.deleted_at IS NULL
+    AND NOT EXISTS (
+      SELECT 1 FROM issue_relations ir
+      JOIN issues blocker ON blocker.id = ir.related_issue_id
+      WHERE ir.issue_id = i.id
+        AND ir.type = 'blocked_by'
+        AND blocker.status NOT IN ('done', 'canceled')
+    )
+  ORDER BY <scoring formula> DESC
+  LIMIT 1
+  FOR UPDATE SKIP LOCKED
+)
+UPDATE issues SET status = 'in_progress', updated_at = NOW()
+FROM unblocked WHERE issues.id = unblocked.id
+RETURNING issues.*
+```
+
+This is approximately 20 lines of SQL. No queue system, no message broker, no distributed lock manager. PostgreSQL handles the concurrency guarantees natively.
+
+## Template Selection
+
+After claiming an issue, Loop selects the best prompt template. Each template has conditions and a specificity score. The algorithm builds a context from the claimed issue (type, signal source, labels, project, failed sessions, hypothesis confidence), finds all templates where every condition matches, sorts by project-specificity then by specificity descending, and returns the first match. See [Prompts](/docs/concepts/prompts) for details on conditions and hydration.
+
+## The Dispatch Response
+
+A successful dispatch returns the claimed issue's core fields, the fully hydrated prompt string, and template metadata (slug, version ID, review URL). If no work is available, the endpoint returns `204 No Content`.
+
+After receiving a response, the agent follows the prompt instructions, reports results via `PATCH /api/issues/:id`, submits a prompt review via `POST /api/prompt-reviews`, and on the next poll cycle calls dispatch again. This pull-based cycle runs continuously with any HTTP-capable agent.

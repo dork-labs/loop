@@ -1,0 +1,118 @@
+---
+title: Environment Variables
+description: Complete reference for all environment variables required to configure the Loop API server and dashboard.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Environment Variables
+
+Loop uses environment variables for all configuration. No config files are required beyond a `.env` file (or your platform's environment variable settings).
+
+## API Server (`@loop/api`)
+
+These variables configure the Hono API server.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string. Format: `postgresql://user:password@host:port/dbname`. For Neon, use the pooled connection string from your dashboard. |
+| `LOOP_API_KEY` | Yes | Bearer token used to authenticate all `/api/*` requests. Clients send this as `Authorization: Bearer <token>`. |
+| `GITHUB_WEBHOOK_SECRET` | No | HMAC-SHA256 secret for verifying GitHub webhook payloads. Required only if you use the GitHub integration. |
+| `SENTRY_CLIENT_SECRET` | No | HMAC-SHA256 secret for verifying Sentry webhook payloads. Required only if you use the Sentry integration. |
+| `POSTHOG_WEBHOOK_SECRET` | No | Shared secret for verifying PostHog webhook payloads. Required only if you use the PostHog integration. |
+
+<Callout type="warn">
+Never commit secrets to version control. Use your platform's secret management (Vercel Environment Variables, AWS Secrets Manager, etc.) or a `.env` file that is listed in `.gitignore`.
+</Callout>
+
+### `DATABASE_URL`
+
+The PostgreSQL connection string. Loop uses the [Neon serverless driver](https://neon.tech/docs/serverless/serverless-driver) with Drizzle ORM.
+
+**Neon (recommended):**
+
+```
+DATABASE_URL=postgresql://user:password@ep-cool-darkness-123456.us-east-2.aws.neon.tech/loopdb?sslmode=require
+```
+
+**Self-hosted PostgreSQL:**
+
+```
+DATABASE_URL=postgresql://loop:secretpassword@localhost:5432/loop
+```
+
+### `LOOP_API_KEY`
+
+A secret token that protects all API endpoints under `/api/*`. Every request must include it in the `Authorization` header:
+
+```
+Authorization: Bearer tok_your_secret_key_here
+```
+
+To generate a secure key, use any cryptographically random string generator:
+
+```bash
+# Using openssl
+openssl rand -hex 32
+
+# Using Node.js
+node -e "console.log('tok_' + require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### Webhook Secrets
+
+Each webhook integration has its own secret for payload verification. These are only required if you configure the corresponding integration.
+
+- **`GITHUB_WEBHOOK_SECRET`** -- Set this to the same value you configure in your GitHub repository's webhook settings. GitHub signs payloads with HMAC-SHA256 using this secret.
+- **`SENTRY_CLIENT_SECRET`** -- Set this to match your Sentry integration's client secret. Sentry signs payloads with HMAC-SHA256.
+- **`POSTHOG_WEBHOOK_SECRET`** -- A shared secret that PostHog includes in webhook requests for verification.
+
+## Dashboard (`@loop/app`)
+
+These variables configure the React dashboard SPA. Variables prefixed with `VITE_` are embedded at build time.
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_API_URL` | No | `http://localhost:4242` | Base URL of the Loop API server. Set this to your production API URL when deploying. |
+| `VITE_LOOP_API_KEY` | Yes | -- | Bearer token for authenticating dashboard API requests. Must match the `LOOP_API_KEY` set on the API server. |
+
+<Callout type="warn">
+Since `VITE_` variables are embedded into the client-side JavaScript bundle at build time, they are visible to anyone who can access the dashboard. The `VITE_LOOP_API_KEY` grants full API access. Only deploy the dashboard behind authentication or on a trusted network.
+</Callout>
+
+### `VITE_API_URL`
+
+The base URL where the Loop API is running. In development this defaults to `http://localhost:4242`. For production, set it to your deployed API URL:
+
+```
+VITE_API_URL=https://api.looped.me
+```
+
+### `VITE_LOOP_API_KEY`
+
+The API key the dashboard uses to authenticate with the API server. This must be the same value as the `LOOP_API_KEY` configured on the API server:
+
+```
+VITE_LOOP_API_KEY=tok_your_secret_key_here
+```
+
+## Example `.env` Files
+
+### API (`.env` in `apps/api/`)
+
+```bash
+DATABASE_URL=postgresql://user:password@host/dbname
+LOOP_API_KEY=tok_your_secret_key_here
+
+# Optional: webhook integrations
+GITHUB_WEBHOOK_SECRET=whsec_your_github_secret
+SENTRY_CLIENT_SECRET=your_sentry_secret
+POSTHOG_WEBHOOK_SECRET=your_posthog_secret
+```
+
+### Dashboard (`.env` in `apps/app/`)
+
+```bash
+VITE_API_URL=https://api.looped.me
+VITE_LOOP_API_KEY=tok_your_secret_key_here
+```

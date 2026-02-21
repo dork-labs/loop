@@ -1,0 +1,148 @@
+---
+title: Templates
+description: List, inspect, and promote prompt template versions using the looped CLI.
+---
+
+# Templates
+
+The `templates` command group manages prompt templates and their versions. Templates define the prompts that agents receive when dispatched to work on an issue.
+
+## looped templates list
+
+List all prompt templates with pagination.
+
+```bash
+looped templates list [options]
+```
+
+### Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--limit <n>` | `50` | Results per page |
+| `--offset <n>` | `0` | Pagination offset |
+
+### Example
+
+```bash
+looped templates list
+```
+
+### Sample output
+
+```
+┌──────────┬───────────────────┬──────────────────────────────┬─────────────┬────────────┬──────────┐
+│ ID       │ SLUG              │ NAME                         │ SPECIFICITY │ ACTIVE VER │ CREATED  │
+├──────────┼───────────────────┼──────────────────────────────┼─────────────┼────────────┼──────────┤
+│ clx1ab.. │ fix-bug           │ Fix Bug Template             │ 3           │ clx2cd..   │ 5d ago   │
+│ clx3ef.. │ investigate-error │ Investigate Error Template   │ 2           │ clx4gh..   │ 7d ago   │
+│ clx5ij.. │ implement-feature │ Implement Feature Template   │ 1           │ none       │ 10d ago  │
+└──────────┴───────────────────┴──────────────────────────────┴─────────────┴────────────┴──────────┘
+Showing 3 of 3 templates
+```
+
+---
+
+## looped templates show
+
+Show detailed information about a template, including the active version and version history.
+
+```bash
+looped templates show <id>
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `id` | Template ID (CUID2) |
+
+### Example
+
+```bash
+looped templates show clx1abc2def3ghi4jkl5mnop
+```
+
+### Sample output
+
+```
+Fix Bug Template
+slug: fix-bug  |  id: clx1abc2def3ghi4jkl5mnop
+
+Identify and fix the reported bug based on signal data.
+
+Specificity: 3
+Created: 2026-02-15
+Updated: 2026-02-18
+
+Active Version
+  Version: 3
+  Author:  system (agent)
+  Usage:   24
+  Completion rate: 87.5%
+  Changelog: Improved context section with signal payload
+
+Versions
+┌─────┬────────┬────────┬───────┬────────────┬──────────┐
+│ VER │ STATUS │ AUTHOR │ USAGE │ COMPLETION │ CREATED  │
+├─────┼────────┼────────┼───────┼────────────┼──────────┤
+│ 3   │ active │ system │ 24    │ 87.5%      │ 2d ago   │
+│ 2   │ retired│ system │ 18    │ 72.2%      │ 5d ago   │
+│ 1   │ retired│ system │ 10    │ 60.0%      │ 10d ago  │
+└─────┴────────┴────────┴───────┴────────────┴──────────┘
+```
+
+---
+
+## looped templates promote
+
+Promote a specific version to be the active version for a template.
+
+```bash
+looped templates promote <templateId> <versionId>
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `templateId` | Template ID (CUID2) |
+| `versionId` | Version ID (CUID2) to promote |
+
+### Example
+
+```bash
+looped templates promote clx1abc2def3ghi4jkl5mnop clx6ver2sid3abc4def5ghij
+```
+
+### Sample output
+
+```
+Promoted version 3 to active for template clx1abc2def3ghi4jkl5mnop
+```
+
+---
+
+## Version statuses
+
+| Status | Description |
+|--------|-------------|
+| `active` | Currently used when dispatching issues matching this template |
+| `draft` | New version not yet promoted |
+| `retired` | Previously active version that has been superseded |
+
+## Typical template workflow
+
+```bash
+# 1. List templates to find the one you want
+looped templates list
+
+# 2. Inspect a template and its version history
+looped templates show clx1abc2def3ghi4jkl5mnop
+
+# 3. Promote a draft version to active
+looped templates promote clx1abc2def3ghi4jkl5mnop clx6ver2sid3abc4def5ghij
+
+# 4. Verify the promotion
+looped templates show clx1abc2def3ghi4jkl5mnop
+```

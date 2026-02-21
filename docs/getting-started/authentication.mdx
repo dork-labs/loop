@@ -1,0 +1,144 @@
+---
+title: Authentication
+description: How to authenticate API requests with Bearer tokens and how webhook providers verify their payloads.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Authentication
+
+Loop uses two authentication mechanisms: **Bearer token auth** for API requests and **provider-specific verification** for webhook endpoints.
+
+## Bearer token authentication
+
+All protected API endpoints (under `/api/*`) require a Bearer token in the `Authorization` header. The token is validated against the `LOOP_API_KEY` environment variable using timing-safe comparison.
+
+<Tabs items={['curl', 'JavaScript']}>
+<Tab value="curl">
+```bash
+curl http://localhost:4242/api/issues \
+  -H "Authorization: Bearer your-api-key-here"
+```
+</Tab>
+<Tab value="JavaScript">
+```js
+const res = await fetch("http://localhost:4242/api/issues", {
+  headers: {
+    "Authorization": "Bearer your-api-key-here",
+  },
+});
+```
+</Tab>
+</Tabs>
+
+If the token is missing or invalid, the API returns a `401` error:
+
+```json
+{ "error": "Missing or malformed Authorization header" }
+```
+
+### Setting your API key
+
+Set the `LOOP_API_KEY` environment variable in your `apps/api/.env` file:
+
+```bash
+LOOP_API_KEY="your-api-key-here"
+```
+
+Generate a secure random key using OpenSSL:
+
+```bash
+openssl rand -base64 32
+```
+
+<Callout type="warning">
+  Never share your API key publicly, commit it to version control, or include it in client-side code. Rotate your key immediately if it is exposed.
+</Callout>
+
+### Public endpoints
+
+The following endpoints do not require authentication:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/` | Service info |
+
+## Webhook authentication
+
+Webhook endpoints use provider-specific authentication instead of Bearer tokens. Each provider sends a signature or shared secret that Loop verifies before processing the payload.
+
+### GitHub webhooks
+
+**Endpoint:** `POST /api/signals/github`
+
+GitHub signs webhook payloads with HMAC-SHA256 using your shared secret. Loop verifies the signature from the `X-Hub-Signature-256` header.
+
+**Environment variable:** `GITHUB_WEBHOOK_SECRET`
+
+**How it works:**
+
+1. GitHub computes `sha256=HMAC-SHA256(secret, raw_body)` and sends it in the `X-Hub-Signature-256` header.
+2. Loop reads the raw request body, computes the same HMAC using `GITHUB_WEBHOOK_SECRET`.
+3. The two signatures are compared using `crypto.timingSafeEqual` to prevent timing attacks.
+
+**Example header:**
+```
+X-Hub-Signature-256: sha256=abc123def456...
+```
+
+### Sentry webhooks
+
+**Endpoint:** `POST /api/signals/sentry`
+
+Sentry uses HMAC-SHA256 with a canonical JSON body. Loop verifies the signature from the `Sentry-Hook-Signature` header.
+
+**Environment variable:** `SENTRY_CLIENT_SECRET`
+
+**How it works:**
+
+1. Sentry signs the canonical JSON form of the payload body.
+2. Loop parses and re-serializes the body through `JSON.parse`/`JSON.stringify` to produce the canonical form.
+3. Loop computes `HMAC-SHA256(secret, canonical_body)` and compares it to the `Sentry-Hook-Signature` header using timing-safe comparison.
+
+**Example header:**
+```
+Sentry-Hook-Signature: abc123def456...
+```
+
+### PostHog webhooks
+
+**Endpoint:** `POST /api/signals/posthog`
+
+PostHog uses a simpler shared secret approach. The raw secret is sent in the `X-PostHog-Secret` header and compared directly against `POSTHOG_WEBHOOK_SECRET`.
+
+**Environment variable:** `POSTHOG_WEBHOOK_SECRET`
+
+**How it works:**
+
+1. PostHog includes the secret value in the `X-PostHog-Secret` header with each request.
+2. Loop compares it to `POSTHOG_WEBHOOK_SECRET` using `crypto.timingSafeEqual`.
+
+**Example header:**
+```
+X-PostHog-Secret: your-posthog-secret-here
+```
+
+## Environment variable reference
+
+| Variable | Required | Used by |
+|----------|----------|---------|
+| `LOOP_API_KEY` | Yes | All `/api/*` endpoints |
+| `GITHUB_WEBHOOK_SECRET` | For GitHub webhooks | `POST /api/signals/github` |
+| `SENTRY_CLIENT_SECRET` | For Sentry webhooks | `POST /api/signals/sentry` |
+| `POSTHOG_WEBHOOK_SECRET` | For PostHog webhooks | `POST /api/signals/posthog` |
+
+<Callout type="info">
+  Webhook secrets are only required if you plan to use that specific integration. The API will return a `500` error if a webhook is called without its corresponding secret configured.
+</Callout>
+
+## Next steps
+
+- [**Concepts**](/docs/concepts) — Understand how signals, issues, dispatch, and prompts work together.
+- [**Integrations**](/docs/integrations) — Step-by-step setup guides for GitHub, Sentry, and PostHog webhooks.

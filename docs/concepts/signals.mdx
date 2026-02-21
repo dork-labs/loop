@@ -1,0 +1,85 @@
+---
+title: Signals
+description: How external events enter Loop as raw data and create triage issues for agent processing.
+---
+
+# Signals
+
+Signals are raw events from the outside world that enter Loop and trigger the feedback loop. Every signal creates a triage issue, ensuring that every external event is evaluated and either acted upon or explicitly declined.
+
+## What Signals Are
+
+A signal is a piece of incoming data from an external source: an analytics alert, an error spike, a GitHub event, user feedback, or a manually submitted observation. Signals carry structured metadata about their origin and content, but they do not represent decisions or actions. They are raw inputs that need triage.
+
+Each signal record stores:
+
+| Field | Description |
+|-------|-------------|
+| `source` | Where the signal came from: `posthog`, `github`, `sentry`, `feedback`, `manual` |
+| `externalId` | Optional reference ID from the source system |
+| `title` | Human-readable summary of the signal |
+| `body` | Optional detailed description |
+| `severity` | `low`, `medium`, `high`, or `critical` |
+| `metadata` | Arbitrary JSON payload with the raw event data |
+
+## Signal Ingestion
+
+Signals enter Loop through the `POST /api/signals` endpoint. When a signal is ingested, Loop does two things atomically:
+
+1. Creates a `Signal` record storing the raw event data
+2. Creates a `triage` issue of type `signal` linked to the signal record
+
+The triage issue enters the dispatch queue with a status of `triage` (which is promoted to `todo` for dispatch eligibility). Its priority is derived from the signal's severity level. The issue carries the signal source and payload as metadata fields, making the raw data available to whatever agent picks it up.
+
+```
+POST /api/signals
+{
+  "source": "posthog",
+  "title": "Sign-up conversion -12% (24h)",
+  "severity": "high",
+  "metadata": {
+    "metric": "signup_conversion_rate",
+    "previous": 3.6,
+    "current": 3.2,
+    "change": -0.12,
+    "period": "24h"
+  }
+}
+```
+
+This creates both a signal record and an issue titled "PostHog: sign-up conversion -12% (24h)" with `type: signal`, ready for agent triage.
+
+## Webhook Sources
+
+Loop provides dedicated webhook endpoints for three external services, each with its own authentication and payload mapping:
+
+**GitHub** (`POST /api/signals/github`) -- Receives GitHub webhook events and verifies them using HMAC-SHA256 with the `GITHUB_WEBHOOK_SECRET`. Supports events like pushes, pull requests, issues, and deployments. The webhook handler extracts relevant fields from GitHub's payload format and creates a normalized signal.
+
+**Sentry** (`POST /api/signals/sentry`) -- Receives Sentry error alerts and verifies them using HMAC-SHA256 with the `SENTRY_CLIENT_SECRET`. Error alerts are mapped to signals with severity derived from the Sentry error level. The raw Sentry event data is preserved in the signal metadata.
+
+**PostHog** (`POST /api/signals/posthog`) -- Receives PostHog metric alerts and verifies them using a shared secret in the `POSTHOG_WEBHOOK_SECRET` header. Metric changes, funnel drops, and action alerts are mapped to signals with appropriate severity levels.
+
+All three webhook endpoints create signals through the same pipeline as the generic `POST /api/signals` endpoint. The only difference is the authentication method and the payload normalization logic.
+
+## The Triage Flow
+
+Once a signal creates a triage issue, the standard dispatch cycle takes over. An agent calls `GET /api/dispatch/next`, receives the signal issue with a hydrated triage prompt, analyzes the signal data, and decides whether it is actionable or noise. If actionable, the agent creates a hypothesis issue as a child of the signal. If noise, the agent marks the signal as `canceled` with an explanation. Every signal is processed systematically -- no signal gets lost or forgotten.
+
+## Severity Levels
+
+Signals carry a severity level that influences the priority of the resulting triage issue:
+
+| Severity | Description | Priority Mapping |
+|----------|-------------|-----------------|
+| `critical` | System-breaking events requiring immediate attention | Urgent (1) |
+| `high` | Significant degradation or important events | High (2) |
+| `medium` | Notable changes worth investigating | Medium (3) |
+| `low` | Minor events or informational signals | Low (4) |
+
+Severity is set by the signal source. Webhook handlers derive severity from the source system's own severity levels (for example, Sentry error levels). Manual signals can specify severity explicitly.
+
+## Signals as the Loop Entry Point
+
+Signals serve a specific architectural role: they are the only way external events enter the feedback loop. Everything downstream -- hypotheses, plans, tasks, monitors -- originates from a signal. This creates a complete audit trail from external event to validated outcome.
+
+When a monitoring issue detects that a hypothesis was invalidated (the fix did not work), the outcome itself becomes a new signal. This feeds back into the triage queue, triggering another iteration of the loop. The system does not stop after one attempt. It observes, hypothesizes, tests, and iterates until outcomes match expectations.

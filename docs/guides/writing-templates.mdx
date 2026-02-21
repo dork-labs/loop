@@ -1,0 +1,340 @@
+---
+title: Writing Templates
+description: Author prompt templates using Handlebars syntax to generate hydrated instructions for AI agents.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Writing Templates
+
+Prompt templates are Handlebars documents that Loop hydrates with real issue data before dispatching to an AI agent. Templates are plain text (not HTML), so all output is unescaped. This guide covers the syntax, available variables, helpers, partials, and conditions system.
+
+## How templates work
+
+1. You create a **template** with a slug, optional conditions, and a project scope.
+2. You add **versions** to the template — each version contains the Handlebars content.
+3. You **promote** a version to make it the active one used during dispatch.
+4. When an agent calls `GET /api/dispatch/next`, Loop selects the best-matching template, hydrates it with issue context, and returns the rendered prompt.
+
+Templates are compiled once and cached by version ID for performance.
+
+## Handlebars basics
+
+Loop uses [Handlebars](https://handlebarsjs.com/) with `noEscape: true` (plain text output) and `strict: false` (missing variables render as empty strings instead of throwing errors).
+
+### Variable interpolation
+
+Use double curly braces to insert values:
+
+```handlebars
+Issue #{{issue.number}}: {{issue.title}}
+Type: {{issue.type}}
+Priority: {{issue.priority}}
+```
+
+### Conditionals
+
+Use `{{#if}}` blocks to include content only when a value is present:
+
+```handlebars
+{{#if issue.description}}
+## Description
+{{issue.description}}
+{{/if}}
+
+{{#if goal}}
+Align your work with the project goal: {{goal.title}}
+{{/if}}
+```
+
+### Iteration
+
+Use `{{#each}}` to loop over arrays:
+
+```handlebars
+{{#if labels.length}}
+Labels: {{#each labels}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+
+{{#each children}}
+- #{{this.number}} [{{this.status}}]: {{this.title}}
+{{/each}}
+```
+
+## Available context variables
+
+When a template is hydrated, the following context object is passed to Handlebars. All fields are populated from the database at dispatch time.
+
+### `issue`
+
+The claimed issue, with all columns from the `issues` table:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `issue.id` | `string` | CUID2 identifier |
+| `issue.number` | `number` | Sequential issue number |
+| `issue.title` | `string` | Issue title |
+| `issue.description` | `string \| null` | Markdown description |
+| `issue.type` | `string` | `signal`, `hypothesis`, `plan`, `task`, or `monitor` |
+| `issue.status` | `string` | Current status (will be `in_progress` at dispatch) |
+| `issue.priority` | `number` | `0` (none) to `4` (low), `1` = urgent |
+| `issue.parentId` | `string \| null` | Parent issue ID |
+| `issue.projectId` | `string \| null` | Owning project ID |
+| `issue.signalSource` | `string \| null` | Origin of the signal (`github`, `sentry`, `posthog`) |
+| `issue.signalPayload` | `object \| null` | Raw signal data (JSON) |
+| `issue.hypothesis` | `object \| null` | Hypothesis data with `statement`, `confidence`, `validationCriteria` |
+| `issue.agentSummary` | `string \| null` | Summary from a previous agent session |
+
+### `parent`
+
+The parent issue (if `issue.parentId` is set), with the same shape as `issue`. Null when no parent exists.
+
+### `siblings`
+
+Array of sibling issues (other children of the same parent). Empty when the issue has no parent.
+
+### `children`
+
+Array of child issues (direct sub-issues). Empty when the issue is a leaf node.
+
+### `project`
+
+The owning project record, or null:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `project.name` | `string` | Project name |
+| `project.description` | `string \| null` | Project description |
+
+### `goal`
+
+The active goal for the project, or null:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `goal.title` | `string` | Goal title |
+| `goal.currentValue` | `number` | Current metric value |
+| `goal.targetValue` | `number` | Target metric value |
+| `goal.unit` | `string` | Unit of measurement |
+| `goal.status` | `string` | `active`, `completed`, or `paused` |
+
+### `labels`
+
+Array of `{ name, color }` objects for all labels attached to the issue.
+
+### `blocking` and `blockedBy`
+
+Arrays of `{ number, title }` for issues in `blocks` and `blocked_by` relations.
+
+### `previousSessions`
+
+Array of `{ status, agentSummary }` from prior agent attempts on this issue.
+
+### `loopUrl` and `loopToken`
+
+The API base URL and bearer token, for use in API call examples within the prompt.
+
+### `meta`
+
+Template metadata for the current render:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `meta.templateId` | `string` | Template CUID2 |
+| `meta.templateSlug` | `string` | Template slug |
+| `meta.versionId` | `string` | Active version CUID2 |
+| `meta.versionNumber` | `number` | Version sequence number |
+
+## Helpers
+
+Loop registers two custom Handlebars helpers.
+
+### `json`
+
+Renders any value as pretty-printed JSON. Useful for JSONB fields like `signalPayload` or `hypothesis`:
+
+````handlebars
+{{#if issue.signalPayload}}
+## Signal Payload
+```
+{{json issue.signalPayload}}
+```
+{{/if}}
+````
+
+### `priority_label`
+
+Converts a numeric priority to a human-readable label:
+
+```handlebars
+Priority: {{priority_label issue.priority}}
+```
+
+Maps `1` to `urgent`, `2` to `high`, `3` to `medium`, `4` to `low`, `0` to `none`.
+
+## Shared partials
+
+Loop ships with five shared partials that you can include in any template with `{{> partialName}}`. These handle common sections so you do not need to rewrite them in every template.
+
+### `api_reference`
+
+Renders a Loop API Reference section with curl examples for creating issues, updating status, adding comments, and creating relations. Automatically uses the current `loopUrl` and `loopToken`.
+
+```handlebars
+{{> api_reference}}
+```
+
+### `review_instructions`
+
+Renders an "After Completion" section that tells the agent how to submit a prompt review via the API, including the `versionId` and `issueId` from the current context.
+
+```handlebars
+{{> review_instructions}}
+```
+
+### `parent_context`
+
+Renders the parent issue details (number, type, title, description, hypothesis) when a parent exists. Outputs nothing if `parent` is null.
+
+```handlebars
+{{> parent_context}}
+```
+
+### `sibling_context`
+
+Renders a bullet list of sibling issues with their status and title. Outputs nothing if there are no siblings.
+
+```handlebars
+{{> sibling_context}}
+```
+
+### `project_and_goal_context`
+
+Renders the project name, description, and goal progress. Outputs nothing if the issue has no project.
+
+```handlebars
+{{> project_and_goal_context}}
+```
+
+## Template conditions
+
+Conditions control which issues a template matches. They are stored as JSON on the template record and use AND logic — all specified conditions must match for the template to be selected.
+
+### Available condition fields
+
+| Field | Type | Match logic |
+|-------|------|-------------|
+| `type` | `string` | Exact match on issue type |
+| `signalSource` | `string` | Exact match on signal source |
+| `labels` | `string[]` | All specified labels must be present on the issue |
+| `projectId` | `string` | Exact match on project ID |
+| `hasFailedSessions` | `boolean` | Whether sibling issues have failed agent sessions |
+| `hypothesisConfidence` | `number` | Issue confidence must be >= this value (0-1) |
+
+### Selection algorithm
+
+When multiple templates match an issue, Loop picks the best one:
+
+1. Filter to templates with a non-null active version
+2. Filter to templates whose conditions match the issue context
+3. Sort: project-specific templates first, then by specificity (number of conditions) descending
+4. Return the first match
+
+If no template matches, Loop falls back to a default template that matches only on issue type.
+
+<Callout type="info">
+Templates with more conditions (higher specificity) win over generic ones. A template with `{"type": "signal", "signalSource": "sentry"}` beats one with just `{"type": "signal"}` for a Sentry-sourced signal issue.
+</Callout>
+
+### Example conditions
+
+Match all signal issues:
+
+```json
+{ "type": "signal" }
+```
+
+Match Sentry signals with the `critical` label:
+
+```json
+{ "type": "signal", "signalSource": "sentry", "labels": ["critical"] }
+```
+
+Match hypothesis issues with high confidence:
+
+```json
+{ "type": "hypothesis", "hypothesisConfidence": 0.8 }
+```
+
+Match task issues that have failed before:
+
+```json
+{ "type": "task", "hasFailedSessions": true }
+```
+
+## Full template example
+
+Below is a complete template for handling signal-type issues from Sentry:
+
+````handlebars
+# Investigate: {{issue.title}}
+
+You are investigating issue #{{issue.number}}, a {{issue.type}} from {{issue.signalSource}}.
+Priority: {{priority_label issue.priority}}
+
+{{#if issue.description}}
+## Description
+{{issue.description}}
+{{/if}}
+
+{{#if issue.signalPayload}}
+## Signal Payload
+```
+{{json issue.signalPayload}}
+```
+{{/if}}
+
+{{> parent_context}}
+{{> sibling_context}}
+{{> project_and_goal_context}}
+
+{{#if blockedBy.length}}
+## Blocked By
+{{#each blockedBy}}
+- #{{this.number}}: {{this.title}}
+{{/each}}
+{{/if}}
+
+{{#if previousSessions.length}}
+## Previous Attempts
+{{#each previousSessions}}
+- Status: {{this.status}} — {{this.agentSummary}}
+{{/each}}
+{{/if}}
+
+## Your Task
+1. Analyze the signal payload and determine root cause
+2. If fixable, implement the fix and update the issue status to `done`
+3. If not fixable, add a comment explaining why and set status to `canceled`
+
+{{> api_reference}}
+{{> review_instructions}}
+````
+
+## Version management
+
+Templates support multiple versions. Only the **promoted** version is used during dispatch.
+
+- **Create a version** — `POST /api/templates/:id/versions` with the Handlebars content
+- **Promote a version** — `POST /api/templates/:id/versions/:versionId/promote` to make it active
+- **List versions** — `GET /api/templates/:id/versions` to see all versions and their usage counts
+
+<Callout type="info">
+Promoting a new version takes effect immediately. The next dispatch call will use the newly promoted version. Old versions are preserved for audit and rollback.
+</Callout>
+
+## Review scoring
+
+After an agent completes work using a dispatched prompt, it can submit a review rating clarity, completeness, and relevance on a 1-5 scale. These scores are aggregated using EWMA (Exponentially Weighted Moving Average) and surfaced in the Prompt Health dashboard view.
+
+Reviews help you identify which templates need improvement. A template with low clarity scores likely needs clearer instructions; low completeness suggests missing context.
