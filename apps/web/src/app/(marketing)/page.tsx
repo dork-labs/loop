@@ -5,13 +5,17 @@ import {
   MarketingHeader,
   MarketingFooter,
   LoopHero,
+  IntegrationsBar,
+  HowItWorksFlow,
   LoopValueProps,
+  QuickStartSection,
 } from '@/layers/features/marketing'
 
 const navLinks = [
-  { label: 'about', href: '#about' },
+  { label: 'how it works', href: '#how-it-works' },
+  { label: 'features', href: '#features' },
+  { label: 'get started', href: '#get-started' },
   { label: 'contact', href: '#contact' },
-  { label: 'blog', href: '/blog' },
   { label: 'docs', href: '/docs' },
 ]
 
@@ -35,7 +39,13 @@ export default function HomePage() {
       <main>
         <LoopHero />
 
+        <IntegrationsBar />
+
+        <HowItWorksFlow />
+
         <LoopValueProps />
+
+        <QuickStartSection />
 
         <ContactSection
           email={siteConfig.contactEmail}

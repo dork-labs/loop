@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 6,
+  "nextNumber": 8,
   "specs": [
     {
       "number": 1,
@@ -34,6 +34,20 @@
       "number": 5,
       "slug": "mvp-phase-4-cli-tool",
       "title": "MVP Phase 4: CLI Tool",
+      "created": "2026-02-20",
+      "status": "specification"
+    },
+    {
+      "number": 6,
+      "slug": "docs-update-post-mvp",
+      "title": "Update Documentation Post-MVP",
+      "created": "2026-02-20",
+      "status": "ideation"
+    },
+    {
+      "number": 7,
+      "slug": "mvp-homepage-update",
+      "title": "Update Marketing Homepage Post-MVP",
       "created": "2026-02-20",
       "status": "specification"
     }

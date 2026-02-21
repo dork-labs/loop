@@ -5,7 +5,10 @@ import { useEventListener } from 'usehooks-ts'
 import { throttle } from 'lodash-es'
 import { motion } from 'motion/react'
 import { ArrowUp } from 'lucide-react'
-import type { NavLink } from '../lib/types'
+export interface NavLink {
+  label: string
+  href: string
+}
 
 interface MarketingNavProps {
   links: NavLink[]

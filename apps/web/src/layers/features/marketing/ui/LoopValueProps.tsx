@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'motion/react'
-import { REVEAL, STAGGER } from '../lib/motion-variants'
+import { REVEAL, STAGGER, VIEWPORT } from '../lib/motion-variants'
 
 interface ValueProp {
   label: string
@@ -11,55 +11,62 @@ interface ValueProp {
 
 const VALUE_PROPS: ValueProp[] = [
   {
-    label: 'Analyze',
-    title: 'Continuous Codebase Analysis',
+    label: 'Data Layer',
+    title: 'Signal Ingestion & Issue Management',
     description:
-      'Loop scans your repository for patterns, tech debt, and improvement opportunities -- building a deep understanding of your system over time.',
+      'PostgreSQL-backed data layer with 10 entity types. Ingest signals from PostHog, GitHub, and Sentry. Full CRUD API with filtering, pagination, and hierarchy.',
   },
   {
-    label: 'Plan',
-    title: 'Intelligent Improvement Plans',
+    label: 'Prompt Engine',
+    title: 'Template Selection & Hydration',
     description:
-      'Prioritizes changes by impact and risk, generating detailed execution plans that respect your architecture and conventions.',
+      'Conditions-based template matching with Handlebars hydration. Injects full system context — issues, projects, goals, relations — into agent prompts.',
   },
   {
-    label: 'Execute',
-    title: 'Autonomous Execution',
+    label: 'Dashboard',
+    title: 'Real-Time Oversight',
     description:
-      'Implements improvements autonomously -- refactoring, testing, and validating changes before presenting them for your review.',
+      'React dashboard with 5 views: Issues, Issue Detail, Activity Timeline, Goals, and Prompt Health. Monitor the autonomous loop in real time.',
+  },
+  {
+    label: 'CLI',
+    title: 'Command-Line Control',
+    description:
+      '13 commands for issue management, signals, triage, dispatch, templates, and system status. JSON output for scripting.',
   },
 ]
 
 /**
- * Value proposition section -- three pillars of the Loop engine.
+ * Value proposition section -- four product pillars of the Loop engine.
  *
- * Displays the Analyze / Plan / Execute cycle as a simple grid
- * with staggered entrance animations.
+ * Displays Data Layer / Prompt Engine / Dashboard / CLI as a staggered
+ * card grid with scroll-triggered entrance animations.
  */
 export function LoopValueProps() {
   return (
-    <section id="about" className="py-24 px-8 bg-cream-secondary">
+    <section id="features" className="py-24 px-8 bg-cream-secondary">
       <motion.div
-        className="max-w-4xl mx-auto"
+        className="max-w-6xl mx-auto"
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: '-100px' }}
+        viewport={VIEWPORT}
         variants={STAGGER}
       >
         <motion.p
           variants={REVEAL}
           className="font-mono text-2xs tracking-[0.2em] uppercase text-brand-orange text-center mb-16"
         >
-          How it works
+          What you get
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {VALUE_PROPS.map((prop) => (
-            <motion.div key={prop.label} variants={REVEAL}>
-              <span
-                className="font-mono text-2xs tracking-[0.15em] uppercase block mb-3"
-                style={{ color: '#7A756A' }}
-              >
+            <motion.div
+              key={prop.label}
+              variants={REVEAL}
+              className="bg-cream-white rounded-lg p-6 border border-[var(--border-warm)]"
+            >
+              <span className="font-mono text-2xs tracking-[0.15em] uppercase block mb-3 text-warm-gray">
                 {prop.label}
               </span>
               <h3 className="text-charcoal font-semibold text-lg mb-3 tracking-[-0.02em]">
