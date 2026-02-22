@@ -44,9 +44,10 @@ function GoalsPage() {
       <h1 className="text-2xl font-bold">Goals</h1>
 
       {goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-center text-muted-foreground">
           <Target className="size-12 opacity-30" />
           <p className="text-lg">No goals defined yet</p>
+          <p className="max-w-sm text-sm">Goals track measurable outcomes for your projects. Create a project with a goal to see progress here.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

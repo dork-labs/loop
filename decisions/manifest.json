@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 21,
+  "nextNumber": 23,
   "decisions": [
     {
       "number": 1,
@@ -163,6 +163,24 @@
       "created": "2026-02-21",
       "extractedFrom": "dev-setup-dx",
       "specSlug": "dev-setup-dx"
+    },
+    {
+      "number": 21,
+      "slug": "use-localstorage-for-onboarding-state",
+      "title": "Use localStorage for onboarding state instead of server-side tracking",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "ftue-onboarding",
+      "specSlug": "ftue-onboarding"
+    },
+    {
+      "number": 22,
+      "slug": "use-polling-over-sse-for-first-event-detection",
+      "title": "Use TanStack Query polling over SSE for first-event detection",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "ftue-onboarding",
+      "specSlug": "ftue-onboarding"
     }
   ]
 }

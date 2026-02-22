@@ -30,10 +30,10 @@ function ActivityPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">Loop Activity</h1>
       {chains.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-center text-muted-foreground">
           <Activity className="size-12 opacity-30" />
           <p className="text-lg">No activity yet</p>
-          <p className="text-sm">The loop is waiting for signals</p>
+          <p className="max-w-sm text-sm">Activity shows the flow of signals through the loop. Once your agent starts creating issues, you'll see the timeline here.</p>
         </div>
       ) : (
         <ActivityTimeline chains={chains} />

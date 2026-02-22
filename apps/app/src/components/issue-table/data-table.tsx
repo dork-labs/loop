@@ -5,7 +5,7 @@ import {
   type PaginationState,
 } from '@tanstack/react-table'
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -71,18 +71,6 @@ export function IssueDataTable({
 
   if (isLoading) {
     return <IssueTableSkeleton />
-  }
-
-  if (!isLoading && data.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-center">
-        <Inbox className="size-12 text-muted-foreground opacity-30" />
-        <p className="text-base font-medium">No issues found</p>
-        <p className="text-sm text-muted-foreground">
-          Try adjusting your filters to see more results.
-        </p>
-      </div>
-    )
   }
 
   return (

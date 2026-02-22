@@ -41,11 +41,11 @@ function PromptsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Prompt Health</h1>
       {!data || data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-center text-muted-foreground">
           <Sparkles className="size-12 opacity-30" />
           <p className="text-lg">No prompt templates yet</p>
-          <p className="text-sm">
-            Templates are created when the dispatch engine first runs
+          <p className="max-w-sm text-sm">
+            Prompt templates tell your AI agent what to do. They&apos;re created when the dispatch engine runs for the first time.
           </p>
         </div>
       ) : (

@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+For product vision and architecture rationale, see @meta/loop-litepaper.md
+
 ## What This Is
 
 Loop is the Autonomous Improvement Engine — an open-source data layer and prompt engine that collects signals, organizes work into issues, and tells AI agents exactly what to do next. It closes the feedback loop for AI-powered development by turning raw data (errors, metrics, user feedback) into prioritized, actionable work items.

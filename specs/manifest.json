@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 9,
+  "nextNumber": 10,
   "specs": [
     {
       "number": 1,
@@ -56,6 +56,13 @@
       "slug": "dev-setup-dx",
       "title": "Developer Setup & DX Improvements",
       "created": "2026-02-21",
+      "status": "specification"
+    },
+    {
+      "number": 9,
+      "slug": "ftue-onboarding",
+      "title": "FTUE Onboarding — Guide New Users to Connect Their AI Agent",
+      "created": "2026-02-22",
       "status": "specification"
     }
   ]

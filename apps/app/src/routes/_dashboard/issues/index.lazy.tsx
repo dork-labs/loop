@@ -1,10 +1,14 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { Inbox } from 'lucide-react'
 import { issueListOptions } from '@/lib/queries/issues'
 import { IssueDataTable } from '@/components/issue-table/data-table'
 import { IssueFilters } from '@/components/issue-table/filters'
 import { ErrorState } from '@/components/error-state'
+import { WelcomeModal } from '@/components/welcome-modal'
+import { SetupChecklist } from '@/components/setup-checklist'
+import { useOnboarding } from '@/hooks/use-onboarding'
 
 export const Route = createLazyFileRoute('/_dashboard/issues/')({
   component: IssueListPage,
@@ -25,7 +29,27 @@ function IssueListPage() {
     return params
   }, [search])
 
-  const { data, isFetching, error } = useQuery(issueListOptions(filters))
+  // Read localStorage synchronously to decide polling before the query runs.
+  // This breaks the circular dependency: useOnboarding needs issueCount from
+  // the query, but the query needs the polling flag from onboarding state.
+  const onboardingState = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('loop:onboarding')
+      if (!raw) return { welcomed: false, completedAt: null }
+      return JSON.parse(raw) as { welcomed: boolean; completedAt: string | null }
+    } catch {
+      return { welcomed: false, completedAt: null }
+    }
+  }, [])
+
+  const shouldPoll = !onboardingState.completedAt
+
+  const { data, isFetching, error } = useQuery(
+    issueListOptions(filters, { polling: shouldPoll })
+  )
+
+  const issueCount = data?.data?.length ?? 0
+  const { state, isOnboarding, markWelcomed, markComplete } = useOnboarding(issueCount)
 
   if (error) {
     return (
@@ -36,17 +60,46 @@ function IssueListPage() {
     )
   }
 
+  const firstIssueId = data?.data?.[0]?.id
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Issues</h1>
-      <IssueFilters />
-      <IssueDataTable
-        data={data?.data ?? []}
-        total={data?.total ?? 0}
-        page={search.page}
-        limit={search.limit}
-        isLoading={isFetching && !data}
+
+      <WelcomeModal
+        open={!state.welcomed && issueCount === 0}
+        onClose={markWelcomed}
       />
+
+      {isOnboarding ? (
+        <SetupChecklist
+          onComplete={markComplete}
+          issueCount={issueCount}
+          firstIssueId={firstIssueId}
+        />
+      ) : issueCount === 0 && !isFetching ? (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card py-20 text-center">
+          <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+            <Inbox className="size-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold">No issues yet</h2>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Issues will appear here as signals arrive and agents create work
+            items. Send a signal via the API to get started.
+          </p>
+        </div>
+      ) : (
+        <>
+          <IssueFilters />
+          <IssueDataTable
+            data={data?.data ?? []}
+            total={data?.total ?? 0}
+            page={search.page}
+            limit={search.limit}
+            isLoading={isFetching && !data}
+          />
+        </>
+      )}
     </div>
   )
 }
