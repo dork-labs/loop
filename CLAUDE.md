@@ -35,6 +35,7 @@ loop/
 
 ```bash
 npm run dev              # Start all apps in dev mode (via Turborepo)
+npm run dev:full         # Start local PostgreSQL + all apps
 npm run build            # Build all apps
 npm test                 # Vitest across api + app
 npm run typecheck        # Type-check all packages
@@ -50,9 +51,9 @@ Run a single test file: `npx vitest run apps/api/src/__tests__/example.test.ts`
 
 ```bash
 npm run setup            # First-time setup (install, env, docker, migrate)
-npm run dx               # Start local PostgreSQL (Docker Compose)
-npm run dx:down          # Stop local PostgreSQL
-npm run dx:reset         # Stop and delete local database volume
+npm run db:dev:up        # Start local PostgreSQL (Docker Compose)
+npm run db:dev:down      # Stop local PostgreSQL
+npm run db:dev:reset     # Stop and delete local database volume
 ```
 
 ### Database Commands (from `apps/api/`)

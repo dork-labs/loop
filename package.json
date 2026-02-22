@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "turbo dev",
+    "dev:full": "npm run db:dev:up && npm run dev",
     "build": "turbo build",
     "test": "turbo test",
     "typecheck": "turbo typecheck",
@@ -16,9 +17,9 @@
     "lint:fix": "turbo lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "dx": "docker compose -f docker-compose.dev.yml up -d",
-    "dx:down": "docker compose -f docker-compose.dev.yml down",
-    "dx:reset": "docker compose -f docker-compose.dev.yml down -v",
+    "db:dev:up": "docker compose -f docker-compose.dev.yml up -d",
+    "db:dev:down": "docker compose -f docker-compose.dev.yml down",
+    "db:dev:reset": "docker compose -f docker-compose.dev.yml down -v",
     "setup": "bash scripts/setup.sh"
   },
   "devDependencies": {

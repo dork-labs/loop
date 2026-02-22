@@ -70,7 +70,7 @@ fi
 
 echo ""
 echo "Starting local PostgreSQL..."
-npm run dx
+npm run db:dev:up
 
 # Wait for postgres to be healthy
 echo "Waiting for PostgreSQL to be ready..."
