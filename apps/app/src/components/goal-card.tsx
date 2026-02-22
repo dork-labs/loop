@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Goal } from '@/types/projects'
 
@@ -57,17 +58,11 @@ export function GoalCard({ goal }: GoalCardProps) {
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* Progress bar */}
-        <div className="h-2 w-full rounded-full bg-secondary">
-          <div
-            className={`h-full rounded-full transition-all ${progressColor}`}
-            style={{ width: `${progress}%` }}
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          />
-        </div>
+        <Progress
+          value={progress}
+          className="bg-secondary"
+          indicatorClassName={progressColor}
+        />
 
         {/* Value and percentage row */}
         <div className="flex items-center justify-between text-sm">

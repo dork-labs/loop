@@ -1,7 +1,9 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { Target } from 'lucide-react'
 import { goalListOptions } from '@/lib/queries/goals'
 import { GoalCard, GoalCardSkeleton } from '@/components/goal-card'
+import { ErrorState } from '@/components/error-state'
 
 export const Route = createLazyFileRoute('/_dashboard/goals/')({
   component: GoalsPage,
@@ -28,15 +30,10 @@ function GoalsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20">
-        <p className="text-destructive">Failed to load goals: {error.message}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="text-sm underline"
-        >
-          Retry
-        </button>
-      </div>
+      <ErrorState
+        message={`Failed to load goals: ${error.message}`}
+        onRetry={() => window.location.reload()}
+      />
     )
   }
 
@@ -47,7 +44,8 @@ function GoalsPage() {
       <h1 className="text-2xl font-bold">Goals</h1>
 
       {goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-muted-foreground">
+          <Target className="size-12 opacity-30" />
           <p className="text-lg">No goals defined yet</p>
         </div>
       ) : (

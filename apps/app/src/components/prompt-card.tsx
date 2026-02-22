@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
+import { ChevronDown, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ScoreSparkline } from '@/components/score-sparkline'
 import type { DashboardPromptHealth } from '@/types/dashboard'
 import type { PromptVersion } from '@/types/prompts'
@@ -107,53 +108,44 @@ function VersionHistory({ versions }: { versions: PromptVersion[] }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="border-t border-border pt-3">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-      >
+    <Collapsible open={open} onOpenChange={setOpen} className="border-t border-border pt-3">
+      <CollapsibleTrigger className="flex w-full items-center justify-between text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
         <span>Version History ({versions.length})</span>
-        {open ? (
-          <ChevronUp className="size-3.5" />
-        ) : (
-          <ChevronDown className="size-3.5" />
-        )}
-      </button>
+        <ChevronDown className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </CollapsibleTrigger>
 
-      {open && (
-        <div className="mt-3 space-y-2">
-          {versions.map((v) => (
-            <div
-              key={v.id}
-              className="rounded border border-border bg-secondary/30 px-3 py-2 text-xs"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-medium">v{v.version}</span>
-                  <Badge
-                    variant="outline"
-                    className="h-4 px-1 py-0 text-[10px]"
-                  >
-                    {versionStatusLabel(v.status)}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <span>{v.usageCount} uses</span>
-                  <span>{formatRate(v.completionRate)}</span>
-                  <span className="font-mono">{formatScore(v.reviewScore)}/5</span>
-                </div>
+      <CollapsibleContent className="mt-3 space-y-2">
+        {versions.map((v) => (
+          <div
+            key={v.id}
+            className="rounded border border-border bg-secondary/30 px-3 py-2 text-xs"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-medium">v{v.version}</span>
+                <Badge
+                  variant="outline"
+                  className="h-4 px-1 py-0 text-[10px]"
+                >
+                  {versionStatusLabel(v.status)}
+                </Badge>
               </div>
-              {v.changelog && (
-                <p className="mt-1 text-muted-foreground">{v.changelog}</p>
-              )}
-              <p className="mt-1 text-muted-foreground">
-                By {v.authorName} ({v.authorType})
-              </p>
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <span>{v.usageCount} uses</span>
+                <span>{formatRate(v.completionRate)}</span>
+                <span className="font-mono">{formatScore(v.reviewScore)}/5</span>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
+            {v.changelog && (
+              <p className="mt-1 text-muted-foreground">{v.changelog}</p>
+            )}
+            <p className="mt-1 text-muted-foreground">
+              By {v.authorName} ({v.authorType})
+            </p>
+          </div>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 

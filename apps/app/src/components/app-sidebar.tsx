@@ -1,6 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { List, Activity, Target, Sparkles } from 'lucide-react'
+import { List, Activity, Target, Sparkles, Orbit, Keyboard } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -45,6 +45,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1">
+          <Orbit className="size-5 text-muted-foreground" />
           <span className="text-lg font-bold">Loop</span>
         </div>
       </SidebarHeader>
@@ -78,6 +79,11 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <Separator />
+        <div className="flex items-center gap-1.5 px-4 py-1 text-xs text-muted-foreground">
+          <Keyboard className="size-3" />
+          <span>Press <kbd className="rounded border border-border px-1 font-mono text-[10px]">?</kbd> for shortcuts</span>
+        </div>
         <Separator />
         <SidebarGroup>
           <SidebarGroupLabel>System</SidebarGroupLabel>

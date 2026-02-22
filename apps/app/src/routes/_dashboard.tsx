@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
@@ -25,6 +25,7 @@ function DashboardLayout() {
 function DashboardContent() {
   const { toggleSidebar } = useSidebar()
   const [helpOpen, setHelpOpen] = useState(false)
+  const isNavigating = useRouterState({ select: (s) => s.status === 'pending' })
 
   // Navigation shortcuts: g+i, g+a, g+g, g+p — plus "?" for help
   useKeyboardShortcuts({ onHelpOpen: () => setHelpOpen(true) })
@@ -45,6 +46,11 @@ function DashboardContent() {
     <>
       <AppSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
+        {isNavigating && (
+          <div className="h-0.5 w-full overflow-hidden bg-muted">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
+          </div>
+        )}
         <header className="flex h-12 items-center gap-2 border-b border-border px-4 lg:hidden">
           <SidebarTrigger />
           <span className="text-sm font-semibold">Loop</span>

@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { issueListOptions } from '@/lib/queries/issues'
 import { IssueDataTable } from '@/components/issue-table/data-table'
 import { IssueFilters } from '@/components/issue-table/filters'
+import { ErrorState } from '@/components/error-state'
 
 export const Route = createLazyFileRoute('/_dashboard/issues/')({
   component: IssueListPage,
@@ -28,12 +29,10 @@ function IssueListPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20">
-        <p className="text-destructive">Failed to load issues: {error.message}</p>
-        <button onClick={() => window.location.reload()} className="text-sm underline">
-          Retry
-        </button>
-      </div>
+      <ErrorState
+        message={`Failed to load issues: ${error.message}`}
+        onRetry={() => window.location.reload()}
+      />
     )
   }
 

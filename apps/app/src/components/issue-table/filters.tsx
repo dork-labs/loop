@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { X } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -7,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Route } from '@/routes/_dashboard/issues/index'
 import { projectListOptions } from '@/lib/queries/projects'
 import { labelListOptions } from '@/lib/queries/labels'
@@ -45,6 +48,11 @@ export function IssueFilters() {
   const { data: projectsData } = useQuery(projectListOptions())
   const { data: labelsData } = useQuery(labelListOptions())
 
+  const FILTER_KEYS = ['status', 'type', 'priority', 'projectId', 'labelId'] as const
+  const activeFilterCount = FILTER_KEYS.filter(
+    (key) => search[key] !== undefined,
+  ).length
+
   function setFilter(key: string, value: string | undefined) {
     void navigate({
       search: (prev) => ({
@@ -55,8 +63,14 @@ export function IssueFilters() {
     })
   }
 
+  function clearAllFilters() {
+    void navigate({
+      search: { page: 1, limit: search.limit },
+    })
+  }
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {/* Status filter */}
       <Select
         value={search.status ?? ''}
@@ -151,6 +165,21 @@ export function IssueFilters() {
             ))}
           </SelectContent>
         </Select>
+      )}
+
+      {activeFilterCount > 0 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearAllFilters}
+          className="h-8 gap-1 text-muted-foreground"
+        >
+          <X className="size-3" />
+          Clear
+          <Badge variant="secondary" className="ml-0.5 h-5 px-1.5 text-xs">
+            {activeFilterCount}
+          </Badge>
+        </Button>
       )}
     </div>
   )
