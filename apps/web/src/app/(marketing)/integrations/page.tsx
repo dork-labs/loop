@@ -2,10 +2,9 @@ import type { Metadata } from 'next';
 import { siteConfig } from '@/config/site';
 import { MarketingHeader, MarketingFooter, MarketingNav } from '@/layers/features/marketing';
 import { AgentGrid } from '@/layers/features/marketing/ui/AgentGrid';
-import { AgentSetupSection } from '@/layers/features/marketing/ui/AgentSetupSection';
+import { AgentSetupSections } from '@/layers/features/marketing/ui/AgentSetupSection';
 import { CodeTabs } from '@/layers/features/marketing/ui/CodeTabs';
 import { CopyCommand } from '@/layers/features/marketing/ui/CopyCommand';
-import { AGENTS } from '@/layers/features/marketing/lib/agents';
 import type { CodeTab } from '@/layers/features/marketing/ui/CodeTabs';
 
 export const metadata: Metadata = {
@@ -125,14 +124,7 @@ export default function IntegrationsPage() {
         </section>
 
         {/* Per-agent setup sections — alternating cream-primary / cream-secondary */}
-        {AGENTS.map((agent, index) => (
-          <div
-            key={agent.id}
-            className={index % 2 === 0 ? 'bg-cream-primary' : 'bg-cream-secondary'}
-          >
-            <AgentSetupSection agent={agent} />
-          </div>
-        ))}
+        <AgentSetupSections />
 
         {/* Code examples */}
         <section className="bg-cream-tertiary px-8 py-24">

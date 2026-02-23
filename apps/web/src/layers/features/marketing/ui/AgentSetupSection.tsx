@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { Copy, Check } from 'lucide-react';
 import { REVEAL, VIEWPORT } from '../lib/motion-variants';
 import { DeeplinkButton } from './DeeplinkButton';
-import { MCP_SERVER_CONFIG, type AgentPlatform, type AgentSetup } from '../lib/agents';
+import { AGENTS, MCP_SERVER_CONFIG, type AgentPlatform, type AgentSetup } from '../lib/agents';
 
 /** Duration in ms before copy icon resets back to clipboard. */
 const COPY_RESET_DELAY = 2000;
@@ -142,6 +142,28 @@ function SetupContent({ setup, agentName }: { setup: AgentSetup; agentName: stri
 interface AgentSetupSectionProps {
   /** The agent platform to render setup instructions for. */
   agent: AgentPlatform;
+}
+
+/**
+ * Renders all agent setup sections with alternating backgrounds.
+ *
+ * This wrapper exists so the AGENTS array (which contains function components
+ * as Logo fields) stays within the client boundary — server components cannot
+ * pass functions as props to client components.
+ */
+export function AgentSetupSections() {
+  return (
+    <>
+      {AGENTS.map((agent, index) => (
+        <div
+          key={agent.id}
+          className={index % 2 === 0 ? 'bg-cream-primary' : 'bg-cream-secondary'}
+        >
+          <AgentSetupSection agent={agent} />
+        </div>
+      ))}
+    </>
+  );
 }
 
 /**
