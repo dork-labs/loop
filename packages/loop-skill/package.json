@@ -1,0 +1,29 @@
+{
+  "name": "@dork-labs/loop",
+  "version": "0.1.0",
+  "description": "Agent skill for Loop — the autonomous improvement engine. Teaches AI agents how to use Loop's REST API.",
+  "type": "module",
+  "files": [
+    "SKILL.md",
+    "references/",
+    "templates/",
+    "README.md"
+  ],
+  "keywords": [
+    "agent-skill",
+    "openskills",
+    "loop",
+    "ai-agent",
+    "mcp",
+    "claude-code",
+    "cursor",
+    "codex"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dork-labs/loop",
+    "directory": "packages/loop-skill"
+  },
+  "homepage": "https://looped.me"
+}

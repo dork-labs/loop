@@ -141,7 +141,7 @@
       "number": 18,
       "slug": "use-zod-to-openapi-for-api-docs",
       "title": "Use @asteasolutions/zod-to-openapi for API documentation generation",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-20",
       "extractedFrom": "docs-update-post-mvp",
       "specSlug": "docs-update-post-mvp"
@@ -150,7 +150,7 @@
       "number": 19,
       "slug": "conditional-driver-swap-for-local-dev",
       "title": "Use conditional driver swap for local PostgreSQL development",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-21",
       "extractedFrom": "dev-setup-dx",
       "specSlug": "dev-setup-dx"
@@ -159,43 +159,16 @@
       "number": 20,
       "slug": "use-raw-zod-for-env-validation",
       "title": "Use raw Zod safeParse for environment variable validation",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-21",
       "extractedFrom": "dev-setup-dx",
       "specSlug": "dev-setup-dx"
     },
     {
-      "number": 21,
-      "slug": "use-localstorage-for-onboarding-state",
-      "title": "Use localStorage for onboarding state instead of server-side tracking",
-      "status": "draft",
-      "created": "2026-02-22",
-      "extractedFrom": "ftue-onboarding",
-      "specSlug": "ftue-onboarding"
-    },
-    {
-      "number": 22,
-      "slug": "use-polling-over-sse-for-first-event-detection",
-      "title": "Use TanStack Query polling over SSE for first-event detection",
-      "status": "draft",
-      "created": "2026-02-22",
-      "extractedFrom": "ftue-onboarding",
-      "specSlug": "ftue-onboarding"
-    },
-    {
       "number": 23,
       "slug": "use-loop-prefix-for-api-keys",
       "title": "Use loop_ prefix for identifiable API keys",
-      "status": "draft",
-      "created": "2026-02-22",
-      "extractedFrom": "api-key-dx",
-      "specSlug": "api-key-dx"
-    },
-    {
-      "number": 24,
-      "slug": "use-env-hints-for-actionable-errors",
-      "title": "Use ENV_HINTS map for actionable environment variable errors",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-22",
       "extractedFrom": "api-key-dx",
       "specSlug": "api-key-dx"
@@ -204,7 +177,7 @@
       "number": 25,
       "slug": "dual-transport-mcp-package",
       "title": "Use dual-transport single package for MCP server",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-22",
       "extractedFrom": "mcp-server",
       "specSlug": "mcp-server"
@@ -213,7 +186,7 @@
       "number": 26,
       "slug": "outcomes-over-operations-tool-design",
       "title": "Use outcomes-over-operations design for MCP tools",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-22",
       "extractedFrom": "mcp-server",
       "specSlug": "mcp-server"
@@ -222,7 +195,7 @@
       "number": 27,
       "slug": "use-hono-mcp-for-http-transport",
       "title": "Use @hono/mcp for Streamable HTTP transport",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-22",
       "extractedFrom": "mcp-server",
       "specSlug": "mcp-server"
@@ -231,16 +204,7 @@
       "number": 28,
       "slug": "content-only-npm-package-for-agent-skill",
       "title": "Use content-only npm package for agent discovery artifacts",
-      "status": "draft",
-      "created": "2026-02-22",
-      "extractedFrom": "agent-discovery-layer",
-      "specSlug": "agent-discovery-layer"
-    },
-    {
-      "number": 29,
-      "slug": "agent-requested-mode-for-cursor-rules",
-      "title": "Use Agent-Requested mode for Cursor rules over alwaysApply",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-22",
       "extractedFrom": "agent-discovery-layer",
       "specSlug": "agent-discovery-layer"
@@ -249,7 +213,7 @@
       "number": 30,
       "slug": "progressive-disclosure-across-discovery-artifacts",
       "title": "Use progressive disclosure across layered discovery artifacts",
-      "status": "draft",
+      "status": "proposed",
       "created": "2026-02-22",
       "extractedFrom": "agent-discovery-layer",
       "specSlug": "agent-discovery-layer"
