@@ -1,7 +1,7 @@
 ---
 number: 31
 title: Use hand-written SDK over auto-generation
-status: draft
+status: proposed
 created: 2026-02-23
 spec: typescript-sdk
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: typescript-sdk)
+Proposed
 
 ## Context
 

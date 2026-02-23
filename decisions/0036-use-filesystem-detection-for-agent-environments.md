@@ -1,7 +1,7 @@
 ---
 number: 36
 title: Use filesystem detection for agent environment discovery
-status: draft
+status: proposed
 created: 2026-02-23
 spec: connect-cli
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: connect-cli)
+Proposed
 
 ## Context
 

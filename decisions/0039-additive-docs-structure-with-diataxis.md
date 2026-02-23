@@ -1,7 +1,7 @@
 ---
 number: 39
 title: Use additive topic-based docs structure with Diátaxis principles
-status: draft
+status: proposed
 created: 2026-02-23
 spec: docs-agent-integration
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: docs-agent-integration)
+Proposed
 
 ## Context
 
