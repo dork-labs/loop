@@ -36,15 +36,15 @@ loop/
 ## Commands
 
 ```bash
-npm run dev              # Start all apps in dev mode (via Turborepo)
-npm run dev:full         # Start local PostgreSQL + all apps
-npm run build            # Build all apps
-npm test                 # Vitest across api + app
-npm run typecheck        # Type-check all packages
-npm run lint             # ESLint across all packages
-npm run lint:fix         # Auto-fix ESLint issues
-npm run format           # Prettier format all files
-npm run format:check     # Check formatting without writing
+pnpm run dev              # Start all apps in dev mode (via Turborepo)
+pnpm run dev:full         # Start local PostgreSQL + all apps
+pnpm run build            # Build all apps
+pnpm test                 # Vitest across api + app
+pnpm run typecheck        # Type-check all packages
+pnpm run lint             # ESLint across all packages
+pnpm run lint:fix         # Auto-fix ESLint issues
+pnpm run format           # Prettier format all files
+pnpm run format:check     # Check formatting without writing
 ```
 
 Run a single test file: `npx vitest run apps/api/src/__tests__/example.test.ts`
@@ -52,19 +52,19 @@ Run a single test file: `npx vitest run apps/api/src/__tests__/example.test.ts`
 ### Developer Setup Commands
 
 ```bash
-npm run setup            # First-time setup (install, env, docker, migrate)
-npm run db:dev:up        # Start local PostgreSQL (Docker Compose)
-npm run db:dev:down      # Stop local PostgreSQL
-npm run db:dev:reset     # Stop and delete local database volume
+pnpm run setup            # First-time setup (install, env, docker, migrate)
+pnpm run db:dev:up        # Start local PostgreSQL (Docker Compose)
+pnpm run db:dev:down      # Stop local PostgreSQL
+pnpm run db:dev:reset     # Stop and delete local database volume
 ```
 
-### Database Commands (from `apps/api/`)
+### Database Commands (run from repo root with `--filter`)
 
 ```bash
-npm run db:generate      # Generate Drizzle migrations from schema changes
-npm run db:migrate       # Apply pending migrations to the database
-npm run db:push          # Push schema directly (skips migration files)
-npm run db:studio        # Launch Drizzle Studio GUI for browsing data
+pnpm run --filter @loop/api db:generate  # Generate Drizzle migrations from schema changes
+pnpm run --filter @loop/api db:migrate   # Apply pending migrations to the database
+pnpm run --filter @loop/api db:push      # Push schema directly (skips migration files)
+pnpm run --filter @loop/api db:studio    # Launch Drizzle Studio GUI for browsing data
 ```
 
 ## Tech Stack

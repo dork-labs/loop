@@ -46,7 +46,7 @@ Loop API keys use the `loop_` prefix format for identifiability. Set the `LOOP_A
 LOOP_API_KEY=loop_your_generated_key_here
 ```
 
-The easiest way to generate a key is with the setup script (`npm run setup`), which writes the key to both `.env` files automatically. You can also generate one manually:
+The easiest way to generate a key is with the setup script (`pnpm run setup`), which writes the key to both `.env` files automatically. You can also generate one manually:
 
 ```bash
 node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"

@@ -38,7 +38,7 @@ echo "  Docker $(docker --version | cut -d' ' -f3 | tr -d ',')"
 
 echo ""
 echo "Installing dependencies..."
-npm install
+pnpm install
 
 # ─── Environment Files ───────────────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ node scripts/generate-api-key.js
 
 echo ""
 echo "Starting local PostgreSQL..."
-npm run db:dev:up
+pnpm run db:dev:up
 
 # Wait for postgres to be healthy
 echo "Waiting for PostgreSQL to be ready..."
@@ -95,12 +95,12 @@ echo "  PostgreSQL ready on localhost:54320"
 
 echo ""
 echo "Running database migrations..."
-npm run db:migrate -w apps/api
+pnpm run --filter @loop/api db:migrate
 
 # ─── Done ────────────────────────────────────────────────────────────────────
 
 echo ""
-echo "Setup complete! Run 'npm run dev' to start all apps."
+echo "Setup complete! Run 'pnpm run dev' to start all apps."
 echo ""
 echo "  API:       http://localhost:4242"
 echo "  Dashboard: http://localhost:3000"

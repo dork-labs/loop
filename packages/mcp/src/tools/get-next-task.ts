@@ -13,7 +13,6 @@ import { handleToolCall } from './error-handler.js';
  * @param client - Authenticated ky client for the Loop API
  */
 export function registerGetNextTask(server: McpServer, client: ApiClient): void {
-  // @ts-expect-error TS2589 — MCP SDK server.tool() overload inference with complex Zod schemas
   server.tool(
     'loop_get_next_task',
     'Get the highest-priority unblocked issue with dispatch instructions. Atomically claims the issue. Returns issue details and hydrated prompt.',

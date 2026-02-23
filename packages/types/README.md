@@ -8,6 +8,8 @@ This package is a peer dependency of `@dork-labs/loop-sdk` and is re-exported fr
 
 ```bash
 npm install @dork-labs/loop-types
+# or
+pnpm add @dork-labs/loop-types
 ```
 
 ## Contents

@@ -11,7 +11,6 @@ import { handleToolCall } from './error-handler.js';
  * @param client - Authenticated API client for Loop
  */
 export function registerIngestSignal(server: McpServer, client: ApiClient): void {
-  // @ts-expect-error TS2589 — MCP SDK server.tool() overload inference with complex Zod schemas
   server.tool(
     'loop_ingest_signal',
     'Ingest a signal (error, metric change, user feedback) into Loop. Creates a signal and a linked triage issue.',

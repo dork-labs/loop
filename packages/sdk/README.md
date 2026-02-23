@@ -6,6 +6,8 @@ TypeScript SDK for the [Loop](https://www.looped.me) API — the Autonomous Impr
 
 ```bash
 npm install @dork-labs/loop-sdk
+# or
+pnpm add @dork-labs/loop-sdk
 ```
 
 ## Usage

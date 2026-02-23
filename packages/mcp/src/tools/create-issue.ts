@@ -11,7 +11,6 @@ import { handleToolCall } from './error-handler.js';
  * @param client - Authenticated API client for Loop
  */
 export function registerCreateIssue(server: McpServer, client: ApiClient): void {
-  // @ts-expect-error TS2589 — MCP SDK server.tool() overload inference with complex Zod schemas
   server.tool(
     'loop_create_issue',
     'Create a new issue in Loop. Issues are the atomic unit of work — signals, hypotheses, plans, tasks, and monitors are all issue types.',

@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@hono/mcp": "latest",
+    "@types/node": "^20",
     "hono": "^4",
     "tsup": "latest",
     "tsx": "latest",

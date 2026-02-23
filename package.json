@@ -2,14 +2,10 @@
   "name": "loop",
   "version": "0.2.0",
   "type": "module",
-  "packageManager": "npm@10.9.2",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.6.5",
   "scripts": {
     "dev": "turbo dev",
-    "dev:full": "npm run db:dev:up && npm run dev",
+    "dev:full": "pnpm run db:dev:up && pnpm run dev",
     "build": "turbo build",
     "test": "turbo test",
     "typecheck": "turbo typecheck",
@@ -22,6 +18,16 @@
     "db:dev:reset": "docker compose -f docker-compose.dev.yml down -v",
     "generate-key": "node scripts/generate-api-key.js",
     "setup": "bash scripts/setup.sh"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js",
+      "esbuild",
+      "msw",
+      "protobufjs",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

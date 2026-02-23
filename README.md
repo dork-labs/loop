@@ -21,8 +21,8 @@ into issues, and tells AI agents exactly what to do next.
 
 ## Getting Started
 
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 
 ## Structure
 

@@ -18,12 +18,13 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@clack/prompts": "^1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^20",
     "tsup": "latest",
     "typescript": "^5",
     "vitest": "^3.2"

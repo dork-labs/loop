@@ -1,5 +1,5 @@
 ---
-description: Create a new release with version bump, changelog update, git tag, npm publish, and optional GitHub Release
+description: Create a new release with version bump, changelog update, git tag, pnpm publish, and optional GitHub Release
 argument-hint: [patch|minor|major|X.Y.Z] [--dry-run]
 allowed-tools: Bash, Read, Write, Edit, Glob, AskUserQuestion, Task
 ---
@@ -45,7 +45,7 @@ This command operates as an **orchestrator** that:
 |           |                                                   |
 |  Phase 4: Present recommendation, get user confirmation       |
 |  Phase 5: Execute release (VERSION, package.json, changelog,  |
-|           git, npm publish)                                   |
+|           git, pnpm publish)                                   |
 |  Phase 6: Report results                                      |
 +-------------------------------------------------------------+
                            |
@@ -120,7 +120,21 @@ git describe --tags --abbrev=0 2>/dev/null || echo "none"
 ```
 
 ```bash
-# Check 5: Analyze commits since last tag for changelog completeness
+# Check 5: Local build passes
+pnpm run build
+```
+
+If the build fails, **STOP** and report:
+
+```
+## Cannot Release: Build Failing
+
+The local build failed. Fix build errors before releasing:
+[error output]
+```
+
+```bash
+# Check 6: Analyze commits since last tag for changelog completeness
 git log $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD --oneline
 ```
 
@@ -360,9 +374,9 @@ Present the release plan to the user:
 ### Files to be Modified
 
 1. `VERSION` - 0.1.0 -> 0.2.0
-2. `packages/cli/package.json` - 0.1.0 -> 0.2.0
+2. `apps/cli/package.json` - 0.1.0 -> 0.2.0
 3. `package.json` - 0.1.0 -> 0.2.0
-4. `package-lock.json` - updated by npm version
+4. `pnpm-lock.yaml` - updated by pnpm version
 5. `CHANGELOG.md` - [Unreleased] -> [0.2.0] - YYYY-MM-DD
 
 ### Git Operations
@@ -373,7 +387,7 @@ Present the release plan to the user:
 
 ### npm Publish
 
-4. `npm publish -w packages/cli` (publishes `loop` to npm)
+4. `pnpm publish --filter @dork-labs/loop-cli` (publishes `loop` to npm)
 ```
 
 If `--dry-run` flag is present, **STOP** here.
@@ -424,14 +438,14 @@ printf "0.2.0" > VERSION
 ### 5.3: Sync Version to package.json Files
 
 ```bash
-# Update packages/cli/package.json (the published npm package)
-npm version 0.2.0 --no-git-tag-version -w packages/cli
+# Update apps/cli/package.json (the published npm package)
+pnpm version 0.2.0 --no-git-tag-version --filter @dork-labs/loop-cli
 
 # Update root package.json
-npm version 0.2.0 --no-git-tag-version
+pnpm version 0.2.0 --no-git-tag-version
 ```
 
-This updates `packages/cli/package.json`, `package.json`, and `package-lock.json` in one go.
+This updates `apps/cli/package.json`, `package.json`, and `pnpm-lock.yaml` in one go.
 
 ### 5.4: Update Changelog
 
@@ -524,7 +538,7 @@ The user can edit this post before the release commit. Add the blog post file to
 
 ```bash
 # Stage all version-related changes
-git add VERSION CHANGELOG.md docs/changelog.mdx packages/cli/package.json package.json package-lock.json blog/
+git add VERSION CHANGELOG.md docs/changelog.mdx apps/cli/package.json package.json pnpm-lock.yaml blog/
 
 # Commit (use HEREDOC for message)
 git commit -m "$(cat <<'EOF'
@@ -556,18 +570,18 @@ header: "npm Publish"
 question: "Publish loop v0.2.0 to npm?"
 options:
   - label: "Yes, publish to npm (Recommended)"
-    description: "Runs npm publish -w packages/cli to publish the loop package"
-  - label: "No, skip npm publish"
+    description: "Runs pnpm publish --filter @dork-labs/loop-cli to publish the loop package"
+  - label: "No, skip pnpm publish"
     description: "Tag is pushed, but package is not published to npm"
 ```
 
 If yes:
 
 ```bash
-npm publish -w packages/cli
+pnpm publish --filter @dork-labs/loop-cli
 ```
 
-The `prepublishOnly` hook in `packages/cli/package.json` will automatically build before publishing.
+The `prepublishOnly` hook in `apps/cli/package.json` will automatically build before publishing.
 
 ### 5.9: GitHub Release Notes
 
@@ -702,11 +716,11 @@ To undo local changes:
 ```
 ## npm Publish Failed
 
-The git tag was pushed but npm publish failed.
+The git tag was pushed but pnpm publish failed.
 Error: [error message]
 
 To retry:
-- `npm publish -w packages/cli`
+- `pnpm publish --filter @dork-labs/loop-cli`
 
 Common fixes:
 - `npm login` (if auth expired)

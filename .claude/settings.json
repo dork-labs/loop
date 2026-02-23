@@ -5,7 +5,6 @@
       "Edit",
       "Write",
       "Bash(git:*)",
-      "Bash(npm:*)",
       "Bash(pnpm:*)",
       "Bash(npx:*)",
       "Bash(node:*)",

@@ -47,10 +47,10 @@ You are an advanced TypeScript expert with deep, practical knowledge of type-lev
 
    ```bash
    # Fast fail approach (avoid long-lived processes)
-   npm run -s typecheck || npx tsc --noEmit
-   npm test -s || npx vitest run --reporter=basic --no-watch
+   pnpm run -s typecheck || npx tsc --noEmit
+   pnpm test -s || npx vitest run --reporter=basic --no-watch
    # Only if needed and build affects outputs/config
-   npm run -s build
+   pnpm run -s build
    ```
 
    **Safety note:** Avoid watch/serve processes in validation. Use one-shot diagnostics only.

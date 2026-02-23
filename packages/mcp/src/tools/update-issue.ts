@@ -39,7 +39,6 @@ interface IssueResponse {
  * @param client - Authenticated API client for Loop
  */
 export function registerUpdateIssue(server: McpServer, client: ApiClient): void {
-  // @ts-expect-error TS2589 — MCP SDK server.tool() overload inference with complex Zod schemas
   server.tool(
     'loop_update_issue',
     'Update an existing issue in Loop (status, priority, type, title, or description)',

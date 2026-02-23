@@ -93,7 +93,7 @@ curl -H "Authorization: Bearer loop_your_key_here" http://localhost:5667/health
 
 **Solution:**
 
-1. Start the Loop API: `npm run dev -w apps/api`
+1. Start the Loop API: `pnpm run --filter @loop/api dev`
 2. Verify the URL. The default is `http://localhost:5667`. If your API runs on a different port or host, set `LOOP_API_URL` accordingly.
 3. Test connectivity directly:
 

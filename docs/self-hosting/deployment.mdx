@@ -40,7 +40,7 @@ Set the **Root Directory** to `apps/api`. Vercel will detect it as a Node.js pro
 Set the **Build Command** to:
 
 ```
-npm run build
+pnpm run build
 ```
 
 Set the **Output Directory** to `dist`.
@@ -69,7 +69,7 @@ Add webhook secrets only if you plan to use those integrations:
 After the first deployment, run migrations against your production database. You can do this from your local machine with the production `DATABASE_URL`:
 
 ```bash
-DATABASE_URL="your-production-connection-string" npm run db:migrate -w apps/api
+DATABASE_URL="your-production-connection-string" pnpm run --filter @loop/api db:migrate
 ```
 
 </Step>
@@ -93,7 +93,7 @@ Import the same repository again as a new Vercel project. Set the **Root Directo
 Set the **Build Command** to:
 
 ```
-npm run build
+pnpm run build
 ```
 
 Set the **Output Directory** to `dist`.
@@ -130,8 +130,8 @@ For deployments on your own infrastructure (VPS, EC2, bare metal, etc.).
 From the repository root, install dependencies and build all apps:
 
 ```bash
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 This produces:
@@ -170,7 +170,7 @@ export DATABASE_URL="postgresql://user:password@host:5432/loop"
 Apply the database schema:
 
 ```bash
-npm run db:migrate -w apps/api
+pnpm run --filter @loop/api db:migrate
 ```
 
 This creates all required tables. Run this command again after pulling updates that include new migrations.

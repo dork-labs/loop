@@ -32,7 +32,7 @@ This format provides:
 The setup script generates a secure key and writes it to both `.env` files automatically:
 
 ```bash
-npm run setup
+pnpm run setup
 ```
 
 ### Manual generation
@@ -110,7 +110,7 @@ The API server validates environment variables at startup using Zod. If `LOOP_AP
   Hint for LOOP_API_KEY:
   Generate one with:
     node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
-  Or run: npm run setup
+  Or run: pnpm run setup
 ```
 
 This prevents the server from starting in an insecure state.
@@ -140,7 +140,7 @@ To rotate your API key:
 
 ## Development key
 
-For local development, the `npm run setup` command generates a real `loop_`-prefixed key. If you want to use a simpler key during development, any non-empty string works -- format validation is not enforced. However, using the standard format is recommended to match production behavior.
+For local development, the `pnpm run setup` command generates a real `loop_`-prefixed key. If you want to use a simpler key during development, any non-empty string works -- format validation is not enforced. However, using the standard format is recommended to match production behavior.
 
 ## Next steps
 

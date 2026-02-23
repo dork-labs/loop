@@ -17,14 +17,15 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.1",
+    "@dork-labs/loop-mcp": "*",
     "@hono/zod-validator": "^0.7.6",
     "@neondatabase/serverless": "^1.0.2",
     "@paralleldrive/cuid2": "^3.3.0",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "handlebars": "^4.7.8",
-    "@dork-labs/loop-mcp": "*",
     "hono": "^4",
+    "openapi3-ts": "^4.5.0",
     "ws": "^8.19.0",
     "zod": "^4.3.6"
   },

@@ -9,7 +9,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 Loop uses environment variables for all configuration. Each app validates its environment variables at startup using Zod — missing or invalid variables produce clear, formatted error messages instead of cryptic runtime errors.
 
-For local development, pre-filled `.env.example` files with working defaults are provided. Run `cp apps/api/.env.example apps/api/.env` (or use `npm run setup` which does this automatically).
+For local development, pre-filled `.env.example` files with working defaults are provided. Run `cp apps/api/.env.example apps/api/.env` (or use `pnpm run setup` which does this automatically).
 
 ## API Server (`@loop/api`)
 
@@ -44,7 +44,7 @@ DATABASE_URL=postgresql://user:password@ep-cool-darkness-123456.us-east-2.aws.ne
 DATABASE_URL=postgresql://loop:loop@localhost:54320/loop
 ```
 
-The local default connects to the PostgreSQL container started by `npm run db:dev:up`.
+The local default connects to the PostgreSQL container started by `pnpm run db:dev:up`.
 
 ### `LOOP_API_KEY`
 
@@ -57,7 +57,7 @@ Authorization: Bearer loop_your_secret_key_here
 To generate a secure key, use the built-in key generation command:
 
 ```bash
-npm run generate-key
+pnpm run generate-key
 ```
 
 This generates a cryptographically secure `loop_` prefixed key and writes it to both `.env` files automatically. To generate a key manually, use any cryptographically random string generator:

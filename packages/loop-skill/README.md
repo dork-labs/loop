@@ -32,12 +32,14 @@ This will:
 - Copy SKILL.md to your agent's skill directory
 - Register the skill for discovery
 
-### Via npm
+### Via npm / pnpm
 
 Install the package as a dependency in your project:
 
 ```bash
 npm install @dork-labs/loop
+# or
+pnpm add @dork-labs/loop
 ```
 
 Then reference the files in `node_modules/@dork-labs/loop/` when configuring your agent.

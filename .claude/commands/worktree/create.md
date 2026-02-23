@@ -67,7 +67,7 @@ This will:
 
 1. Create a sibling directory `../<repo>-<branch-name>/`
 2. Copy `.env.example` (from `.gtrconfig`)
-3. Run `npm install` (from `.gtrconfig` postCreate hook)
+3. Run `pnpm install` (from `.gtrconfig` postCreate hook)
 4. Run `.claude/scripts/worktree-setup.sh` (assigns unique port)
 
 ### Step 3: Report Results
@@ -88,7 +88,7 @@ Port:     <assigned-port>
 
 Next steps:
   cd ../<directory-name>/
-  npm run dev
+  pnpm run dev
 ```
 
 ## Edge Cases
@@ -97,4 +97,4 @@ Next steps:
 - **Already in a worktree**: Report "You're already in a worktree. Switch to the main working tree first."
 - **Branch already exists as worktree**: Report the existing worktree location
 - **Branch name invalid**: Let git report the error naturally
-- **npm install fails**: Report the error but note the worktree was created (user can fix manually)
+- **pnpm install fails**: Report the error but note the worktree was created (user can fix manually)
