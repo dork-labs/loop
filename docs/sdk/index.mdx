@@ -99,7 +99,7 @@ console.log(page.total)   // total count across all pages
 console.log(page.hasMore) // true if more pages exist
 ```
 
-Resources that support pagination also expose an `iter()` method that returns an async generator, automatically fetching subsequent pages as you consume items:
+Some resources (like `issues`) also expose an `iter()` method that returns an async generator, automatically fetching subsequent pages as you consume items:
 
 ```typescript
 for await (const issue of loop.issues.iter({ status: 'todo' })) {

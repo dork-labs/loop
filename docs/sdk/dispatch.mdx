@@ -147,7 +147,6 @@ async function agentLoop() {
   // Report results back to Loop
   await loop.issues.update(task.issue.id, {
     status: 'done',
-    agentSummary: result.summary,
   })
 }
 

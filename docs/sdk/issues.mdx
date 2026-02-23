@@ -167,7 +167,7 @@ Update one or more fields on an existing issue. Only the fields you include will
 ```typescript
 const updated = await loop.issues.update('clxyz1234567890abcdef', {
   status: 'done',
-  agentSummary: 'Added loading spinner to OAuth redirect page.',
+  description: 'Added loading spinner to OAuth redirect page.',
 })
 
 console.log(updated.status)      // 'done'
