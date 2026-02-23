@@ -7,4 +7,6 @@ export default defineWorkspace([
   'apps/web',
   'packages/mcp',
   'packages/loop-skill',
+  'packages/sdk',
+  'packages/loop-connect',
 ]);

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 31,
+  "nextNumber": 37,
   "decisions": [
     {
       "number": 1,
@@ -217,6 +217,60 @@
       "created": "2026-02-22",
       "extractedFrom": "agent-discovery-layer",
       "specSlug": "agent-discovery-layer"
+    },
+    {
+      "number": 31,
+      "slug": "hand-written-sdk-over-generation",
+      "title": "Use hand-written SDK over auto-generation",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "typescript-sdk",
+      "specSlug": "typescript-sdk"
+    },
+    {
+      "number": 32,
+      "slug": "shared-types-package-for-api-types",
+      "title": "Use shared packages/types for API type definitions",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "typescript-sdk",
+      "specSlug": "typescript-sdk"
+    },
+    {
+      "number": 33,
+      "slug": "use-ky-for-sdk-http-layer",
+      "title": "Use ky as the SDK HTTP layer",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "typescript-sdk",
+      "specSlug": "typescript-sdk"
+    },
+    {
+      "number": 34,
+      "slug": "use-clack-prompts-for-connect-cli",
+      "title": "Use @clack/prompts for the Connect CLI",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "connect-cli",
+      "specSlug": "connect-cli"
+    },
+    {
+      "number": 35,
+      "slug": "use-native-fetch-for-connect-cli",
+      "title": "Use native fetch for Connect CLI HTTP calls",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "connect-cli",
+      "specSlug": "connect-cli"
+    },
+    {
+      "number": 36,
+      "slug": "use-filesystem-detection-for-agent-environments",
+      "title": "Use filesystem detection for agent environment discovery",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "connect-cli",
+      "specSlug": "connect-cli"
     }
   ]
 }

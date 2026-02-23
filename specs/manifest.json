@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 14,
+  "nextNumber": 16,
   "specs": [
     {
       "number": 1,
@@ -91,7 +91,21 @@
       "slug": "typescript-sdk",
       "title": "TypeScript SDK — Idiomatic Client for Loop's REST API",
       "created": "2026-02-23",
-      "status": "ideation"
+      "status": "specification"
+    },
+    {
+      "number": 14,
+      "slug": "connect-cli",
+      "title": "Connect CLI — npx @dork-labs/loop-connect",
+      "created": "2026-02-23",
+      "status": "specification"
+    },
+    {
+      "number": 15,
+      "slug": "loop-cli",
+      "title": "Loop CLI — Terminal-Native Interface with loop next",
+      "created": "2026-02-23",
+      "status": "specification"
     }
   ]
 }

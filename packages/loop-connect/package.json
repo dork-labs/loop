@@ -1,0 +1,31 @@
+{
+  "name": "@dork-labs/loop-connect",
+  "version": "0.1.0",
+  "description": "Connect any project to Loop in one command",
+  "type": "module",
+  "bin": {
+    "loop-connect": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsup": "latest",
+    "typescript": "^5",
+    "vitest": "^3.2"
+  }
+}

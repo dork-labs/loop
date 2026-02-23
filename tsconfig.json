@@ -8,11 +8,14 @@
     "skipLibCheck": true
   },
   "references": [
+    { "path": "./packages/types" },
+    { "path": "./packages/sdk" },
     { "path": "./apps/api" },
     { "path": "./apps/app" },
     { "path": "./apps/cli" },
     { "path": "./apps/web" },
-    { "path": "./packages/mcp" }
+    { "path": "./packages/mcp" },
+    { "path": "./packages/loop-connect" }
   ],
   "exclude": ["node_modules"]
 }
