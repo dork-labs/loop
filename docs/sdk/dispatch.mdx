@@ -1,0 +1,164 @@
+---
+title: Dispatch
+description: Claim prioritized work and preview the dispatch queue using the Loop TypeScript SDK.
+---
+
+# Dispatch
+
+The dispatch resource is Loop's core agent feedback loop. It lets agents claim the highest-priority unblocked issue with hydrated prompt instructions, or preview the queue without claiming anything.
+
+Access it via `loop.dispatch` on your client instance.
+
+```typescript
+import { LoopClient } from '@dork-labs/loop-sdk'
+
+const loop = new LoopClient({ apiKey: 'loop_abc123' })
+```
+
+---
+
+## next()
+
+Atomically claim the highest-priority unblocked issue. Returns the issue with hydrated prompt instructions, or `null` if the queue is empty.
+
+```typescript
+const task = await loop.dispatch.next()
+
+if (task) {
+  console.log(task.issue.title)
+  console.log(task.prompt)
+}
+```
+
+### Parameters
+
+| Parameter   | Type     | Required | Description          |
+| ----------- | -------- | -------- | -------------------- |
+| `projectId` | `string` | No       | Filter by project ID |
+
+### Return type
+
+`Promise<DispatchNextResponse | null>`
+
+Returns `null` when no unblocked issues are available (the API returns `204 No Content`).
+
+### DispatchNextResponse
+
+| Field   | Type                | Description                                      |
+| ------- | ------------------- | ------------------------------------------------ |
+| `issue` | `object`            | Claimed issue with `id`, `number`, `title`, `type`, `priority`, `status` |
+| `prompt` | `string \| null`   | Fully hydrated prompt instructions for the agent |
+| `meta`  | `object \| null`    | Template metadata (see below)                    |
+
+The `meta` object contains:
+
+| Field           | Type     | Description                           |
+| --------------- | -------- | ------------------------------------- |
+| `templateSlug`  | `string` | Slug of the matched prompt template   |
+| `templateId`    | `string` | Template ID                           |
+| `versionId`     | `string` | Active version ID                     |
+| `versionNumber` | `number` | Active version number                 |
+| `reviewUrl`     | `string` | URL for submitting a prompt review    |
+
+### Filter by project
+
+```typescript
+const task = await loop.dispatch.next({ projectId: 'clx1abc2def3ghi4jkl5mnop' })
+```
+
+---
+
+## queue()
+
+Preview the priority queue without claiming any issues. Returns a paginated list of unblocked `todo` issues with their score breakdowns.
+
+```typescript
+const queue = await loop.dispatch.queue()
+
+for (const item of queue.data) {
+  console.log(`#${item.issue.number} ${item.issue.title} — score: ${item.score}`)
+}
+```
+
+### Parameters
+
+| Parameter   | Type     | Required | Default | Description                |
+| ----------- | -------- | -------- | ------- | -------------------------- |
+| `projectId` | `string` | No       | none    | Filter by project ID       |
+| `limit`     | `number` | No       | none    | Maximum items per page     |
+| `offset`    | `number` | No       | `0`     | Number of items to skip    |
+
+### Return type
+
+`Promise<PaginatedList<DispatchQueueItem>>`
+
+The `PaginatedList` wrapper provides `data`, `total`, and a `hasMore` getter for pagination.
+
+### DispatchQueueItem
+
+| Field       | Type     | Description                          |
+| ----------- | -------- | ------------------------------------ |
+| `issue`     | `Issue`  | Full issue object                    |
+| `score`     | `number` | Composite priority score             |
+| `breakdown` | `object` | Score breakdown (see below)          |
+
+The `breakdown` object contains:
+
+| Field            | Type     | Description                                       |
+| ---------------- | -------- | ------------------------------------------------- |
+| `priorityWeight` | `number` | Weight based on priority level                    |
+| `goalBonus`      | `number` | Bonus for issues linked to a project with a goal  |
+| `ageBonus`       | `number` | Bonus that increases as the issue ages             |
+| `typeBonus`      | `number` | Bonus based on issue type                          |
+
+### Paginated example
+
+```typescript
+const queue = await loop.dispatch.queue({ limit: 5 })
+
+console.log(`Showing ${queue.data.length} of ${queue.total} items`)
+console.log(`Has more: ${queue.hasMore}`)
+```
+
+---
+
+## Agent polling loop
+
+A typical agent integration polls `next()` on a schedule, executes the prompt, reports results, and repeats.
+
+```typescript
+import { LoopClient } from '@dork-labs/loop-sdk'
+
+const loop = new LoopClient({ apiKey: process.env.LOOP_API_KEY! })
+
+async function agentLoop() {
+  const task = await loop.dispatch.next()
+
+  if (!task) {
+    console.log('No work available')
+    return
+  }
+
+  console.log(`Claimed #${task.issue.number}: ${task.issue.title}`)
+
+  // Execute the prompt instructions with your AI model
+  const result = await executeWithAgent(task.prompt)
+
+  // Report results back to Loop
+  await loop.issues.update(task.issue.id, {
+    status: 'done',
+    agentSummary: result.summary,
+  })
+}
+
+// Poll every 60 seconds
+setInterval(agentLoop, 60_000)
+```
+
+---
+
+## Related
+
+- [Dispatch concepts](/docs/concepts/dispatch) for priority scoring, blocking filters, and SKIP LOCKED concurrency
+- [Templates](/docs/sdk/templates) for managing the prompt templates that dispatch hydrates
+- [Issues](/docs/sdk/issues) for updating issues after completing dispatched work

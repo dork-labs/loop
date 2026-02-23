@@ -1,0 +1,181 @@
+---
+title: Agent Skill
+description: Contextual instructions that teach AI agents how to use Loop effectively in your project.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Agent Skill
+
+The Loop agent skill (`@dork-labs/loop`) is a content-only npm package that teaches AI agents how to use Loop's REST API. It contains no executable code -- just structured instructions that agents read for context when working in your project.
+
+<Callout type="info">
+  The agent skill provides **knowledge** (instructions the agent reads), while the [MCP Server](/docs/mcp) provides **tools** (actions the agent can call). Install both for the best agent experience.
+</Callout>
+
+## What's Inside
+
+The package ships four artifacts:
+
+| File | Purpose |
+| --- | --- |
+| `SKILL.md` | Primary skill definition in agentskills.io format. Works with Claude Code, Codex, Cursor, Amp, Goose, and any platform that loads SKILL.md files. |
+| `templates/AGENTS.md` | Ready-to-paste snippet for your repository's AGENTS.md file (Linux Foundation standard). |
+| `templates/loop.mdc` | Cursor rule file for `.cursor/rules/`. Applied on request, not auto-applied. |
+| `templates/openhands-loop.md` | OpenHands microagent with keyword triggers (`loop`, `loop api`, `ingest signal`, etc.). |
+| `references/api.md` | Full API endpoint reference loaded on demand by agents needing technical details. |
+
+## Installation
+
+<Tabs items={['openskills', 'npm']}>
+<Tab value="openskills">
+
+The easiest way to install the skill across any agent platform that supports openskills:
+
+```bash
+npx openskills install @dork-labs/loop
+```
+
+This downloads the package, copies SKILL.md to your agent's skill directory, and registers the skill for discovery.
+
+</Tab>
+<Tab value="npm">
+
+Install the package as a dependency:
+
+```bash
+npm install @dork-labs/loop
+```
+
+Then reference the files in `node_modules/@dork-labs/loop/` when configuring your agent.
+
+</Tab>
+</Tabs>
+
+## What Agents Learn
+
+When an agent reads the skill, it learns:
+
+- **Authentication** -- how to use Bearer token auth with `$LOOP_API_KEY`
+- **The dispatch loop** -- the core workflow of get task, do work, report completion, create discovered issues, repeat
+- **Common API operations** -- create issues, list issues, ingest signals, complete tasks, add comments
+- **Issue types** -- `signal`, `hypothesis`, `plan`, `task`, `monitor`
+- **Status values** -- `triage`, `backlog`, `todo`, `in_progress`, `done`, `canceled`
+- **Error handling** -- what 401, 404, and 422 responses mean and how to recover
+
+## The Dispatch Loop
+
+The skill teaches agents the core Loop workflow:
+
+```
+Get next task  -->  Do the work  -->  Report completion  -->  Create discovered issues  -->  Repeat
+```
+
+1. **Get next task** -- fetch the highest-priority unblocked issue from Loop
+2. **Do the work** -- execute what the issue describes
+3. **Report completion** -- update the issue status to `done` and add outcome notes as a comment
+4. **Create discovered issues** -- if bugs or new tasks are found during work, create them as new issues
+5. **Repeat** -- get the next task and continue the loop
+
+## Platform-Specific Setup
+
+### Claude Code
+
+Claude Code loads SKILL.md files automatically. After installing via openskills or npm, the skill is available in every session.
+
+```bash
+npx openskills install @dork-labs/loop
+```
+
+Set your API key so the agent can make calls:
+
+```bash
+export LOOP_API_KEY=loop_...
+```
+
+### Cursor
+
+Copy the Cursor rule file into your project:
+
+```bash
+mkdir -p .cursor/rules
+cp node_modules/@dork-labs/loop/templates/loop.mdc .cursor/rules/loop.mdc
+```
+
+The rule is configured as on-request (not auto-applied), so the agent loads it when Loop-related context is needed.
+
+### OpenHands
+
+Copy the microagent into your project:
+
+```bash
+mkdir -p .openhands/microagents
+cp node_modules/@dork-labs/loop/templates/openhands-loop.md .openhands/microagents/loop.md
+```
+
+The microagent triggers automatically when the agent encounters keywords like `loop`, `looped.me`, `loop api`, `loop issue`, or `ingest signal`.
+
+### AGENTS.md
+
+To add Loop context to any agent that reads AGENTS.md (Linux Foundation standard):
+
+```bash
+cat node_modules/@dork-labs/loop/templates/AGENTS.md >> AGENTS.md
+```
+
+This appends the Loop integration section to your existing AGENTS.md file.
+
+## Common Operations Reference
+
+The skill teaches agents these key API calls:
+
+### Get the next issue to work on
+
+```bash
+curl -H "Authorization: Bearer $LOOP_API_KEY" \
+  "https://app.looped.me/api/issues?status=open&limit=1"
+```
+
+### Create an issue
+
+```bash
+curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Fix login redirect","type":"bug"}' \
+  https://app.looped.me/api/issues
+```
+
+### Ingest a signal
+
+```bash
+curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"source":"agent","title":"Error rate spike","data":{"count":47}}' \
+  https://app.looped.me/api/signals
+```
+
+### Complete an issue
+
+```bash
+curl -X PATCH -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"done"}' \
+  https://app.looped.me/api/issues/{id}
+```
+
+### Add a progress comment
+
+```bash
+curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"body":"Investigating root cause...","authorName":"agent"}' \
+  https://app.looped.me/api/issues/{id}/comments
+```
+
+## Next Steps
+
+- [**MCP Server**](/docs/mcp) -- Zero-code IDE integration that gives agents callable tools alongside the skill's knowledge.
+- [**Agent Integration**](/docs/agents) -- Per-agent guides for Claude Code, Cursor, Windsurf, OpenHands, and custom setups.
+- [**API Reference**](/docs/api) -- Full endpoint documentation for all Loop REST API routes.
+- [**Concepts**](/docs/concepts) -- Understand how issues, signals, dispatch, and prompts work together.

@@ -40,17 +40,19 @@ If the token is missing or invalid, the API returns a `401` error:
 
 ### Setting your API key
 
-Set the `LOOP_API_KEY` environment variable in your `apps/api/.env` file:
+Loop API keys use the `loop_` prefix format for identifiability. Set the `LOOP_API_KEY` environment variable in your `apps/api/.env` file:
 
 ```bash
-LOOP_API_KEY="your-api-key-here"
+LOOP_API_KEY=loop_your_generated_key_here
 ```
 
-Generate a secure random key using OpenSSL:
+The easiest way to generate a key is with the setup script (`npm run setup`), which writes the key to both `.env` files automatically. You can also generate one manually:
 
 ```bash
-openssl rand -base64 32
+node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
 ```
+
+See [API Keys](/docs/getting-started/api-keys) for details on key format, rotation, and security best practices.
 
 <Callout type="warning">
   Never share your API key publicly, commit it to version control, or include it in client-side
@@ -145,5 +147,6 @@ X-PostHog-Secret: your-posthog-secret-here
 
 ## Next steps
 
+- [**API Keys**](/docs/getting-started/api-keys) — Key format, generation, rotation, and security best practices.
 - [**Concepts**](/docs/concepts) — Understand how signals, issues, dispatch, and prompts work together.
 - [**Integrations**](/docs/integrations) — Step-by-step setup guides for GitHub, Sentry, and PostHog webhooks.

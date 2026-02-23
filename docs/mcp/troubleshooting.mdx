@@ -1,0 +1,204 @@
+---
+title: Troubleshooting
+description: Common issues with MCP server setup, authentication errors, and connectivity problems.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Troubleshooting
+
+Common issues when setting up or using the Loop MCP server, with solutions.
+
+## Server does not start
+
+### Missing LOOP_API_KEY
+
+**Symptom:** The server exits immediately with:
+
+```
+Missing LOOP_API_KEY environment variable.
+```
+
+**Solution:** Set `LOOP_API_KEY` in your MCP configuration's `env` block. Generate a key with:
+
+```bash
+node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Then add it to your `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "loop_your_generated_key_here"
+      }
+    }
+  }
+}
+```
+
+### npx fails to resolve the package
+
+**Symptom:** Error like `npm ERR! 404 Not Found - GET https://registry.npmjs.org/@dork-labs%2floop-mcp`.
+
+**Solution:** Verify the package name is correct: `@dork-labs/loop-mcp`. If you are behind a corporate proxy or using a private registry, ensure your npm configuration can reach the public registry.
+
+```bash
+# Verify the package exists
+npm view @dork-labs/loop-mcp version
+```
+
+---
+
+## Authentication errors
+
+### 401 — Authentication failed
+
+**Symptom:** Every tool call returns:
+
+```
+Authentication failed. Check your LOOP_API_KEY.
+```
+
+**Causes:**
+
+1. **Wrong key** -- The `LOOP_API_KEY` in your MCP config does not match the one configured on your Loop API server.
+2. **Missing `loop_` prefix** -- Loop API keys must start with `loop_`. If your key does not have this prefix, regenerate it.
+3. **API server not running** -- The server at `LOOP_API_URL` is not reachable.
+
+**Solution:** Verify your key matches. The key in the MCP server `env` must be identical to the `LOOP_API_KEY` set in your Loop API's `.env` file.
+
+```bash
+# Check the API is running and your key works
+curl -H "Authorization: Bearer loop_your_key_here" http://localhost:5667/health
+```
+
+---
+
+## Connection errors
+
+### Cannot connect to the Loop API
+
+**Symptom:** Tool calls fail with network errors like `ECONNREFUSED` or timeout.
+
+**Causes:**
+
+1. **API not running** -- The Loop API server is not started.
+2. **Wrong URL** -- `LOOP_API_URL` points to the wrong host or port.
+3. **Firewall or network** -- A firewall is blocking the connection.
+
+**Solution:**
+
+1. Start the Loop API: `npm run dev -w apps/api`
+2. Verify the URL. The default is `http://localhost:5667`. If your API runs on a different port or host, set `LOOP_API_URL` accordingly.
+3. Test connectivity directly:
+
+```bash
+curl http://localhost:5667/health
+```
+
+You should see `{ "ok": true, "service": "loop-api", ... }`.
+
+### Wrong port
+
+**Symptom:** Connection refused even though the API is running.
+
+**Solution:** The Loop API defaults to port `5667` for local development. If you changed the port, update `LOOP_API_URL` in your MCP config to match. Check the API startup output for the actual port.
+
+---
+
+## Tool-specific issues
+
+### loop_get_next_task returns empty queue
+
+**Symptom:** `"No tasks available. The dispatch queue is empty."`
+
+**Possible causes:**
+
+- No issues exist with a dispatchable status (`triage`, `todo`, or `backlog`).
+- All eligible issues are blocked by other incomplete issues.
+- If using `projectId`, no issues exist in that project.
+
+**Solution:**
+
+1. Use `loop_list_issues` to check what issues exist and their statuses.
+2. Create an issue with `loop_create_issue` or ingest a signal with `loop_ingest_signal` to populate the queue.
+
+### loop_complete_task — issue not found
+
+**Symptom:** `Not found: ... Use loop_list_issues to find valid IDs.`
+
+**Solution:** The issue ID is incorrect or the issue has been soft-deleted. Use `loop_list_issues` to find valid issue IDs. Issue IDs are CUID2 strings (e.g., `clxyz1234567890abcdef`).
+
+### loop_get_issue — 404
+
+**Symptom:** `Not found` error for an ID you know exists.
+
+**Solution:** The issue may have been soft-deleted. Soft-deleted issues are excluded from API responses. Check that you are using the correct issue ID, not the issue number.
+
+---
+
+## IDE-specific issues
+
+### Claude Code does not see the MCP tools
+
+**Solution:** Ensure the `.mcp.json` file is in your project root or in `~/.claude/mcp.json` for global configuration. Restart Claude Code after adding or modifying the MCP configuration.
+
+### Cursor does not show Loop tools
+
+**Solution:** Place the config in `.cursor/mcp.json` in your project root. Restart Cursor after changes. Check the MCP panel in Cursor settings to verify the server is connected.
+
+### VS Code Copilot does not detect the server
+
+**Solution:** VS Code uses `.vscode/mcp.json` with a slightly different format. The top-level key is `"servers"` instead of `"mcpServers"`:
+
+```json
+{
+  "servers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Debugging
+
+### Check the MCP server directly
+
+You can run the MCP server outside of an IDE to verify it starts correctly:
+
+```bash
+LOOP_API_KEY=your_key LOOP_API_URL=http://localhost:5667 npx @dork-labs/loop-mcp
+```
+
+If it starts without error, the server is working. The issue is likely in your IDE's MCP configuration.
+
+### Check API connectivity from the MCP server
+
+The MCP server uses [ky](https://github.com/sindresorhus/ky) as its HTTP client. If you see HTTP errors in tool responses, verify the API is reachable from the same environment where the MCP server runs.
+
+<Callout type="info">
+  The MCP server is a stateless proxy. It does not cache data or maintain connections between tool
+  calls. Every tool invocation makes a fresh HTTP request to the Loop API.
+</Callout>
+
+### Enable verbose logging
+
+For deeper debugging, you can inspect the raw HTTP traffic by setting the MCP server's API URL to a local proxy or request inspector:
+
+```bash
+LOOP_API_URL=http://localhost:8080 npx @dork-labs/loop-mcp
+```
+
+This redirects all API calls through your proxy, letting you inspect request headers, bodies, and responses.

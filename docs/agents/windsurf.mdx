@@ -1,0 +1,260 @@
+---
+title: Windsurf
+description: End-to-end guide for connecting Windsurf to Loop — MCP server setup, Cascade rules, and a complete dispatch walkthrough.
+---
+
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Windsurf
+
+This guide walks you through connecting [Windsurf](https://codeium.com/windsurf) to Loop so that Cascade (Windsurf's AI agent) can claim tasks, create issues, ingest signals, and close the feedback loop — all from inside the IDE.
+
+By the end you will have:
+
+1. The Loop MCP server running in Windsurf with 9 agent tools
+2. A Cascade rule that teaches the agent how to use Loop
+3. A working dispatch cycle — claim a task, do the work, report the outcome
+
+<Callout type="info">
+  This guide assumes you have a running Loop API (local or hosted) and a valid `LOOP_API_KEY`.
+  See the [Quickstart](/docs/getting-started/quickstart) if you need to set that up first.
+</Callout>
+
+---
+
+## Prerequisites
+
+- **Windsurf** installed (version 1.6+ recommended for MCP support)
+- **Node.js 20+** (for `npx`)
+- **Loop API** running at `http://localhost:5667` (or your hosted URL)
+- **API key** starting with `loop_`
+
+---
+
+<Steps>
+
+<Step>
+### Install the MCP server
+
+Create a `.windsurf/mcp.json` file in your project root:
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+Replace `<your-api-key>` with your actual Loop API key.
+
+<Callout type="warning">
+  Do not commit your API key. Add `.windsurf/mcp.json` to `.gitignore`, or use
+  environment variable references if your Windsurf version supports them.
+</Callout>
+
+After saving the file, restart Windsurf or reload the window. Windsurf discovers MCP servers automatically from this config file.
+
+</Step>
+
+<Step>
+### Verify the connection
+
+Open the Cascade chat panel and ask:
+
+```
+What Loop tools do you have available?
+```
+
+Cascade should list all 9 tools: `loop_get_next_task`, `loop_complete_task`, `loop_create_issue`, `loop_update_issue`, `loop_list_issues`, `loop_get_issue`, `loop_ingest_signal`, `loop_create_comment`, and `loop_get_dashboard`.
+
+If the tools do not appear:
+
+1. Check that `.windsurf/mcp.json` is in the project root (not a subdirectory)
+2. Verify your API key is valid — run `curl -H "Authorization: Bearer YOUR_KEY" http://localhost:5667/health` in a terminal
+3. Restart Windsurf completely (not just reload)
+4. Check the Windsurf output panel for MCP connection errors
+
+</Step>
+
+<Step>
+### Add a Cascade rule for Loop context
+
+Windsurf supports project-level rules via `.windsurfrules` in your project root. Create this file to give Cascade persistent context about Loop:
+
+```markdown
+# Loop Integration
+
+This project uses Loop (looped.me) as its autonomous improvement engine.
+Loop manages issues, signals, and dispatch for AI agents.
+
+## Workflow
+
+When asked to work on Loop tasks, follow the dispatch loop:
+
+1. Call `loop_get_next_task` to claim the highest-priority issue
+2. Read the hydrated prompt in the response — it contains full instructions
+3. Execute the work described in the prompt
+4. Use `loop_create_comment` to post progress updates on the issue
+5. Call `loop_complete_task` with an outcome summary when done
+6. If you discover new bugs or tasks, use `loop_create_issue` to add them
+
+## Issue types
+
+signal | hypothesis | plan | task | monitor
+
+## Status values
+
+triage | backlog | todo | in_progress | done | canceled
+
+## Priority levels
+
+0 = none | 1 = urgent | 2 = high | 3 = medium | 4 = low
+
+## Key behaviors
+
+- Always read the full prompt from `loop_get_next_task` before starting work
+- Post at least one comment before completing a task
+- When ingesting signals, set severity based on user impact
+- Use `loop_get_dashboard` to check system health before long work sessions
+```
+
+<Callout type="info">
+  Windsurf loads `.windsurfrules` automatically for every Cascade conversation in the project.
+  Unlike MCP tools (which give Cascade *actions*), rules give Cascade *knowledge* about how to
+  use those actions effectively.
+</Callout>
+
+</Step>
+
+<Step>
+### Run the dispatch loop
+
+With everything configured, try the full dispatch cycle. In Cascade, say:
+
+```
+Get my next Loop task and work on it.
+```
+
+Cascade will:
+
+1. Call `loop_get_next_task` to claim an issue
+2. Read the hydrated prompt with full instructions
+3. Execute the work (write code, investigate, etc.)
+4. Post a progress comment via `loop_create_comment`
+5. Complete the task with `loop_complete_task`
+
+If the dispatch queue is empty, Cascade will tell you there are no tasks available. You can seed the queue by ingesting a signal:
+
+```
+Ingest a Loop signal: source "manual", type "bug_report", severity "high",
+payload: { "message": "404 on /api/users endpoint", "method": "GET" }
+```
+
+This creates a signal and a linked triage issue that will appear in the dispatch queue.
+
+</Step>
+
+<Step>
+### Explore the dashboard
+
+Ask Cascade to check the system health:
+
+```
+Show me the Loop dashboard — how many issues are open and what's in the queue?
+```
+
+Cascade calls `loop_get_dashboard` and returns issue counts by status, active goals, and the dispatch queue depth.
+
+</Step>
+
+</Steps>
+
+---
+
+## Recommended Cascade prompts
+
+These prompts work well with the Loop MCP tools in Windsurf:
+
+| Prompt | What it does |
+| --- | --- |
+| "Get my next Loop task and work on it" | Full dispatch cycle: claim, execute, complete |
+| "List all open Loop issues" | Calls `loop_list_issues` with status filter |
+| "Create a Loop issue: Fix the broken auth flow" | Creates a task issue with the given title |
+| "Ingest a signal about the login error rate spike" | Ingests a signal and creates a triage issue |
+| "Show me Loop issue #42" | Retrieves full issue details with comments and labels |
+| "What's the Loop system health?" | Calls `loop_get_dashboard` for metrics |
+| "Complete Loop task [id] — fixed the redirect bug" | Marks the issue done with an outcome summary |
+
+---
+
+## Project-level vs global configuration
+
+**Project-level** (recommended): Place `.windsurf/mcp.json` in your project root. The MCP server is scoped to that project and uses that project's API key.
+
+**Global**: If you want Loop available across all Windsurf projects, place the config in your global Windsurf settings directory. The exact location varies by OS:
+
+- macOS: `~/.windsurf/mcp.json`
+- Linux: `~/.windsurf/mcp.json`
+- Windows: `%USERPROFILE%\.windsurf\mcp.json`
+
+<Callout type="warning">
+  Global configuration shares the same API key across all projects. Use project-level
+  configuration if different projects connect to different Loop instances.
+</Callout>
+
+---
+
+## Troubleshooting
+
+### "Tool not found" errors
+
+Cascade cannot see the MCP tools. Verify:
+
+1. `.windsurf/mcp.json` exists in the project root and is valid JSON
+2. The `command` is `npx` (not `node` or a file path)
+3. Windsurf has been restarted since adding the config
+4. Node.js 20+ is on your PATH
+
+### Authentication failures
+
+The MCP server connects but tools return 401 errors:
+
+1. Check that `LOOP_API_KEY` in the config starts with `loop_`
+2. Verify the key works: `curl -H "Authorization: Bearer YOUR_KEY" http://localhost:5667/api/issues`
+3. Ensure `LOOP_API_URL` points to the correct Loop API instance
+
+### Empty dispatch queue
+
+`loop_get_next_task` returns no tasks:
+
+1. Check that issues exist: `loop_list_issues` with status `todo` or `backlog`
+2. Issues in `triage` status are not dispatched — they need to be moved to `todo` first
+3. Blocked issues are skipped — check for unresolved blocking relations
+4. Ingest a test signal to seed the queue
+
+### MCP server crashes
+
+If the server exits unexpectedly:
+
+1. Check the Windsurf output panel for error messages
+2. Run the server manually to see the error: `LOOP_API_KEY=your-key LOOP_API_URL=http://localhost:5667 npx @dork-labs/loop-mcp`
+3. Ensure `@dork-labs/loop-mcp` can be downloaded (check network/proxy settings)
+
+---
+
+## Next steps
+
+- [**MCP Tools Reference**](/docs/mcp/tools) — Complete parameter documentation for all 9 tools
+- [**MCP Troubleshooting**](/docs/mcp/troubleshooting) — Deeper debugging for MCP connectivity issues
+- [**Concepts**](/docs/concepts) — Understand how signals, issues, dispatch, and prompts work together
+- [**Writing Templates**](/docs/guides/writing-templates) — Create prompt templates that guide agent behavior

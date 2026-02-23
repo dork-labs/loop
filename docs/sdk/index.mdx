@@ -1,0 +1,172 @@
+---
+title: TypeScript SDK
+description: Type-safe programmatic access to the Loop API for custom applications, scripts, and agent frameworks.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# TypeScript SDK
+
+The `@dork-labs/loop-sdk` package provides a type-safe client for the Loop API. It wraps every endpoint in a resource-based interface with automatic pagination, structured error handling, built-in retries, and idempotency keys for mutating operations.
+
+## Installation
+
+<Tabs items={['npm', 'pnpm', 'yarn', 'bun']}>
+  <Tab value="npm">```bash npm install @dork-labs/loop-sdk ```</Tab>
+  <Tab value="pnpm">```bash pnpm add @dork-labs/loop-sdk ```</Tab>
+  <Tab value="yarn">```bash yarn add @dork-labs/loop-sdk ```</Tab>
+  <Tab value="bun">```bash bun add @dork-labs/loop-sdk ```</Tab>
+</Tabs>
+
+The SDK ships ESM and CJS builds with full TypeScript declarations. It has two runtime dependencies: [ky](https://github.com/sindresorhus/ky) for HTTP and `@dork-labs/loop-types` for shared type definitions.
+
+## Quick start
+
+```typescript
+import { LoopClient } from '@dork-labs/loop-sdk'
+
+const loop = new LoopClient({
+  apiKey: 'loop_abc123',
+  baseURL: 'https://your-loop-instance.example.com',
+})
+
+// Claim the next prioritized issue with a hydrated prompt
+const task = await loop.dispatch.next()
+if (task) {
+  console.log(task.issue.title)
+  console.log(task.prompt)
+}
+
+// List open issues
+const issues = await loop.issues.list({ status: 'todo' })
+for (const issue of issues.data) {
+  console.log(`#${issue.number} ${issue.title}`)
+}
+```
+
+## Client configuration
+
+The `LoopClient` constructor accepts the following options:
+
+| Option             | Type       | Default                    | Description                                               |
+| ------------------ | ---------- | -------------------------- | --------------------------------------------------------- |
+| `apiKey`           | `string`   | **required**               | Loop API key (must start with `loop_`)                    |
+| `baseURL`          | `string`   | `http://localhost:5667`    | Base URL of the Loop API                                  |
+| `timeout`          | `number`   | `30000`                    | Request timeout in milliseconds                           |
+| `maxRetries`       | `number`   | `2`                        | Automatic retries on transient errors                     |
+| `retryStatusCodes` | `number[]` | `[429, 500, 503]`         | HTTP status codes that trigger a retry                    |
+
+```typescript
+const loop = new LoopClient({
+  apiKey: process.env.LOOP_API_KEY!,
+  baseURL: 'https://api.looped.me',
+  timeout: 15_000,
+  maxRetries: 3,
+})
+```
+
+## Resources
+
+The client organizes all endpoints into resource namespaces. Each resource is accessible as a property on the `LoopClient` instance:
+
+| Resource               | Namespace            | Description                                        |
+| ---------------------- | -------------------- | -------------------------------------------------- |
+| [Dispatch](/docs/sdk/dispatch)     | `loop.dispatch`    | Claim prioritized work with hydrated prompts       |
+| [Issues](/docs/sdk/issues)         | `loop.issues`      | CRUD for the atomic unit of work                   |
+| [Signals](/docs/sdk/signals)       | `loop.signals`     | Ingest external events into the pipeline           |
+| [Projects](/docs/sdk/projects)     | `loop.projects`    | Group issues toward shared objectives              |
+| [Goals](/docs/sdk/goals)           | `loop.goals`       | Measurable success indicators for projects         |
+| [Templates](/docs/sdk/templates)   | `loop.templates`   | Versioned prompt instructions for dispatch         |
+| [Dashboard](/docs/sdk/dashboard)   | `loop.dashboard`   | System health metrics and activity overview        |
+| [Comments](/docs/sdk/comments)     | `loop.comments`    | Threaded discussion on issues                      |
+| [Errors](/docs/sdk/errors)         | --                 | Structured error classes and handling patterns      |
+
+Additional resources available on the client:
+
+- `loop.labels` -- create, list, and delete categorical tags for issues
+- `loop.relations` -- create and delete blocking/related dependencies between issues
+- `loop.reviews` -- submit and list quality feedback on prompt versions
+
+## Pagination
+
+List endpoints return a `PaginatedList<T>` with `data`, `total`, and a `hasMore` flag:
+
+```typescript
+const page = await loop.issues.list({ limit: 20, offset: 0 })
+console.log(page.data)    // Issue[]
+console.log(page.total)   // total count across all pages
+console.log(page.hasMore) // true if more pages exist
+```
+
+Resources that support pagination also expose an `iter()` method that returns an async generator, automatically fetching subsequent pages as you consume items:
+
+```typescript
+for await (const issue of loop.issues.iter({ status: 'todo' })) {
+  console.log(issue.title)
+}
+```
+
+The auto-paginator fetches pages of 50 items by default. It handles offset management internally so you can iterate through the entire dataset without manual page tracking.
+
+## Per-request options
+
+Mutating methods (`create`, `update`, `delete`) accept an optional `RequestOptions` object for per-request overrides:
+
+| Option           | Type          | Description                                         |
+| ---------------- | ------------- | --------------------------------------------------- |
+| `idempotencyKey` | `string`      | Custom idempotency key (auto-generated if omitted)  |
+| `timeout`        | `number`      | Override the client-level timeout for this request   |
+| `signal`         | `AbortSignal` | Cancel the request via an `AbortController`          |
+
+```typescript
+const controller = new AbortController()
+
+const issue = await loop.issues.create(
+  { title: 'Fix login page', type: 'task' },
+  {
+    idempotencyKey: 'create-login-fix-001',
+    timeout: 10_000,
+    signal: controller.signal,
+  }
+)
+```
+
+<Callout type="info">
+  The SDK automatically generates an `Idempotency-Key` header for every POST, PATCH, and DELETE request. You only need to provide a custom key if you want to ensure exactly-once semantics across retries in your own code.
+</Callout>
+
+## Error handling
+
+All API errors are thrown as typed `LoopError` subclasses with structured `status`, `code`, and `details` fields:
+
+```typescript
+import { LoopNotFoundError, LoopValidationError } from '@dork-labs/loop-sdk'
+
+try {
+  await loop.issues.get('nonexistent-id')
+} catch (error) {
+  if (error instanceof LoopNotFoundError) {
+    console.log('Issue not found')
+  } else if (error instanceof LoopValidationError) {
+    console.log('Validation failed:', error.details)
+  }
+}
+```
+
+See [Errors](/docs/sdk/errors) for the full error class hierarchy and handling patterns.
+
+## Type re-exports
+
+The SDK re-exports all types from `@dork-labs/loop-types` for convenience. You can import entity types, request params, response shapes, and enums directly from the SDK package:
+
+```typescript
+import type { Issue, CreateIssueParams, IssueStatus } from '@dork-labs/loop-sdk'
+```
+
+## What comes next
+
+- [Dispatch](/docs/sdk/dispatch) -- the core agent loop: claim work and receive hydrated prompts
+- [Issues](/docs/sdk/issues) -- create, list, update, and delete the atomic unit of work
+- [Signals](/docs/sdk/signals) -- ingest external events into Loop's pipeline
+- [Errors](/docs/sdk/errors) -- structured error handling with typed exception classes

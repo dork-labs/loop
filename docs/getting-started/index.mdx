@@ -1,29 +1,109 @@
 ---
 title: Getting Started
-description: Get up and running with Loop in minutes. Learn what Loop is, what you need, and how to make your first API call.
+description: Choose your path into Loop based on how you want to integrate — quickstart, agent setup, SDK, CLI, or MCP server.
 ---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
 
 # Getting Started
 
-Loop is the **Autonomous Improvement Engine** — an open-source data layer and prompt engine that collects signals, organizes work into issues, and tells AI agents exactly what to do next. It closes the feedback loop for AI-powered development by turning raw data (errors, metrics, user feedback) into prioritized, actionable work items.
+Loop is the **autonomous improvement engine** — an open-source data layer and prompt engine that collects signals, organizes work into issues, and tells AI agents exactly what to do next. There is no AI inside Loop. It is a fully deterministic system that any agent can pull work from over HTTP.
 
-## What makes Loop different
+<Callout title="New to Loop?" type="info">
+  If this is your first time, start with the **Quickstart** below. You will go from zero to a dispatched
+  issue in under five minutes.
+</Callout>
 
-Loop is fully deterministic. It makes **zero LLM calls** — no embeddings, no generation, no AI inside the engine itself. Instead, Loop structures work so that _any_ AI agent can read a hydrated prompt and take action. Quality improves automatically when better models read Loop's prompts.
+## Choose Your Path
+
+Pick the entry point that matches what you are trying to do.
+
+### First Steps
+
+<Cards>
+  <Card
+    title="Quickstart"
+    description="Go from zero to a working agent loop in five minutes. Connect your project, create an issue, and dispatch it to an AI agent."
+    href="/docs/getting-started/quickstart"
+  />
+  <Card
+    title="API Keys"
+    description="Generate and configure loop_ prefixed API keys for authenticating with the Loop API."
+    href="/docs/getting-started/api-keys"
+  />
+  <Card
+    title="Authentication"
+    description="Understand Bearer token auth for API requests and HMAC signature verification for webhooks."
+    href="/docs/getting-started/authentication"
+  />
+</Cards>
+
+### Connect an AI Agent
+
+If you are building an autonomous agent workflow and want your agent to pull tasks from Loop, pick the integration surface that fits your setup.
+
+<Cards>
+  <Card
+    title="Agent Integration Guide"
+    description="Choose the right integration for your AI agent — Claude Code, Cursor, Windsurf, OpenHands, or a custom agent."
+    href="/docs/agents"
+  />
+  <Card
+    title="MCP Server"
+    description="Zero-code IDE integration via the Model Context Protocol. Install in one command and get 9 agent tools."
+    href="/docs/mcp"
+  />
+  <Card
+    title="Agent Skill"
+    description="Drop a SKILL.md into your repo so AI agents automatically discover how to use Loop in your project."
+    href="/docs/skill"
+  />
+</Cards>
+
+### Build with the SDK or CLI
+
+If you are writing custom scripts, building integrations, or managing Loop from the terminal.
+
+<Cards>
+  <Card
+    title="TypeScript SDK"
+    description="Type-safe programmatic access to the Loop API. Use it in custom applications, scripts, and agent frameworks."
+    href="/docs/sdk"
+  />
+  <Card
+    title="CLI Reference"
+    description="Manage issues, signals, triage, templates, dispatch, and system health from the command line."
+    href="/docs/cli"
+  />
+</Cards>
+
+### Understand the System
+
+<Cards>
+  <Card
+    title="Core Concepts"
+    description="Learn the building blocks: issues, signals, dispatch, prompt templates, projects, and goals."
+    href="/docs/concepts"
+  />
+  <Card
+    title="API Reference"
+    description="Complete REST endpoint reference for issues, signals, templates, dispatch, and dashboard."
+    href="/docs/api"
+  />
+  <Card
+    title="Self-Hosting"
+    description="Deploy Loop on your own infrastructure with environment configuration and deployment guides."
+    href="/docs/self-hosting"
+  />
+</Cards>
 
 ## Prerequisites
 
-Before you begin, make sure you have:
+Before running Loop locally, make sure you have:
 
 - **Node.js 20+** installed
 - **Docker** installed and running (for local PostgreSQL)
 - **npm** (comes with Node.js)
 
-For production, you will need a [Neon](https://neon.tech) PostgreSQL database. For local development, Loop provides a Docker Compose config that runs PostgreSQL automatically.
-
-## What you will learn
-
-This section walks you through everything you need to start using Loop:
-
-- [**Quickstart**](/docs/getting-started/quickstart) — Go from zero to your first dispatched issue in 5 minutes. Clone the repo, start the API, ingest a signal, and see a hydrated prompt.
-- [**Authentication**](/docs/getting-started/authentication) — Understand how to authenticate API requests with Bearer tokens and how webhook providers verify their payloads.
+For production deployments, you will need a [Neon](https://neon.tech) PostgreSQL database. For local development, Loop provides a Docker Compose configuration that runs PostgreSQL automatically.

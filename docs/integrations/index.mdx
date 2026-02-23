@@ -38,3 +38,7 @@ The created issue inherits a priority derived from the severity mapping:
 All webhook endpoints use **timing-safe comparison** (`crypto.timingSafeEqual`) to prevent timing attacks when verifying signatures or secrets. If the corresponding environment variable is not set, the endpoint returns `500` rather than silently accepting unverified requests.
 
 Webhook endpoints use provider-specific authentication and are **not** behind the standard `Authorization: Bearer` API key middleware.
+
+## Agent Integration
+
+Looking to connect an AI agent to Loop rather than an external service? See the [Agent Integration](/docs/agents) guides for per-agent setup instructions covering Claude Code, Cursor, Windsurf, OpenHands, and custom agents. You can also learn how to [build a polling loop](/docs/guides/agent-polling-loop) for autonomous task execution.

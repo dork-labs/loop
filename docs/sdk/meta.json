@@ -1,0 +1,4 @@
+{
+  "title": "TypeScript SDK",
+  "pages": ["dispatch", "issues", "signals", "projects", "goals", "templates", "dashboard", "comments", "errors"]
+}

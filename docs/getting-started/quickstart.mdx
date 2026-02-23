@@ -1,6 +1,6 @@
 ---
 title: Quickstart
-description: Go from zero to your first dispatched issue in 5 minutes. Clone the repo, start the API, ingest a signal, and dispatch it to an AI agent.
+description: Go from zero to a working agent loop in 5 minutes. Connect your project, create an issue, and dispatch it to an AI agent.
 ---
 
 import { Steps, Step } from 'fumadocs-ui/components/steps';
@@ -9,262 +9,141 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 # Quickstart
 
-This tutorial walks you through the core Loop workflow: ingest a signal, see it become a triage issue, and dispatch it with a hydrated prompt for an AI agent.
+This guide walks you through the core Loop workflow: connect a project, create your first issue, and dispatch it to an AI agent with a hydrated prompt.
 
 <Callout type="info">
-  This guide assumes you have Node.js 20+, npm, and Docker installed. No external database needed —
-  Docker provides a local PostgreSQL instance.
+  **Choose your path.** This quickstart uses the Connect CLI for the fastest setup. If you prefer to
+  self-host Loop locally, see the [self-hosting guide](/docs/self-hosting) for Docker and database setup,
+  then return here at Step 2.
 </Callout>
+
+## Prerequisites
+
+- **Node.js 20+** and **npm**
+- A **Loop API key** — sign up at [looped.me](https://app.looped.me) or [generate one locally](/docs/getting-started/api-keys)
 
 <Steps>
 
 <Step>
-### Clone and run the automated setup
+### Connect your project
 
-The setup script installs dependencies, copies environment files with working defaults, starts a local PostgreSQL database via Docker, and runs migrations.
+The Connect CLI wires your project to Loop in a single interactive command. Run it from your project directory:
 
 ```bash
-git clone https://github.com/dork-labs/loop.git
-cd loop
-npm run setup
+npx @dork-labs/loop-connect
 ```
+
+The wizard walks you through three steps:
+
+1. **API key** — paste your `loop_`-prefixed key (validated against the Loop API)
+2. **Project** — select an existing Loop project or create a new one
+3. **File generation** — configuration files are written for your detected environment
+
+After the wizard completes, you will have:
+
+- `.env.local` with your `LOOP_API_KEY` and `LOOP_API_URL`
+- Agent-specific config files (`.mcp.json`, Cursor rules, etc.) based on what the CLI detected
 
 <Callout type="info">
-  The `.env.example` files contain pre-filled defaults that work immediately for local development.
-  No manual editing required.
-</Callout>
-
-<Callout type="warning">
-  Never commit your `.env` file. It is already in `.gitignore`, but always double-check before pushing.
+  The Connect CLI auto-detects Claude Code, Cursor, and OpenHands environments and writes the
+  appropriate configuration files for each. See the [Connect CLI guide](/docs/guides/connect-cli)
+  for the full list of detected environments.
 </Callout>
 </Step>
 
 <Step>
-### Start the API server
+### Create your first issue
 
+With your project connected, create an issue for an agent to work on. You can do this with the CLI, the SDK, or a direct API call.
+
+<Tabs items={['CLI', 'SDK', 'curl']}>
+<Tab value="CLI">
 ```bash
-npm run dev -w apps/api
+npx @dork-labs/loop-cli issues create \
+  --title "Add input validation to login form" \
+  --type task \
+  --priority 2
 ```
+</Tab>
+<Tab value="SDK">
+```typescript
+import { LoopClient } from '@dork-labs/loop-sdk'
 
-The API starts on `http://localhost:4242`. Verify it is running:
+const loop = new LoopClient({
+  apiKey: process.env.LOOP_API_KEY,
+})
 
-<Tabs items={['curl', 'JavaScript']}>
-  <Tab value="curl">```bash curl http://localhost:4242/health ```</Tab>
-  <Tab value="JavaScript">
-    ```js const res = await fetch("http://localhost:4242/health"); const data = await res.json();
-    console.log(data); ```
-  </Tab>
-</Tabs>
+const issue = await loop.issues.create({
+  title: 'Add input validation to login form',
+  type: 'task',
+  priority: 2,
+})
 
-You should see:
-
-```json
-{ "ok": true, "service": "loop-api", "timestamp": "2026-02-20T..." }
+console.log(`Created issue: ${issue.id}`)
 ```
-
-</Step>
-
-<Step>
-### Create a project
-
-Create a project to organize your issues.
-
-<Tabs items={['curl', 'JavaScript']}>
+</Tab>
 <Tab value="curl">
 ```bash
-curl -X POST http://localhost:4242/api/projects \
-  -H "Authorization: Bearer your-api-key-here" \
+curl -X POST https://app.looped.me/api/issues \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"name": "My First Project", "description": "Testing Loop"}'
-```
-</Tab>
-<Tab value="JavaScript">
-```js
-const res = await fetch("http://localhost:4242/api/projects", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer your-api-key-here",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    name: "My First Project",
-    description: "Testing Loop",
-  }),
-});
-const data = await res.json();
-console.log(data);
+  -d '{
+    "title": "Add input validation to login form",
+    "type": "task",
+    "priority": 2
+  }'
 ```
 </Tab>
 </Tabs>
 
-The response includes the new project with a generated CUID2 `id`. Save this ID for the next step.
+The response includes the new issue with a generated ID and `backlog` status:
 
 ```json
 {
   "data": {
     "id": "clxyz1234567890abcdef",
-    "name": "My First Project",
-    "description": "Testing Loop",
+    "title": "Add input validation to login form",
+    "type": "task",
     "status": "backlog",
-    "health": "on_track",
-    "createdAt": "2026-02-20T...",
-    "updatedAt": "2026-02-20T..."
+    "priority": 2
   }
 }
 ```
-
-</Step>
-
-<Step>
-### Ingest a signal
-
-Signals are raw events from external sources. When you submit a signal, Loop atomically creates a linked triage issue.
-
-<Tabs items={['curl', 'JavaScript']}>
-<Tab value="curl">
-```bash
-curl -X POST http://localhost:4242/api/signals \
-  -H "Authorization: Bearer your-api-key-here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "source": "manual",
-    "type": "error_report",
-    "severity": "high",
-    "payload": {
-      "message": "Login page returns 500 on mobile Safari",
-      "url": "/login",
-      "userAgent": "Mozilla/5.0 (iPhone; ...)"
-    }
-  }'
-```
-</Tab>
-<Tab value="JavaScript">
-```js
-const res = await fetch("http://localhost:4242/api/signals", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer your-api-key-here",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    source: "manual",
-    type: "error_report",
-    severity: "high",
-    payload: {
-      message: "Login page returns 500 on mobile Safari",
-      url: "/login",
-      userAgent: "Mozilla/5.0 (iPhone; ...)",
-    },
-  }),
-});
-const data = await res.json();
-console.log(data);
-```
-</Tab>
-</Tabs>
-
-The response contains both the signal and the automatically created triage issue:
-
-```json
-{
-  "data": {
-    "signal": {
-      "id": "sig_abc123...",
-      "source": "manual",
-      "type": "error_report",
-      "severity": "high"
-    },
-    "issue": {
-      "id": "iss_def456...",
-      "title": "[manual] error_report: Login page returns 500 on mobile Safari",
-      "type": "signal",
-      "status": "triage",
-      "priority": 2
-    }
-  }
-}
-```
-
-</Step>
-
-<Step>
-### See the signal as a triage issue
-
-List issues to confirm the signal created a triage issue.
-
-<Tabs items={['curl', 'JavaScript']}>
-<Tab value="curl">
-```bash
-curl "http://localhost:4242/api/issues?type=signal" \
-  -H "Authorization: Bearer your-api-key-here"
-```
-</Tab>
-<Tab value="JavaScript">
-```js
-const res = await fetch("http://localhost:4242/api/issues?type=signal", {
-  headers: {
-    "Authorization": "Bearer your-api-key-here",
-  },
-});
-const data = await res.json();
-console.log(data);
-```
-</Tab>
-</Tabs>
-
-You should see your signal-generated issue in the response:
-
-```json
-{
-  "data": [
-    {
-      "id": "iss_def456...",
-      "title": "[manual] error_report: Login page returns 500 on mobile Safari",
-      "type": "signal",
-      "status": "triage",
-      "priority": 2,
-      "signalSource": "manual"
-    }
-  ],
-  "total": 1
-}
-```
-
-</Step>
-
-<Step>
-### Dispatch the next issue
-
-The dispatch endpoint atomically claims the highest-priority unblocked issue, sets it to `in_progress`, and returns a hydrated prompt for an AI agent.
 
 <Callout type="info">
-  Dispatch uses `FOR UPDATE SKIP LOCKED` to prevent multiple agents from claiming the same issue. If
-  no issues are available, you receive a `204 No Content` response.
+  Issues can also be created automatically from signals. When you [ingest a signal](/docs/concepts/signals)
+  (from GitHub, Sentry, PostHog, or any webhook), Loop creates a linked triage issue automatically.
 </Callout>
+</Step>
 
-<Tabs items={['curl', 'JavaScript']}>
-<Tab value="curl">
+<Step>
+### Dispatch the issue to an agent
+
+The dispatch endpoint claims the highest-priority unblocked issue, sets it to `in_progress`, and returns a hydrated prompt that tells the agent exactly what to do.
+
+<Tabs items={['CLI', 'SDK', 'curl']}>
+<Tab value="CLI">
 ```bash
-curl http://localhost:4242/api/dispatch/next \
-  -H "Authorization: Bearer your-api-key-here"
+npx @dork-labs/loop-cli next
 ```
 </Tab>
-<Tab value="JavaScript">
-```js
-const res = await fetch("http://localhost:4242/api/dispatch/next", {
-  headers: {
-    "Authorization": "Bearer your-api-key-here",
-  },
-});
+<Tab value="SDK">
+```typescript
+const task = await loop.dispatch.next()
 
-if (res.status === 204) {
-console.log("No issues available for dispatch");
+if (task) {
+  console.log(`Claimed: ${task.issue.title}`)
+  console.log(`Prompt:\n${task.prompt}`)
 } else {
-const data = await res.json();
-console.log(data);
+  console.log('No issues available for dispatch')
 }
-
-````
+```
+</Tab>
+<Tab value="curl">
+```bash
+curl https://app.looped.me/api/dispatch/next \
+  -H "Authorization: Bearer $LOOP_API_KEY"
+```
 </Tab>
 </Tabs>
 
@@ -273,32 +152,97 @@ If a matching prompt template exists, the response includes the issue, the hydra
 ```json
 {
   "issue": {
-    "id": "iss_def456...",
-    "number": 1,
-    "title": "[manual] error_report: Login page returns 500 on mobile Safari",
-    "type": "signal",
-    "priority": 2,
-    "status": "in_progress"
+    "id": "clxyz1234567890abcdef",
+    "title": "Add input validation to login form",
+    "type": "task",
+    "status": "in_progress",
+    "priority": 2
   },
-  "prompt": "You are investigating a signal...",
+  "prompt": "You are working on a task. Your goal is to...",
   "meta": {
-    "templateSlug": "signal-triage",
+    "templateSlug": "default-task",
     "templateId": "tpl_abc...",
     "versionId": "ver_xyz...",
     "versionNumber": 1,
     "reviewUrl": "POST /api/prompt-reviews"
   }
 }
-````
+```
 
 If no template matches, `prompt` and `meta` will be `null`, but you still receive the claimed issue.
 
+<Callout type="info">
+  Dispatch uses `FOR UPDATE SKIP LOCKED` for atomic claiming. Multiple agents can poll simultaneously
+  without claiming the same issue. If the queue is empty, you receive a `204 No Content` response.
+</Callout>
+</Step>
+
+<Step>
+### Complete the loop
+
+After an agent finishes work, report results back to Loop. This closes the loop and unblocks any downstream issues.
+
+<Tabs items={['SDK', 'curl']}>
+<Tab value="SDK">
+```typescript
+// Update the issue status
+await loop.issues.update(task.issue.id, {
+  status: 'done',
+})
+
+// Add a completion comment
+await loop.comments.create(task.issue.id, {
+  body: 'Implemented input validation with Zod schema. Added tests.',
+  author: 'agent',
+})
+
+// Rate the prompt quality (feeds back into template improvement)
+await loop.promptReviews.create({
+  versionId: task.meta.versionId,
+  rating: 4,
+  comment: 'Clear instructions, had enough context to complete the task.',
+})
+```
+</Tab>
+<Tab value="curl">
+```bash
+# Update the issue status
+curl -X PATCH https://app.looped.me/api/issues/$ISSUE_ID \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "done"}'
+
+# Add a completion comment
+curl -X POST https://app.looped.me/api/issues/$ISSUE_ID/comments \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"body": "Implemented input validation with Zod schema.", "author": "agent"}'
+```
+</Tab>
+</Tabs>
+
+This is the full cycle: **create work, dispatch it, execute, report back.** In production, agents run this as an automated polling loop — continuously pulling the next task and reporting results.
 </Step>
 
 </Steps>
 
+## What just happened
+
+You completed the core Loop workflow:
+
+1. **Connected** your project to Loop with the Connect CLI
+2. **Created** an issue that entered the priority queue
+3. **Dispatched** the issue to an agent with a hydrated prompt
+4. **Completed** the loop by reporting results back
+
+In a real setup, this cycle runs continuously. Signals arrive from integrations (GitHub, Sentry, PostHog), Loop creates and prioritizes issues, agents poll for work, execute it, and report back — and the loop keeps running.
+
 ## Next steps
 
-- [**Authentication**](/docs/getting-started/authentication) — Learn about Bearer token auth and webhook verification.
+- [**Connect CLI**](/docs/guides/connect-cli) — Full reference for the interactive setup wizard and generated config files.
+- [**Agent Polling Loop**](/docs/guides/agent-polling-loop) — Build an autonomous loop that continuously pulls and executes work.
+- [**Agent Guides**](/docs/agents) — Setup instructions for Claude Code, Cursor, OpenHands, Windsurf, and custom agents.
+- [**MCP Server**](/docs/mcp) — Give AI agents direct tool access to Loop via the Model Context Protocol.
+- [**TypeScript SDK**](/docs/sdk) — Type-safe client for building custom integrations and scripts.
+- [**CLI Reference**](/docs/cli) — Full command reference for the `loop` CLI.
 - [**Concepts**](/docs/concepts) — Understand how issues, signals, dispatch, and prompts work together.
-- [**API Reference**](/docs/api) — Browse the full endpoint documentation.

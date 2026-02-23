@@ -1,0 +1,345 @@
+---
+title: Tools
+description: Complete reference for all 9 MCP tools exposed by the Loop MCP server. Covers dispatch, issue management, signals, comments, and dashboard.
+---
+
+# Tools
+
+The Loop MCP server exposes 9 tools that give AI agents full access to the Loop feedback loop. Tools are grouped into four categories: dispatch, issue management, signals, and observability.
+
+## Dispatch
+
+### loop_get_next_task
+
+Get the highest-priority unblocked issue with dispatch instructions. Atomically claims the issue so no other agent can pick it up simultaneously. Returns the issue details along with a hydrated prompt containing full execution instructions.
+
+When the dispatch queue is empty, returns a message indicating no tasks are available.
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `projectId` | `string` | No | Filter to a specific project |
+
+#### Example response
+
+```json
+{
+  "issue": {
+    "id": "clx1abc2def3ghi4jkl5mnop",
+    "number": 42,
+    "title": "Fix OAuth redirect showing blank page",
+    "type": "task",
+    "priority": 1,
+    "status": "in_progress"
+  },
+  "prompt": "You are working on issue #42...",
+  "meta": {
+    "templateSlug": "signal-triage",
+    "templateId": "tpl_abc...",
+    "versionId": "ver_xyz...",
+    "versionNumber": 1,
+    "reviewUrl": "POST /api/prompt-reviews"
+  }
+}
+```
+
+---
+
+### loop_complete_task
+
+Mark an issue as done, record what was accomplished, and find newly unblocked issues. This tool performs three actions in sequence:
+
+1. Sets the issue status to `done`
+2. Posts an outcome comment attributed to the agent
+3. Queries for issues that were blocked by the completed one
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `issueId` | `string` | Yes | ID of the issue to complete |
+| `outcome` | `string` | Yes | Summary of what was accomplished |
+
+#### Example response
+
+```json
+{
+  "issue": { "id": "clx1abc...", "status": "done" },
+  "comment": { "id": "clx2def...", "body": "Fixed the blank page..." },
+  "unblockedIssues": [
+    { "id": "clx3ghi...", "title": "Add latency tracking" }
+  ]
+}
+```
+
+---
+
+## Issue Management
+
+### loop_create_issue
+
+Create a new issue in Loop. Issues are the atomic unit of work -- signals, hypotheses, plans, tasks, and monitors are all issue types.
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string` | Yes | Issue title (1-500 characters) |
+| `type` | `string` | No | One of `signal`, `hypothesis`, `plan`, `task`, `monitor`. Defaults to `task` |
+| `priority` | `number` | No | `0` = none, `1` = urgent, `2` = high, `3` = medium, `4` = low. Defaults to `0` |
+| `projectId` | `string` | No | Project to assign the issue to |
+| `description` | `string` | No | Issue description |
+| `parentId` | `string` | No | Parent issue ID for hierarchy |
+
+#### Example response
+
+```json
+{
+  "id": "clx1abc2def3ghi4jkl5mnop",
+  "number": 43,
+  "title": "Add loading spinner to OAuth redirect",
+  "type": "task",
+  "status": "triage",
+  "priority": 2
+}
+```
+
+---
+
+### loop_update_issue
+
+Update an existing issue in Loop. You can change the status, priority, type, title, or description. Only the fields you provide will be updated.
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `issueId` | `string` | Yes | ID of the issue to update |
+| `status` | `string` | No | One of `triage`, `backlog`, `todo`, `in_progress`, `done`, `canceled` |
+| `priority` | `number` | No | `0` = none, `1` = urgent, `2` = high, `3` = medium, `4` = low |
+| `type` | `string` | No | One of `signal`, `hypothesis`, `plan`, `task`, `monitor` |
+| `title` | `string` | No | New title (1-500 characters) |
+| `description` | `string` | No | New description |
+
+#### Example response
+
+```json
+{
+  "id": "clx1abc2def3ghi4jkl5mnop",
+  "number": 42,
+  "title": "Fix OAuth redirect showing blank page",
+  "type": "task",
+  "status": "in_progress",
+  "priority": 1
+}
+```
+
+---
+
+### loop_list_issues
+
+List issues from Loop with optional filters for status, type, and project. Returns paginated results with a `hasMore` flag for cursor-based iteration.
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `status` | `string` | No | Filter by status: `triage`, `backlog`, `todo`, `in_progress`, `done`, `canceled` |
+| `type` | `string` | No | Filter by type: `signal`, `hypothesis`, `plan`, `task`, `monitor` |
+| `projectId` | `string` | No | Filter by project ID |
+| `limit` | `number` | No | Maximum issues to return (1-100, default 20) |
+| `offset` | `number` | No | Number of issues to skip for pagination |
+
+#### Example response
+
+```json
+{
+  "issues": [
+    {
+      "id": "clx1abc...",
+      "number": 42,
+      "title": "Fix OAuth redirect",
+      "type": "task",
+      "status": "todo",
+      "priority": 1
+    }
+  ],
+  "total": 128,
+  "hasMore": true
+}
+```
+
+---
+
+### loop_get_issue
+
+Get full details of a single issue by ID, including labels, comments, and relations. Use this to inspect an issue before working on it or to check the current state after updates.
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `issueId` | `string` | Yes | ID of the issue to retrieve |
+
+#### Example response
+
+```json
+{
+  "id": "clx1abc2def3ghi4jkl5mnop",
+  "number": 42,
+  "title": "Fix OAuth redirect showing blank page",
+  "type": "task",
+  "status": "in_progress",
+  "priority": 1,
+  "description": "Login requests are timing out...",
+  "labels": [{ "id": "clx4...", "name": "bug" }],
+  "comments": [{ "id": "clx5...", "body": "Investigating..." }],
+  "relations": [{ "id": "clx6...", "type": "blocked_by", "targetId": "clx7..." }]
+}
+```
+
+---
+
+## Signals
+
+### loop_ingest_signal
+
+Ingest a signal (error, metric change, user feedback) into Loop. Creates a signal record and a linked triage issue automatically. This is how agents report observations back into the feedback loop.
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `source` | `string` | Yes | Signal source (e.g., `"agent"`, `"posthog"`, `"sentry"`) |
+| `type` | `string` | Yes | Signal type (e.g., `"error"`, `"metric_change"`, `"user_feedback"`) |
+| `severity` | `string` | No | One of `critical`, `high`, `medium`, `low`. Defaults to `medium` |
+| `payload` | `object` | Yes | Signal data as key-value pairs |
+| `projectId` | `string` | No | Project to associate the signal with |
+
+#### Example response
+
+```json
+{
+  "signal": {
+    "id": "clx8sig...",
+    "source": "agent"
+  },
+  "issue": {
+    "id": "clx9iss...",
+    "number": 44,
+    "title": "Signal: error from agent",
+    "status": "triage"
+  }
+}
+```
+
+---
+
+## Comments
+
+### loop_create_comment
+
+Post a comment on an issue as the agent. Comments are automatically attributed with `authorType: "agent"`. Use this to report progress, document findings, or ask questions on an issue.
+
+#### Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `issueId` | `string` | Yes | ID of the issue to comment on |
+| `body` | `string` | Yes | Comment text (minimum 1 character) |
+
+#### Example response
+
+```json
+{
+  "id": "clx2def3ghi4jkl5mnop6qrs",
+  "body": "Completed investigation. The root cause is...",
+  "authorName": "agent",
+  "createdAt": "2026-02-23T12:00:00.000Z"
+}
+```
+
+---
+
+## Observability
+
+### loop_get_dashboard
+
+Get system health metrics including issue counts by status, goal progress, and dispatch queue status. Takes no parameters. Use this to understand the current state of the system before deciding what to work on.
+
+#### Parameters
+
+None.
+
+#### Example response
+
+```json
+{
+  "issues": {
+    "total": 128,
+    "byStatus": {
+      "triage": 12,
+      "backlog": 34,
+      "todo": 28,
+      "in_progress": 8,
+      "done": 42,
+      "canceled": 4
+    }
+  },
+  "goals": { "active": 3, "completed": 7 },
+  "dispatch": { "queueDepth": 28 }
+}
+```
+
+---
+
+## Tool behavior notes
+
+### Error handling
+
+All tools return structured error messages when something goes wrong. Errors include an HTTP status code and a human-readable message. Common errors:
+
+| Status | Meaning |
+| --- | --- |
+| `401` | Invalid or missing API key |
+| `404` | Issue or resource not found |
+| `422` | Validation error (bad input) |
+| `500` | Server error |
+
+### Read-only vs mutating tools
+
+| Tool | Read-only | Idempotent |
+| --- | --- | --- |
+| `loop_get_next_task` | No | No |
+| `loop_complete_task` | No | Yes |
+| `loop_create_issue` | No | No |
+| `loop_update_issue` | No | No |
+| `loop_list_issues` | Yes | Yes |
+| `loop_get_issue` | Yes | Yes |
+| `loop_ingest_signal` | No | No |
+| `loop_create_comment` | No | No |
+| `loop_get_dashboard` | Yes | Yes |
+
+### Typical agent workflow
+
+A standard agent loop uses these tools in sequence:
+
+```
+loop_get_next_task  ->  (do work)  ->  loop_complete_task
+       |                                      |
+       |                                      v
+       |                            loop_create_comment
+       |                            loop_ingest_signal
+       |                            loop_create_issue
+       v
+loop_get_dashboard  (check system health)
+```
+
+1. Call `loop_get_next_task` to claim the highest-priority issue
+2. Read the hydrated prompt and execute the work
+3. Use `loop_create_comment` to report progress
+4. If new issues are discovered, use `loop_create_issue` to add them
+5. If signals are observed (errors, metrics), use `loop_ingest_signal`
+6. Call `loop_complete_task` with an outcome summary when done
+7. Optionally call `loop_get_dashboard` to check overall system health

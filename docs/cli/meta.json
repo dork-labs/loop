@@ -1,4 +1,17 @@
 {
   "title": "CLI Reference",
-  "pages": ["issues", "signals", "triage", "templates", "dispatch", "status"]
+  "pages": [
+    "auth",
+    "issues",
+    "comments",
+    "signals",
+    "triage",
+    "templates",
+    "dispatch",
+    "dashboard",
+    "projects",
+    "goals",
+    "labels",
+    "completions"
+  ]
 }

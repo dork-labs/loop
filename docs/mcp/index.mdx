@@ -1,0 +1,228 @@
+---
+title: MCP Server
+description: Zero-code IDE integration via the Model Context Protocol. Install in one command, get 9 agent tools.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# MCP Server
+
+Loop's MCP server gives AI agents direct access to Loop's issue tracking, dispatch queue, and signal ingestion through the [Model Context Protocol](https://modelcontextprotocol.io). Install it in one command and get 9 tools that cover the full Loop workflow.
+
+<Callout type="info">
+  The MCP server is a thin wrapper around the Loop REST API. It requires a running Loop API instance
+  and a valid `LOOP_API_KEY`. No additional infrastructure is needed.
+</Callout>
+
+## Why MCP?
+
+The Model Context Protocol lets AI agents discover and use tools without custom integration code. Instead of writing HTTP requests manually, agents call named tools like `loop_get_next_task` and `loop_create_issue` directly from their IDE or agent framework.
+
+Loop's MCP server supports two transports:
+
+- **Stdio** -- for IDE integrations (Claude Code, Cursor, Windsurf, VS Code)
+- **Streamable HTTP** -- for embedding in your own Hono server
+
+## Quick Install
+
+<Tabs items={['Claude Code', 'Cursor', 'Windsurf', 'VS Code', 'Manual']}>
+<Tab value="Claude Code">
+
+Add to your project's `.mcp.json` or global `~/.claude/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab value="Cursor">
+
+Add to `.cursor/mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab value="Windsurf">
+
+Add to `.windsurf/mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab value="VS Code">
+
+Add to `.vscode/mcp.json` in your project root:
+
+```json
+{
+  "servers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab value="Manual">
+
+Run the MCP server directly via stdio:
+
+```bash
+LOOP_API_KEY=your-api-key LOOP_API_URL=http://localhost:5667 npx @dork-labs/loop-mcp
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="warning">
+  Replace `<your-api-key>` with your actual Loop API key. Generate one with
+  `npm run generate-key` or `node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"`.
+</Callout>
+
+## Environment Variables
+
+| Variable       | Required | Default                  | Description                          |
+| -------------- | -------- | ------------------------ | ------------------------------------ |
+| `LOOP_API_KEY` | Yes      | --                       | Bearer token for Loop API access     |
+| `LOOP_API_URL` | No       | `http://localhost:5667`  | Base URL of the Loop API server      |
+
+## Available Tools
+
+The MCP server registers 9 tools organized around the Loop workflow:
+
+| Tool                    | Description                                                          | Read-only |
+| ----------------------- | -------------------------------------------------------------------- | --------- |
+| `loop_get_next_task`    | Claim the highest-priority unblocked issue with dispatch instructions | No        |
+| `loop_complete_task`    | Mark an issue as done, record the outcome, find unblocked issues     | No        |
+| `loop_create_issue`     | Create a new issue (signal, hypothesis, plan, task, or monitor)      | No        |
+| `loop_update_issue`     | Update an issue's status, priority, type, title, or description      | No        |
+| `loop_list_issues`      | List issues with filters for status, type, and project               | Yes       |
+| `loop_get_issue`        | Get full issue details including labels, comments, and relations     | Yes       |
+| `loop_ingest_signal`    | Submit a signal that creates a linked triage issue                   | No        |
+| `loop_create_comment`   | Post a comment on an issue as the agent                              | No        |
+| `loop_get_dashboard`    | Get system health metrics, issue counts, and queue status            | Yes       |
+
+See the [Tools Reference](/docs/mcp/tools) for complete parameter documentation and example responses.
+
+## Transports
+
+### Stdio (IDE Integration)
+
+The default transport. The MCP server communicates over stdin/stdout, which is the standard for IDE integrations. This is what you get when you run `npx @dork-labs/loop-mcp`.
+
+### Streamable HTTP (Embedded)
+
+For embedding the MCP server in your own Hono application:
+
+```ts
+import { Hono } from 'hono';
+import { createMcpHandler } from '@dork-labs/loop-mcp/http';
+
+const app = new Hono();
+
+app.route('/mcp', createMcpHandler({
+  apiKey: process.env.LOOP_API_KEY,
+  apiUrl: process.env.LOOP_API_URL,
+}));
+
+export default app;
+```
+
+This mounts the MCP server at `/mcp` on your existing Hono app, allowing remote agents to connect over HTTP.
+
+## Programmatic Usage
+
+You can also create the MCP server programmatically for custom transports or testing:
+
+```ts
+import { createLoopMcpServer } from '@dork-labs/loop-mcp';
+
+const server = createLoopMcpServer({
+  apiKey: 'loop_your_key_here',
+  apiUrl: 'http://localhost:5667',
+});
+
+// Connect to any MCP transport
+await server.connect(yourTransport);
+```
+
+## Typical Agent Workflow
+
+A standard agent session using the MCP server follows this pattern:
+
+1. **Get next task** -- call `loop_get_next_task` to claim the highest-priority issue
+2. **Read the prompt** -- the response includes hydrated instructions telling the agent what to do
+3. **Execute the work** -- the agent performs the task (write code, investigate, etc.)
+4. **Report progress** -- call `loop_create_comment` to post updates on the issue
+5. **Complete the task** -- call `loop_complete_task` to mark it done and record the outcome
+6. **Repeat** -- call `loop_get_next_task` again to get the next item
+
+## Next Steps
+
+<Cards>
+  <Card
+    title="Tools Reference"
+    description="Complete parameter documentation and example responses for all 9 MCP tools."
+    href="/docs/mcp/tools"
+  />
+  <Card
+    title="Troubleshooting"
+    description="Common issues with MCP server setup, authentication errors, and connectivity problems."
+    href="/docs/mcp/troubleshooting"
+  />
+  <Card
+    title="Agent Integration"
+    description="Choose the right integration surface for your AI agent."
+    href="/docs/agents"
+  />
+  <Card
+    title="TypeScript SDK"
+    description="For programmatic access beyond MCP tools."
+    href="/docs/sdk"
+  />
+</Cards>

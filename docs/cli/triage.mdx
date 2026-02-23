@@ -1,18 +1,18 @@
 ---
 title: Triage
-description: View and manage the triage queue using the looped CLI. Accept issues into the backlog or decline them.
+description: View and manage the triage queue using the loop CLI. Accept issues into the backlog or decline them.
 ---
 
 # Triage
 
 The `triage` command group lets you view the triage queue and act on pending issues. Issues enter triage when signals are ingested, and must be accepted or declined before they enter the work pipeline.
 
-## looped triage
+## loop triage
 
 List all issues with `triage` status.
 
 ```bash
-looped triage
+loop triage
 ```
 
 ### Sample output
@@ -21,21 +21,21 @@ looped triage
 ┌──────┬───────────┬──────────────────────────────────┬─────────────┬────────┬──────────┐
 │ #    │ TYPE      │ TITLE                            │ STATUS      │ PRI    │ CREATED  │
 ├──────┼───────────┼──────────────────────────────────┼─────────────┼────────┼──────────┤
-│ 46   │ ⚡ signal  │ Checkout error rate spike         │ triage      │ medium │ 1h ago   │
-│ 45   │ ⚡ signal  │ Memory usage alert                │ triage      │ high   │ 3h ago   │
-│ 44   │ ⚡ signal  │ User feedback: slow page loads    │ triage      │ low    │ 1d ago   │
+│ 46   │ signal    │ Checkout error rate spike         │ triage      │ medium │ 1h ago   │
+│ 45   │ signal    │ Memory usage alert                │ triage      │ high   │ 3h ago   │
+│ 44   │ signal    │ User feedback: slow page loads    │ triage      │ low    │ 1d ago   │
 └──────┴───────────┴──────────────────────────────────┴─────────────┴────────┴──────────┘
 Showing 3 of 3 issues
 ```
 
 ---
 
-## looped triage accept
+## loop triage accept
 
 Accept a triage issue into the backlog. This sets the issue status to `backlog`.
 
 ```bash
-looped triage accept <id>
+loop triage accept <id>
 ```
 
 ### Arguments
@@ -47,7 +47,7 @@ looped triage accept <id>
 ### Example
 
 ```bash
-looped triage accept clx8iss2uea3bcd4efg5hijk
+loop triage accept clx8iss2uea3bcd4efg5hijk
 ```
 
 ### Sample output
@@ -58,12 +58,12 @@ Issue clx8iss2uea3bcd4efg5hijk accepted into backlog
 
 ---
 
-## looped triage decline
+## loop triage decline
 
 Decline a triage issue by setting its status to `canceled`. An optional reason can be provided, which is saved as a comment on the issue.
 
 ```bash
-looped triage decline <id> [reason]
+loop triage decline <id> [reason]
 ```
 
 ### Arguments
@@ -78,13 +78,13 @@ looped triage decline <id> [reason]
 Decline without a reason:
 
 ```bash
-looped triage decline clx8iss2uea3bcd4efg5hijk
+loop triage decline clx8iss2uea3bcd4efg5hijk
 ```
 
 Decline with a reason:
 
 ```bash
-looped triage decline clx8iss2uea3bcd4efg5hijk "Duplicate of issue #32"
+loop triage decline clx8iss2uea3bcd4efg5hijk "Duplicate of issue #32"
 ```
 
 ### Sample output
@@ -93,7 +93,7 @@ looped triage decline clx8iss2uea3bcd4efg5hijk "Duplicate of issue #32"
 Issue clx8iss2uea3bcd4efg5hijk declined
 ```
 
-When a reason is provided, a comment is posted on the issue with `authorName: looped-cli` before the issue is marked as declined. If the comment fails to save, a warning is printed but the decline still succeeds.
+When a reason is provided, a comment is posted on the issue with `authorName: loop-cli` before the issue is marked as declined. If the comment fails to save, a warning is printed but the decline still succeeds.
 
 ---
 
@@ -101,14 +101,14 @@ When a reason is provided, a comment is posted on the issue with `authorName: lo
 
 ```bash
 # 1. Check the triage queue
-looped triage
+loop triage
 
 # 2. Inspect a specific issue
-looped show clx8iss2uea3bcd4efg5hijk
+loop issues view clx8iss2uea3bcd4efg5hijk
 
 # 3. Accept it into the backlog
-looped triage accept clx8iss2uea3bcd4efg5hijk
+loop triage accept clx8iss2uea3bcd4efg5hijk
 
 # Or decline with a reason
-looped triage decline clx9xyz... "Not actionable — transient network blip"
+loop triage decline clx9xyz... "Not actionable — transient network blip"
 ```

@@ -1,0 +1,163 @@
+---
+title: Connect CLI
+description: Use npx @dork-labs/loop-connect to connect any project to Loop in one interactive command.
+---
+
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Connect CLI
+
+The Connect CLI is a one-command setup tool that wires your project to Loop. It validates your API key, selects or creates a project, detects your agent environment, and writes the necessary configuration files — all in a single interactive flow.
+
+## Quick start
+
+Run the CLI with `npx` from any project directory:
+
+```bash
+npx @dork-labs/loop-connect
+```
+
+The interactive wizard walks you through three steps:
+
+1. **API key** — enter your `loop_`-prefixed key (validated against the Loop API)
+2. **Project** — select an existing project or create a new one
+3. **File generation** — configuration files are written based on your detected environment
+
+## What it detects
+
+The CLI scans your working directory for known agent environments and writes configuration files for each one it finds:
+
+| Detected file/directory | Written file                         | Contents                                      |
+| ----------------------- | ------------------------------------ | --------------------------------------------- |
+| _(always)_              | `.env.local`                         | `LOOP_API_KEY` and `LOOP_API_URL`             |
+| `CLAUDE.md` or `.mcp.json` | `.mcp.json`                      | MCP server entry for `@dork-labs/loop-mcp`    |
+| `CLAUDE.md`             | `CLAUDE.md` (appended)               | Loop context block with skill instructions    |
+| `.cursor/`              | `.cursor/rules/loop.mdc`             | Cursor rules for Loop-aware AI assistance     |
+| `.openhands/`           | `.openhands/microagents/loop.md`     | OpenHands microagent for Loop integration     |
+
+Files that already exist with the correct content are skipped. Conflicts (e.g., a different `LOOP_API_KEY` already set) are reported but not overwritten.
+
+## CLI flags
+
+| Flag          | Short | Default                    | Description                                           |
+| ------------- | ----- | -------------------------- | ----------------------------------------------------- |
+| `--api-key`   |       |                            | Provide the API key non-interactively                 |
+| `--api-url`   |       | `https://app.looped.me`    | Loop API base URL (override for self-hosted instances)|
+| `--yes`       | `-y`  | `false`                    | Non-interactive mode (skip all prompts)               |
+
+### Non-interactive mode
+
+Use `--yes` with `--api-key` for CI or scripted setups. In this mode the CLI validates the key, selects the first available project, and writes files without prompting:
+
+```bash
+npx @dork-labs/loop-connect --yes --api-key loop_abc123...
+```
+
+If the key is invalid or no projects exist, the CLI exits with a non-zero code.
+
+## Self-hosted instances
+
+Point the CLI at your own Loop deployment by passing `--api-url`:
+
+```bash
+npx @dork-labs/loop-connect --api-url http://localhost:5667
+```
+
+This sets `LOOP_API_URL` in `.env.local` and configures the MCP server entry to point at your custom URL.
+
+<Steps>
+
+<Step>
+### Run the wizard
+
+```bash
+npx @dork-labs/loop-connect
+```
+
+You are prompted for your API key. The key is masked during entry and validated against the Loop API before proceeding.
+
+</Step>
+
+<Step>
+### Select a project
+
+If projects exist, you see a selection list. Choose an existing project or select "Create new project" to create one inline.
+
+If the API is unreachable (e.g., network error), you can continue anyway — files are written with the key you provided, and the project can be created later.
+
+</Step>
+
+<Step>
+### Review the summary
+
+After writing files, the CLI prints a summary showing what was written, what was skipped, and what was not detected:
+
+```
+  Files written
+
+  /path/to/.env.local         — LOOP_API_KEY, LOOP_API_URL
+  /path/to/.mcp.json          — MCP server config
+  /path/to/CLAUDE.md          — Loop context block (appended)
+  .cursor/rules/              — Skipped (not detected)
+  .openhands/                 — Skipped (not detected)
+
+  Connected to project: my-project
+```
+
+</Step>
+
+<Step>
+### Verify the connection
+
+Open the dashboard to confirm your project is connected:
+
+```bash
+open https://app.looped.me/issues
+```
+
+Or test the API directly:
+
+<Tabs items={['curl', 'JavaScript']}>
+<Tab value="curl">
+```bash
+source .env.local
+curl "$LOOP_API_URL/api/issues" \
+  -H "Authorization: Bearer $LOOP_API_KEY"
+```
+</Tab>
+<Tab value="JavaScript">
+```js
+const res = await fetch(`${process.env.LOOP_API_URL}/api/issues`, {
+  headers: {
+    "Authorization": `Bearer ${process.env.LOOP_API_KEY}`,
+  },
+});
+const data = await res.json();
+console.log(data);
+```
+</Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+## Gitignore reminder
+
+The CLI checks whether `.env.local` is listed in your `.gitignore`. If it is not, the summary includes a warning. Add it to prevent committing your API key:
+
+```bash
+echo '.env.local' >> .gitignore
+```
+
+<Callout type="warning">
+  Never commit `.env.local` to version control. It contains your Loop API key.
+</Callout>
+
+## Next steps
+
+- [**Agent Integration**](/docs/agents) — Configure your specific AI agent (Claude Code, Cursor, Windsurf, OpenHands).
+- [**Agent Polling Loop**](/docs/guides/agent-polling-loop) — Build an autonomous polling loop that continuously pulls work from Loop.
+- [**Writing Templates**](/docs/guides/writing-templates) — Author prompt templates that control what agents see at dispatch time.

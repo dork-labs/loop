@@ -1,0 +1,277 @@
+---
+title: Cursor
+description: End-to-end guide for integrating Loop with Cursor — MCP server setup, Cursor rules, and the dispatch workflow.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+
+# Cursor
+
+This guide walks you through connecting Loop to [Cursor](https://cursor.com) so that Cursor's AI agent can claim tasks, create issues, ingest signals, and close the feedback loop — all from your editor.
+
+You will set up two things:
+
+1. **MCP Server** — gives the agent 9 Loop tools it can call directly
+2. **Cursor Rules** — gives the agent contextual knowledge about Loop's API, issue types, and workflows
+
+<Callout type="info">
+  Both layers are independent. The MCP server provides actions (tools the agent invokes).
+  Cursor rules provide knowledge (context the agent reads). Install both for the best experience.
+</Callout>
+
+---
+
+## Prerequisites
+
+- [Cursor](https://cursor.com) installed (version 0.45+ recommended for MCP support)
+- A running Loop API instance (local or hosted)
+- A valid `LOOP_API_KEY` — generate one with:
+
+```bash
+node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
+```
+
+---
+
+## Step 1: Install the MCP Server
+
+Create `.cursor/mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+Replace `<your-api-key>` with your actual Loop API key (must start with `loop_`). If your API runs on a hosted URL, replace `http://localhost:5667` with that URL.
+
+After saving the file, restart Cursor. The MCP server should appear in Cursor's MCP panel under **Settings > MCP**.
+
+### Verify the connection
+
+Open Cursor's AI chat and ask:
+
+```
+What Loop tools do you have available?
+```
+
+The agent should list the 9 Loop tools: `loop_get_next_task`, `loop_complete_task`, `loop_create_issue`, `loop_update_issue`, `loop_list_issues`, `loop_get_issue`, `loop_ingest_signal`, `loop_create_comment`, and `loop_get_dashboard`.
+
+If the tools do not appear, see [Troubleshooting](/docs/mcp/troubleshooting#cursor-does-not-show-loop-tools).
+
+---
+
+## Step 2: Add Cursor Rules
+
+Cursor rules give the agent persistent context about Loop without consuming chat tokens on every message. Loop ships a pre-built `.mdc` rules file in the `@dork-labs/loop` skill package.
+
+<Tabs items={['npx (recommended)', 'Manual']}>
+<Tab value="npx (recommended)">
+
+Copy the rules file into your project:
+
+```bash
+mkdir -p .cursor/rules
+npx @dork-labs/loop cat templates/loop.mdc > .cursor/rules/loop.mdc
+```
+
+If the `npx` command does not work, use the manual method below.
+
+</Tab>
+<Tab value="Manual">
+
+Create `.cursor/rules/loop.mdc` with the following content:
+
+```markdown
+---
+description: >
+  Use when working with Loop (looped.me), the autonomous improvement engine.
+  Apply when: creating or updating issues via the Loop API, ingesting signals,
+  fetching the next work item for an agent, managing projects or goals, or
+  accessing prompt templates. Loop API base: https://app.looped.me/api.
+alwaysApply: false
+---
+
+# Loop — Autonomous Improvement Engine
+
+## Auth
+
+Set before making API calls:
+
+export LOOP_API_KEY=loop_...
+
+All `/api/*` endpoints: `Authorization: Bearer $LOOP_API_KEY`
+
+## Issue Types
+
+`signal` | `hypothesis` | `plan` | `task` | `monitor`
+
+## Status Values
+
+`triage` | `backlog` | `todo` | `in_progress` | `done` | `canceled`
+
+## Docs
+
+Full API: https://www.looped.me/docs
+Machine-readable: https://www.looped.me/llms.txt
+```
+
+For the complete rules file, see the source at [`packages/loop-skill/templates/loop.mdc`](https://github.com/dork-labs/loop/blob/main/packages/loop-skill/templates/loop.mdc) in the Loop repository.
+
+</Tab>
+</Tabs>
+
+<Callout type="warning">
+  The `alwaysApply: false` setting in the frontmatter means Cursor will only load these rules when
+  the agent determines they are relevant (e.g., when you mention Loop, issues, or signals). Set it
+  to `true` if you want the rules active in every conversation.
+</Callout>
+
+---
+
+## Step 3: Run the Dispatch Loop
+
+With both the MCP server and Cursor rules installed, you can run the full Loop dispatch workflow from Cursor's AI chat.
+
+### Claim a task
+
+Ask the agent to pull the next task from Loop:
+
+```
+Get my next task from Loop
+```
+
+The agent calls `loop_get_next_task`, which atomically claims the highest-priority unblocked issue and returns it with hydrated dispatch instructions. The response includes the issue details and a prompt telling the agent exactly what to do.
+
+### Execute the work
+
+Read the dispatch instructions and tell the agent to proceed:
+
+```
+Execute the task from the dispatch instructions
+```
+
+The agent reads the prompt, writes code, creates files, runs tests — whatever the instructions describe. During execution, it can call `loop_create_comment` to post progress updates on the issue.
+
+### Complete the task
+
+When the work is done, tell the agent to close it out:
+
+```
+Complete the Loop task. Outcome: Fixed the OAuth redirect by adding a loading spinner.
+```
+
+The agent calls `loop_complete_task`, which marks the issue as `done`, posts the outcome as a comment, and returns any issues that were blocked by the completed one.
+
+### Report new findings
+
+If the agent discovers bugs, regressions, or observations during its work, it can feed them back into Loop:
+
+```
+Create a Loop issue: "Add retry logic to webhook delivery" as a task with high priority
+```
+
+```
+Ingest a signal into Loop: error rate spike in auth service, source is agent, severity high
+```
+
+---
+
+## Example Session
+
+Here is a complete session showing the dispatch loop in action:
+
+```
+You:    Get my next task from Loop
+Agent:  [calls loop_get_next_task]
+        Claimed issue #42: "Fix OAuth redirect showing blank page"
+        Priority: urgent | Type: task | Project: Onboarding
+
+        Dispatch instructions: "The OAuth redirect page shows a blank
+        white screen for 1.5-3 seconds. Add a loading spinner component
+        to /app/auth/callback/page.tsx..."
+
+You:    Execute the task
+Agent:  [reads instructions, creates loading spinner component, updates
+        the callback page, runs tests]
+        [calls loop_create_comment: "Added spinner component, all tests passing"]
+
+You:    Complete the task. Outcome: Added loading spinner to OAuth callback,
+        resolves blank screen issue. Tests passing.
+Agent:  [calls loop_complete_task]
+        Issue #42 marked as done.
+        Unblocked issues: #43 "Add latency tracking to OAuth flow"
+
+You:    Get my next task from Loop
+Agent:  [calls loop_get_next_task]
+        Claimed issue #43: "Add latency tracking to OAuth flow"...
+```
+
+---
+
+## Available Tools
+
+All 9 MCP tools are available to Cursor's agent once the server is connected:
+
+| Tool | What it does |
+| --- | --- |
+| `loop_get_next_task` | Claim the highest-priority unblocked issue with dispatch instructions |
+| `loop_complete_task` | Mark an issue as done and record the outcome |
+| `loop_create_issue` | Create a new issue (signal, hypothesis, plan, task, or monitor) |
+| `loop_update_issue` | Update status, priority, type, title, or description |
+| `loop_list_issues` | List issues with filters for status, type, and project |
+| `loop_get_issue` | Get full issue details including labels, comments, and relations |
+| `loop_ingest_signal` | Submit a signal that creates a linked triage issue |
+| `loop_create_comment` | Post a progress comment on an issue |
+| `loop_get_dashboard` | Get system health metrics and queue status |
+
+See the [Tools Reference](/docs/mcp/tools) for complete parameter documentation and example responses.
+
+---
+
+## Project Structure
+
+After setup, your project will have these Loop-related files:
+
+```
+your-project/
+├── .cursor/
+│   ├── mcp.json          # MCP server config (tools)
+│   └── rules/
+│       └── loop.mdc      # Cursor rules (knowledge)
+└── ...
+```
+
+Both files can be committed to your repository so the entire team gets the same Loop integration.
+
+---
+
+## Tips
+
+**Use Composer mode for multi-step tasks.** Cursor's Composer (Cmd+I) works well for executing dispatch instructions that span multiple files. Claim a task in the chat, then switch to Composer to execute the work.
+
+**Pin the Loop rules for long sessions.** If you are working on a Loop-heavy session, set `alwaysApply: true` in the `.mdc` frontmatter to keep the rules loaded without the agent needing to decide on each turn.
+
+**Check the dashboard periodically.** Ask the agent to call `loop_get_dashboard` to see the current queue depth, issue counts, and system health before starting a work session.
+
+**Combine with the REST API docs.** The Cursor rules file includes a link to `https://www.looped.me/llms.txt` — the machine-readable docs index. If the agent needs deeper API knowledge beyond the MCP tools, it can fetch that URL.
+
+---
+
+## Next Steps
+
+- [MCP Tools Reference](/docs/mcp/tools) — full parameter docs for all 9 tools
+- [MCP Troubleshooting](/docs/mcp/troubleshooting) — common setup issues and solutions
+- [Agent Skill](/docs/skill) — deeper agent context beyond Cursor rules
+- [Concepts: Dispatch](/docs/concepts/dispatch) — how Loop prioritizes and assigns work

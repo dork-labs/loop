@@ -1,0 +1,106 @@
+---
+title: Auth
+description: Authenticate with the Loop API using the loop CLI. Login, logout, and check authentication status.
+---
+
+# Auth
+
+The `auth` command group manages authentication with the Loop API. It provides interactive login, credential clearing, and status checking.
+
+## loop auth login
+
+Interactively authenticate with the Loop API. Prompts for the API URL and API key, validates the credentials against the server, and saves them to the config file.
+
+```bash
+loop auth login
+```
+
+### Interactive prompts
+
+| Prompt       | Default                  | Description                      |
+| ------------ | ------------------------ | -------------------------------- |
+| Loop API URL | `http://localhost:5667`  | API base URL                     |
+| API key      | none                     | Your Loop API key (starts with `loop_`) |
+
+The command validates the credentials by making a test request to the API. If validation fails, the credentials are not saved.
+
+### Example session
+
+```
+$ loop auth login
+? Loop API URL: https://api.looped.me
+? API key (starts with loop_): ****
+✔ Authenticated successfully
+Config saved to ~/.loop/config.json
+```
+
+### Error output
+
+```
+$ loop auth login
+? Loop API URL: https://api.looped.me
+? API key (starts with loop_): ****
+✖ Authentication failed. Check your API key and URL.
+```
+
+---
+
+## loop auth logout
+
+Clear stored credentials from the config file.
+
+```bash
+loop auth logout
+```
+
+### Sample output
+
+```
+Logged out. Credentials cleared.
+```
+
+---
+
+## loop auth status
+
+Show the current authentication state, including the configured URL and a masked version of the API key.
+
+```bash
+loop auth status
+```
+
+### Sample output (authenticated)
+
+```
+Authenticated
+  URL:   https://api.looped.me
+  Token: loop_****...abcd
+```
+
+### Sample output (not authenticated)
+
+```
+Not authenticated. Run: loop auth login
+```
+
+---
+
+## Typical authentication workflow
+
+```bash
+# 1. Log in interactively
+loop auth login
+
+# 2. Verify authentication state
+loop auth status
+
+# 3. Start using the CLI
+loop issues list
+
+# 4. When done, clear credentials
+loop auth logout
+```
+
+## Configuration storage
+
+Credentials are stored in `~/.loop/config.json` with restricted file permissions (`0600`). The config file is also used by `loop config set` and `loop config get`. See the [CLI Reference](/docs/cli) for details on configuration resolution order.

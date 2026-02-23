@@ -1,0 +1,103 @@
+---
+title: Signals
+description: Ingest external data into the Loop feedback pipeline using the TypeScript SDK.
+---
+
+# Signals
+
+The `loop.signals` resource ingests external events (errors, metrics, user feedback) into the Loop pipeline. Each ingested signal automatically creates a linked triage issue.
+
+## Ingest a signal
+
+```typescript
+const result = await loop.signals.ingest({
+  source: 'monitoring',
+  type: 'metric-alert',
+  severity: 'high',
+  payload: {
+    metric: 'error_rate',
+    value: 12.1,
+    threshold: 5.0,
+    message: 'Error rate spike on checkout endpoint',
+  },
+});
+
+console.log(result.signal.id); // Signal record ID
+console.log(result.issue.id); // Linked triage issue ID
+console.log(result.issue.number); // Issue number (e.g. 46)
+```
+
+## Parameters
+
+### `IngestSignalParams`
+
+| Field       | Type             | Required | Description                                          |
+| ----------- | ---------------- | -------- | ---------------------------------------------------- |
+| `source`    | `string`         | Yes      | Origin identifier (e.g. `"posthog"`, `"sentry"`)    |
+| `sourceId`  | `string`         | No       | External ID for deduplication                        |
+| `type`      | `string`         | Yes      | Signal category (e.g. `"metric-alert"`, `"error"`)   |
+| `severity`  | `SignalSeverity`  | Yes      | `"low"`, `"medium"`, `"high"`, or `"critical"`       |
+| `payload`   | `SignalPayload`  | Yes      | Arbitrary JSON data for the signal                   |
+| `projectId` | `string`         | No       | Associate with a specific project                    |
+
+## Response
+
+The `ingest` method returns a `SignalIngestResponse` containing both the created signal and the linked issue:
+
+```typescript
+interface SignalIngestResponse {
+  signal: Signal;
+  issue: Issue;
+}
+```
+
+The created issue has `type: "signal"` and `status: "triage"`, placing it in the triage queue for agent processing.
+
+## Examples
+
+### CI pipeline failure
+
+```typescript
+await loop.signals.ingest({
+  source: 'ci',
+  sourceId: `run-${runId}`,
+  type: 'build-failure',
+  severity: 'high',
+  payload: {
+    pipeline: 'main',
+    exitCode: 1,
+    failedStep: 'test',
+    commitSha: 'abc123',
+  },
+});
+```
+
+### User feedback
+
+```typescript
+await loop.signals.ingest({
+  source: 'feedback-form',
+  type: 'user-feedback',
+  severity: 'medium',
+  payload: {
+    userId: 'usr_123',
+    message: 'Checkout page loads slowly after recent update',
+    page: '/checkout',
+  },
+  projectId: 'clx1abc2def3ghi4jkl5mnop',
+});
+```
+
+### With request options
+
+```typescript
+await loop.signals.ingest(
+  {
+    source: 'sentry',
+    type: 'error',
+    severity: 'critical',
+    payload: { errorId: 'evt_456', message: 'Unhandled exception' },
+  },
+  { timeout: 10_000 }
+);
+```

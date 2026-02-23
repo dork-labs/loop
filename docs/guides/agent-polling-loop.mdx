@@ -1,0 +1,304 @@
+---
+title: Agent Polling Loop
+description: Build an autonomous polling loop that continuously pulls work from Loop, executes tasks, and reports results.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+
+# Agent Polling Loop
+
+Loop uses a pull architecture. Agents ask Loop for work on a schedule, execute it, report results, and poll again. This guide walks through building an autonomous polling loop from scratch using the REST API.
+
+## How it works
+
+The polling loop follows a five-step cycle:
+
+```
+Poll  ->  Execute  ->  Report  ->  Review  ->  Wait  ->  Poll
+```
+
+1. **Poll** — call `GET /api/dispatch/next` to atomically claim the highest-priority unblocked issue
+2. **Execute** — follow the hydrated prompt instructions to complete the work
+3. **Report** — update the issue status and add a comment with the agent summary
+4. **Review** — submit a prompt review rating the instruction quality
+5. **Wait** — sleep for the configured interval, then repeat
+
+If the dispatch queue is empty (`204 No Content`), the agent waits and tries again on the next cycle.
+
+## Minimal example
+
+A basic polling loop in Node.js using `fetch`:
+
+```js
+const API_URL = process.env.LOOP_API_URL ?? "https://app.looped.me";
+const API_KEY = process.env.LOOP_API_KEY;
+const POLL_INTERVAL_MS = 60_000; // 1 minute
+
+async function poll() {
+  const res = await fetch(`${API_URL}/api/dispatch/next`, {
+    headers: { "Authorization": `Bearer ${API_KEY}` },
+  });
+
+  if (res.status === 204) {
+    console.log("Queue empty — waiting");
+    return null;
+  }
+
+  return res.json();
+}
+
+async function reportResult(issueId, status, summary) {
+  await fetch(`${API_URL}/api/issues/${issueId}`, {
+    method: "PATCH",
+    headers: {
+      "Authorization": `Bearer ${API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status, agentSummary: summary }),
+  });
+}
+
+async function submitReview(versionId, issueId, scores) {
+  await fetch(`${API_URL}/api/prompt-reviews`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      versionId,
+      issueId,
+      clarity: scores.clarity,
+      completeness: scores.completeness,
+      relevance: scores.relevance,
+    }),
+  });
+}
+
+async function runLoop() {
+  console.log("Agent polling loop started");
+
+  while (true) {
+    try {
+      const task = await poll();
+
+      if (task) {
+        console.log(`Claimed issue #${task.issue.number}: ${task.issue.title}`);
+
+        // Execute work here using task.prompt as instructions
+        const result = await doWork(task.issue, task.prompt);
+
+        // Report the outcome
+        await reportResult(task.issue.id, result.status, result.summary);
+        console.log(`Reported: ${result.status}`);
+
+        // Submit prompt review if template was used
+        if (task.meta?.versionId) {
+          await submitReview(task.meta.versionId, task.issue.id, {
+            clarity: 5,
+            completeness: 5,
+            relevance: 5,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Poll cycle error:", err.message);
+    }
+
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+  }
+}
+
+runLoop();
+```
+
+Replace `doWork()` with your agent's execution logic. The function receives the claimed issue and the hydrated prompt string.
+
+## Using the TypeScript SDK
+
+The same loop is more concise with `@dork-labs/loop-sdk`:
+
+```ts
+import { LoopClient } from "@dork-labs/loop-sdk";
+
+const loop = new LoopClient({
+  baseUrl: process.env.LOOP_API_URL,
+  apiKey: process.env.LOOP_API_KEY!,
+});
+
+async function runLoop() {
+  while (true) {
+    const task = await loop.dispatch.next();
+
+    if (task) {
+      const result = await doWork(task.issue, task.prompt);
+
+      await loop.issues.update(task.issue.id, {
+        status: result.status,
+        agentSummary: result.summary,
+      });
+
+      if (task.meta?.versionId) {
+        await loop.promptReviews.create({
+          versionId: task.meta.versionId,
+          issueId: task.issue.id,
+          clarity: 5,
+          completeness: 5,
+          relevance: 5,
+        });
+      }
+    }
+
+    await new Promise((r) => setTimeout(r, 60_000));
+  }
+}
+```
+
+## Using the MCP Server
+
+If your agent supports the Model Context Protocol, the polling loop is handled by the agent itself. The `loop_get_next_task` MCP tool wraps the dispatch endpoint:
+
+```
+Agent: "Use loop_get_next_task to get my next assignment"
+MCP:   -> GET /api/dispatch/next
+MCP:   <- { issue, prompt, meta }
+Agent: Follows the prompt instructions
+Agent: "Use loop_update_issue to mark it done"
+MCP:   -> PATCH /api/issues/:id { status: "done" }
+```
+
+With MCP, the agent calls tools conversationally rather than through a coded loop. The [agent integration guides](/docs/agents) cover MCP setup for each supported agent.
+
+## The dispatch response
+
+A successful dispatch returns three fields:
+
+```json
+{
+  "issue": {
+    "id": "clxyz...",
+    "number": 42,
+    "title": "Investigate: signup conversion drop",
+    "type": "signal",
+    "priority": 2,
+    "status": "in_progress"
+  },
+  "prompt": "# Investigate: signup conversion drop\n\nYou are investigating...",
+  "meta": {
+    "templateSlug": "signal-triage",
+    "templateId": "tpl_abc...",
+    "versionId": "ver_xyz...",
+    "versionNumber": 1,
+    "reviewUrl": "POST /api/prompt-reviews"
+  }
+}
+```
+
+- **issue** — the claimed issue (status has been atomically set to `in_progress`)
+- **prompt** — fully hydrated Handlebars template with issue context, parent chain, goal alignment, and API reference
+- **meta** — template metadata for submitting a prompt review after execution
+
+If no prompt template matches, `prompt` and `meta` are `null`, but the issue is still claimed. Your agent should handle this gracefully.
+
+<Callout type="info">
+  The dispatch endpoint uses PostgreSQL `FOR UPDATE SKIP LOCKED` to prevent concurrent agents from
+  claiming the same issue. Multiple agents can safely poll in parallel.
+</Callout>
+
+## Reporting results
+
+After completing work, update the issue and optionally add a comment:
+
+<Tabs items={['Update status', 'Add comment']}>
+<Tab value="Update status">
+```bash
+curl -X PATCH "$LOOP_API_URL/api/issues/$ISSUE_ID" \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "done",
+    "agentSummary": "Fixed the OAuth redirect. Added loading spinner and latency tracking."
+  }'
+```
+</Tab>
+<Tab value="Add comment">
+```bash
+curl -X POST "$LOOP_API_URL/api/issues/$ISSUE_ID/comments" \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Root cause: OAuth provider added a redirect that causes 1.5s blank screen.\nFix: Added a loading spinner component.\nPR: #123"
+  }'
+```
+</Tab>
+</Tabs>
+
+## Prompt reviews
+
+Prompt reviews help Loop track instruction quality over time. After executing a task, rate the prompt on three dimensions (1-5 scale):
+
+| Dimension        | What it measures                                                       |
+| ---------------- | ---------------------------------------------------------------------- |
+| **Clarity**      | Were the instructions easy to understand?                              |
+| **Completeness** | Was enough context provided to complete the work?                      |
+| **Relevance**    | Did the instructions match the actual work needed?                     |
+
+```bash
+curl -X POST "$LOOP_API_URL/api/prompt-reviews" \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "versionId": "ver_xyz...",
+    "issueId": "clxyz...",
+    "clarity": 4,
+    "completeness": 5,
+    "relevance": 4
+  }'
+```
+
+Reviews are aggregated using EWMA (Exponentially Weighted Moving Average) and surfaced in the [Prompt Health dashboard](/docs/guides/dashboard#prompt-health).
+
+## Polling interval
+
+Choose an interval that balances responsiveness with API load:
+
+| Interval   | Use case                                               |
+| ---------- | ------------------------------------------------------ |
+| 10-30s     | Active development with fast feedback loops            |
+| 1-5 min    | Standard autonomous operation                          |
+| 15-30 min  | Background maintenance and monitoring                  |
+
+For most deployments, 1-minute polling provides a good balance. The dispatch endpoint is lightweight (a single SQL query), so frequent polling is not expensive.
+
+## Error handling
+
+Build resilience into your polling loop:
+
+- **Network errors** — catch and retry on the next cycle. Do not crash the loop.
+- **Auth errors (401)** — log and alert. The API key may have been rotated.
+- **Empty queue (204)** — normal. Wait and poll again.
+- **Execution failures** — update the issue status to `canceled` or `todo` (to allow retry) and include the error in `agentSummary`.
+
+```js
+try {
+  const result = await doWork(task.issue, task.prompt);
+  await reportResult(task.issue.id, "done", result.summary);
+} catch (err) {
+  await reportResult(
+    task.issue.id,
+    "canceled",
+    `Agent error: ${err.message}`
+  );
+}
+```
+
+Setting the status back to `todo` instead of `canceled` allows another agent (or a future poll cycle) to retry the issue.
+
+## Next steps
+
+- [**Dispatch**](/docs/concepts/dispatch) — Deep dive into priority scoring, blocking filters, and SKIP LOCKED concurrency.
+- [**Writing Templates**](/docs/guides/writing-templates) — Author the prompt templates that control what agents see.
+- [**Agent Integration**](/docs/agents) — Per-agent setup guides for Claude Code, Cursor, Windsurf, and OpenHands.
+- [**API Reference**](/docs/api) — Full endpoint documentation for all dispatch and issue management routes.

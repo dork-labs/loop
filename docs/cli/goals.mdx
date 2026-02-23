@@ -1,0 +1,81 @@
+---
+title: Goals
+description: List and track goals using the loop CLI.
+---
+
+# Goals
+
+The `goals` command group lets you view goals and their progress. Goals are measurable success indicators attached to projects, providing strategic direction for the system and its agents.
+
+## loop goals list
+
+List all goals with optional status filtering and pagination.
+
+```bash
+loop goals list [options]
+```
+
+### Options
+
+| Flag                | Default | Description                                        |
+| ------------------- | ------- | -------------------------------------------------- |
+| `--status <status>` | all     | Filter by status (`active`, `achieved`, `abandoned`) |
+| `--limit <n>`       | `50`    | Maximum number of results                           |
+| `--offset <n>`      | `0`     | Pagination offset                                   |
+
+### Examples
+
+List all goals:
+
+```bash
+loop goals list
+```
+
+Filter by status:
+
+```bash
+loop goals list --status active
+```
+
+Output as JSON:
+
+```bash
+loop goals list --json
+```
+
+### Sample output
+
+```
+┌─────────────────────────────┬──────────┬──────────────┬──────────┬─────────────────┬──────────┬──────────┐
+│ TITLE                       │ STATUS   │ METRIC       │ PROGRESS │ BAR             │ PROJECT  │ CREATED  │
+├─────────────────────────────┼──────────┼──────────────┼──────────┼─────────────────┼──────────┼──────────┤
+│ Increase sign-up conversion │ active   │ conversion   │ 3.2/4%   │ ████████████░░░ 80% │ clx1ab.. │ 5d ago   │
+│ Reduce P99 latency          │ active   │ latency_ms   │ 180/150ms│ ████████░░░░░░░ 53% │ clx2bc.. │ 7d ago   │
+│ Zero critical errors        │ achieved │ error_count  │ 0/0      │ ███████████████ 100%│ clx3cd.. │ 10d ago  │
+└─────────────────────────────┴──────────┴──────────────┴──────────┴─────────────────┴──────────┴──────────┘
+Showing 3 of 3 goals
+```
+
+The progress bar uses color coding:
+
+| Color  | Condition    |
+| ------ | ------------ |
+| Green  | 75% or above |
+| Yellow | 25% to 74%   |
+| Red    | Below 25%    |
+
+---
+
+## Goal statuses
+
+| Status      | Description                                     |
+| ----------- | ----------------------------------------------- |
+| `active`    | Currently being tracked and worked toward        |
+| `achieved`  | Goal has been met                                |
+| `abandoned` | Goal is no longer being pursued                  |
+
+## How goals work
+
+Goals provide strategic context for issue prioritization. When an issue is linked to a project that has an active goal, the dispatch queue gives it a bonus score. This means goal-aligned work is prioritized over unlinked work.
+
+For more on how goals affect dispatch scoring, see [Dispatch](/docs/cli/dispatch).

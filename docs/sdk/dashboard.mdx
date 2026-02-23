@@ -1,0 +1,121 @@
+---
+title: Dashboard
+description: Access system health metrics, activity timelines, and prompt health via the TypeScript SDK.
+---
+
+# Dashboard
+
+The `loop.dashboard` resource provides read-only views into Loop's operational state. Use it to monitor system health, review activity timelines, and track prompt quality.
+
+## System stats
+
+Get aggregate metrics including issue counts, goal progress, and dispatch queue depth:
+
+```typescript
+const stats = await loop.dashboard.stats();
+
+console.log(`Total issues: ${stats.issues.total}`);
+console.log(`In progress: ${stats.issues.byStatus.in_progress}`);
+console.log(`Signals in triage: ${stats.issues.byType.signal}`);
+
+console.log(`Active goals: ${stats.goals.active}`);
+console.log(`Achieved: ${stats.goals.achieved}`);
+
+console.log(`Queue depth: ${stats.dispatch.queueDepth}`);
+console.log(`Completed (24h): ${stats.dispatch.completedLast24h}`);
+```
+
+## Activity timeline
+
+Get signal chains showing how signals flow through triage, hypotheses, and tasks:
+
+```typescript
+const activity = await loop.dashboard.activity({ limit: 10 });
+
+for (const item of activity) {
+  console.log(`Signal: ${item.root.title}`);
+  console.log(`Children: ${item.children.length}`);
+  console.log(`Latest activity: ${item.latestActivity}`);
+
+  for (const child of item.children) {
+    console.log(`  - ${child.issue.type}: ${child.issue.title}`);
+  }
+}
+```
+
+## Prompt health
+
+Get template health with review scores and attention flags:
+
+```typescript
+const prompts = await loop.dashboard.prompts();
+
+for (const entry of prompts) {
+  console.log(`${entry.template.slug} (${entry.needsAttention ? 'NEEDS ATTENTION' : 'OK'})`);
+
+  if (entry.reviewSummary.compositeScore !== null) {
+    console.log(`  Score: ${entry.reviewSummary.compositeScore}`);
+    console.log(`  Reviews: ${entry.reviewSummary.totalReviews}`);
+  }
+
+  if (entry.activeVersion) {
+    console.log(`  Active: v${entry.activeVersion.version}`);
+    console.log(`  Usage: ${entry.activeVersion.usageCount}`);
+  }
+}
+```
+
+## Types
+
+### `DashboardStats`
+
+```typescript
+interface DashboardStats {
+  issues: {
+    total: number;
+    byStatus: Record<IssueStatus, number>;
+    byType: Record<IssueType, number>;
+  };
+  goals: {
+    total: number;
+    active: number;
+    achieved: number;
+  };
+  dispatch: {
+    queueDepth: number;
+    activeCount: number;
+    completedLast24h: number;
+  };
+}
+```
+
+### `DashboardActivityItem`
+
+```typescript
+interface DashboardActivityItem {
+  root: Issue;
+  children: Array<{
+    issue: Issue;
+    relations: IssueRelation[];
+  }>;
+  latestActivity: string;
+}
+```
+
+### `DashboardPromptHealth`
+
+```typescript
+interface DashboardPromptHealth {
+  template: PromptTemplate;
+  activeVersion: PromptVersion | null;
+  recentVersions: PromptVersion[];
+  reviewSummary: {
+    totalReviews: number;
+    avgClarity: number | null;
+    avgCompleteness: number | null;
+    avgRelevance: number | null;
+    compositeScore: number | null;
+  };
+  needsAttention: boolean;
+}
+```

@@ -1,0 +1,313 @@
+---
+title: Claude Code
+description: End-to-end guide for connecting Claude Code to Loop — MCP server, agent skill, and your first dispatch loop.
+---
+
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Claude Code
+
+This guide walks you through setting up Claude Code as a Loop agent — from prerequisites through your first completed dispatch cycle. By the end, Claude Code will be able to claim tasks, execute work, and report results back to Loop autonomously.
+
+<Callout type="info">
+  Claude Code supports both MCP tools (actions the agent can call) and agent skills (contextual knowledge the agent reads). Install both for the best experience.
+</Callout>
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- **Claude Code** installed and working (`claude` command available in your terminal)
+- **Node.js 20+** and **npm** installed
+- A running **Loop API** instance (local or hosted). See the [Quickstart](/docs/getting-started/quickstart) if you need to set one up.
+- A **Loop API key** starting with `loop_`. Generate one with:
+
+```bash
+node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
+```
+
+<Callout type="warning">
+  Store your API key securely. Do not commit it to version control. The key goes in your MCP config's `env` block, not in `.env` files that might be shared.
+</Callout>
+
+## Step 1: Install the MCP Server
+
+The MCP server gives Claude Code 9 callable tools for interacting with Loop — claiming tasks, creating issues, ingesting signals, and more.
+
+<Steps>
+
+<Step>
+### Choose your config scope
+
+Claude Code reads MCP configuration from two locations:
+
+- **Project-level** (recommended): `.mcp.json` in your project root. Scoped to that project.
+- **Global**: `~/.claude/mcp.json`. Available in every Claude Code session.
+
+</Step>
+
+<Step>
+### Add the Loop MCP server
+
+Add the following to your chosen config file. Create the file if it does not exist.
+
+<Tabs items={['Project (.mcp.json)', 'Global (~/.claude/mcp.json)']}>
+<Tab value="Project (.mcp.json)">
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "loop_your_key_here",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab value="Global (~/.claude/mcp.json)">
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "loop_your_key_here",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+Replace `loop_your_key_here` with your actual API key. If you are using the hosted Loop API, set `LOOP_API_URL` to `https://app.looped.me`.
+
+</Step>
+
+<Step>
+### Verify the MCP connection
+
+Restart Claude Code (or open a new session) and ask it to list available tools. You should see 9 Loop tools:
+
+```
+> What MCP tools do you have available?
+```
+
+You should see tools like `loop_get_next_task`, `loop_create_issue`, `loop_list_issues`, and others. If the tools do not appear, see [Troubleshooting](#troubleshooting) below.
+
+</Step>
+
+</Steps>
+
+## Step 2: Install the Agent Skill
+
+The agent skill teaches Claude Code how to use Loop effectively — the dispatch workflow, issue types, status values, and error handling patterns. It provides knowledge that complements the MCP tools.
+
+<Steps>
+
+<Step>
+### Install via openskills
+
+```bash
+npx openskills install @dork-labs/loop
+```
+
+This copies `SKILL.md` into Claude Code's skill directory. Claude Code loads SKILL.md files automatically in every session.
+
+</Step>
+
+<Step>
+### Set the API key for direct API calls
+
+The skill teaches Claude Code to make direct REST API calls in addition to using MCP tools. Set the environment variable so both paths work:
+
+```bash
+export LOOP_API_KEY=loop_your_key_here
+```
+
+Add this to your shell profile (`~/.zshrc` or `~/.bashrc`) for persistence.
+
+</Step>
+
+</Steps>
+
+<Callout type="info">
+  **Alternative:** If you prefer npm, install with `npm install @dork-labs/loop` and Claude Code will find the SKILL.md in `node_modules/`.
+</Callout>
+
+## Step 3: Verify the Setup
+
+Run a quick verification to confirm both the MCP tools and skill are working.
+
+### Test the MCP tools
+
+Ask Claude Code to check the Loop dashboard:
+
+```
+> Use the loop_get_dashboard tool to check Loop system health.
+```
+
+You should get back a JSON response with issue counts, queue status, and system metrics. If you see a 401 error, your API key is invalid. If you see a connection error, your Loop API is not running.
+
+### Test the skill knowledge
+
+Ask Claude Code about the dispatch loop:
+
+```
+> What is the Loop dispatch workflow?
+```
+
+Claude Code should describe the five-step cycle: get next task, do the work, report completion, create discovered issues, repeat. This knowledge comes from the installed skill.
+
+## Step 4: Run Your First Dispatch
+
+With both the MCP server and skill installed, Claude Code can run the full Loop dispatch workflow.
+
+<Steps>
+
+<Step>
+### Create a test issue
+
+If your Loop instance has no issues yet, create one to test with:
+
+```
+> Use loop_create_issue to create an issue with title "Test dispatch cycle"
+  and type "task". Set the status to "todo".
+```
+
+</Step>
+
+<Step>
+### Claim the next task
+
+```
+> Use loop_get_next_task to claim the highest-priority issue.
+```
+
+Claude Code will call the MCP tool, which atomically claims the issue and returns it with any hydrated prompt instructions.
+
+</Step>
+
+<Step>
+### Complete the task
+
+After Claude Code performs the work, tell it to report completion:
+
+```
+> Use loop_complete_task to mark the issue as done. Add an outcome note
+  saying "Test dispatch cycle completed successfully."
+```
+
+</Step>
+
+<Step>
+### Verify the loop
+
+Check that the issue was updated:
+
+```
+> Use loop_list_issues to show recent issues. Filter to status "done".
+```
+
+You should see your test issue marked as done with the outcome note.
+
+</Step>
+
+</Steps>
+
+## Autonomous Dispatch Mode
+
+Once you have verified the setup, you can run Claude Code in a continuous dispatch loop. Ask Claude Code to operate autonomously:
+
+```
+> Enter a dispatch loop: repeatedly call loop_get_next_task, execute the work
+  described in each issue, then call loop_complete_task. Continue until there
+  are no more tasks. Add a comment on each issue with your progress.
+```
+
+Claude Code will cycle through available work items, using the MCP tools to claim, execute, and complete tasks. The skill provides the contextual knowledge it needs to handle different issue types (signals, hypotheses, tasks, monitors) appropriately.
+
+<Callout type="warning">
+  Start with a small number of test issues to verify behavior before pointing Claude Code at a production backlog. Review the first few completed issues to confirm quality.
+</Callout>
+
+## Available Tools
+
+Once the MCP server is connected, Claude Code has access to these 9 tools:
+
+| Tool | What it does |
+| --- | --- |
+| `loop_get_next_task` | Claim the highest-priority unblocked issue with dispatch instructions |
+| `loop_complete_task` | Mark an issue as done and record the outcome |
+| `loop_create_issue` | Create a new issue (signal, hypothesis, plan, task, or monitor) |
+| `loop_update_issue` | Update an issue's status, priority, type, title, or description |
+| `loop_list_issues` | List issues with filters for status, type, and project |
+| `loop_get_issue` | Get full issue details including labels, comments, and relations |
+| `loop_ingest_signal` | Submit a signal that creates a linked triage issue |
+| `loop_create_comment` | Post a comment on an issue |
+| `loop_get_dashboard` | Get system health metrics and queue status |
+
+See the [MCP Tools Reference](/docs/mcp/tools) for complete parameter documentation and example responses.
+
+## Troubleshooting
+
+### MCP tools do not appear
+
+**Symptom:** Claude Code does not list any Loop tools when asked.
+
+**Solutions:**
+1. Verify your `.mcp.json` (or `~/.claude/mcp.json`) is valid JSON. A trailing comma or missing bracket will silently fail.
+2. Restart Claude Code after editing the config file. MCP servers are loaded at session start.
+3. Check that `npx @dork-labs/loop-mcp` runs without errors in your terminal:
+   ```bash
+   LOOP_API_KEY=loop_test LOOP_API_URL=http://localhost:5667 npx @dork-labs/loop-mcp
+   ```
+   If this fails, you may have a Node.js version issue (requires 20+) or a network problem fetching the package.
+
+### Authentication errors (401)
+
+**Symptom:** Tools return `401 Unauthorized` or `Invalid API key`.
+
+**Solutions:**
+1. Confirm your API key starts with `loop_`. Keys without this prefix are rejected.
+2. Check that the `LOOP_API_KEY` in your MCP config matches the key configured in your Loop API's environment.
+3. Make sure there are no extra spaces or quotes around the key value in your config.
+
+### Connection refused
+
+**Symptom:** Tools return `ECONNREFUSED` or `Failed to connect`.
+
+**Solutions:**
+1. Verify your Loop API is running: `curl http://localhost:5667/health`
+2. Check that `LOOP_API_URL` in your MCP config matches where your API is actually running.
+3. If using the hosted API, set `LOOP_API_URL` to `https://app.looped.me`.
+
+### Skill not loaded
+
+**Symptom:** Claude Code does not know about the Loop dispatch workflow or issue types when asked.
+
+**Solutions:**
+1. Re-run `npx openskills install @dork-labs/loop` and restart Claude Code.
+2. Check that `SKILL.md` exists in your project's skill directory or in `node_modules/@dork-labs/loop/`.
+3. Ask Claude Code directly: `Do you have a Loop skill loaded?`
+
+For more detailed troubleshooting, see the [MCP Troubleshooting guide](/docs/mcp/troubleshooting).
+
+## Next Steps
+
+- [**MCP Tools Reference**](/docs/mcp/tools) -- Detailed parameter docs and example responses for all 9 tools.
+- [**Agent Skill**](/docs/skill) -- Deep dive into what the skill teaches agents and how to customize it.
+- [**Concepts: Dispatch**](/docs/concepts/dispatch) -- Understand how Loop prioritizes and assigns work to agents.
+- [**Writing Templates**](/docs/guides/writing-templates) -- Create custom prompt templates that give agents better instructions.

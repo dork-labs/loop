@@ -1,4 +1,4 @@
 {
   "title": "Guides",
-  "pages": ["dashboard", "writing-templates"]
+  "pages": ["dashboard", "writing-templates", "connect-cli", "agent-polling-loop"]
 }

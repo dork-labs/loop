@@ -1,0 +1,149 @@
+---
+title: API Keys
+description: How to generate, configure, and manage Loop API keys with the loop_ prefix format.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# API Keys
+
+Loop uses API keys to authenticate all requests to protected endpoints under `/api/*`. Keys follow an identifiable `loop_` prefix format, making them easy to recognize in logs, configuration files, and secret scanning tools.
+
+## Key format
+
+Loop API keys use the format `loop_` followed by a 64-character lowercase hex string:
+
+```
+loop_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6
+```
+
+This format provides:
+
+- **Identifiability** -- The `loop_` prefix makes keys instantly recognizable, similar to how Stripe uses `sk_live_` and GitHub uses `ghp_`
+- **256-bit entropy** -- Generated from `crypto.randomBytes(32)`, providing cryptographic strength
+- **URL safety** -- Hex encoding avoids URL-encoding issues that base64 can cause
+- **Secret scanning** -- The prefix enables pattern matching by tools like GitHub Secret Scanning (`loop_[a-f0-9]{64}`)
+
+## Generating a key
+
+### Automatic generation (recommended)
+
+The setup script generates a secure key and writes it to both `.env` files automatically:
+
+```bash
+npm run setup
+```
+
+### Manual generation
+
+If you need to generate a key outside the setup flow, use Node.js:
+
+<Tabs items={['Node.js', 'OpenSSL']}>
+<Tab value="Node.js">
+```bash
+node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
+```
+</Tab>
+<Tab value="OpenSSL">
+```bash
+echo "loop_$(openssl rand -hex 32)"
+```
+</Tab>
+</Tabs>
+
+Copy the output and set it as the `LOOP_API_KEY` environment variable in `apps/api/.env`:
+
+```bash
+LOOP_API_KEY=loop_your_generated_key_here
+```
+
+If you are running the dashboard, set the same key in `apps/app/.env`:
+
+```bash
+VITE_LOOP_API_KEY=loop_your_generated_key_here
+```
+
+<Callout type="info">
+  Both the API server and dashboard need the same key. The API server reads `LOOP_API_KEY` and the
+  dashboard reads `VITE_LOOP_API_KEY` -- these must match for the dashboard to authenticate
+  successfully.
+</Callout>
+
+## Using your key
+
+Include the key in the `Authorization` header as a Bearer token on every request to a protected endpoint:
+
+<Tabs items={['curl', 'JavaScript']}>
+<Tab value="curl">
+```bash
+curl http://localhost:5667/api/issues \
+  -H "Authorization: Bearer loop_your_key_here"
+```
+</Tab>
+<Tab value="JavaScript">
+```js
+const res = await fetch("http://localhost:5667/api/issues", {
+  headers: {
+    Authorization: "Bearer loop_your_key_here",
+  },
+});
+```
+</Tab>
+</Tabs>
+
+If the key is missing or invalid, the API returns a `401` error:
+
+```json
+{ "error": "Missing or malformed Authorization header" }
+```
+
+## Startup validation
+
+The API server validates environment variables at startup using Zod. If `LOOP_API_KEY` is missing, the server exits with a clear error message and a hint showing how to generate a key:
+
+```
+  Missing or invalid environment variables:
+
+  - LOOP_API_KEY: Required
+
+  Hint for LOOP_API_KEY:
+  Generate one with:
+    node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
+  Or run: npm run setup
+```
+
+This prevents the server from starting in an insecure state.
+
+## Rotating a key
+
+To rotate your API key:
+
+1. Generate a new key using one of the methods above
+2. Update `LOOP_API_KEY` in `apps/api/.env`
+3. Update `VITE_LOOP_API_KEY` in `apps/app/.env` to match
+4. Restart the API server and dashboard
+5. Update the key in any external integrations (MCP server configs, agent environments, CI/CD pipelines)
+
+<Callout type="warning">
+  Rotate your key immediately if it is exposed in version control, logs, or any public location.
+  The old key becomes invalid as soon as you restart the server with a new one.
+</Callout>
+
+## Security best practices
+
+- **Never commit keys to version control.** The `.env` files are listed in `.gitignore` by default. Always verify before pushing.
+- **Never include keys in client-side code.** The dashboard uses `VITE_LOOP_API_KEY` as a build-time variable -- this is acceptable for internal dashboards but should not be used in public-facing applications.
+- **Use separate keys per environment.** Generate distinct keys for development, staging, and production.
+- **Store production keys in a secrets manager.** Use your platform's secret management (Vercel Environment Variables, AWS Secrets Manager, etc.) rather than `.env` files in production.
+- **Monitor for leaks.** The `loop_` prefix format enables GitHub Secret Scanning and similar tools to detect exposed keys automatically.
+
+## Development key
+
+For local development, the `npm run setup` command generates a real `loop_`-prefixed key. If you want to use a simpler key during development, any non-empty string works -- format validation is not enforced. However, using the standard format is recommended to match production behavior.
+
+## Next steps
+
+- [**Authentication**](/docs/getting-started/authentication) -- Learn about Bearer token auth mechanics and webhook verification.
+- [**Environment Variables**](/docs/self-hosting/environment) -- Full reference for all configuration variables.
+- [**Quickstart**](/docs/getting-started/quickstart) -- Use your key to ingest a signal and dispatch work.

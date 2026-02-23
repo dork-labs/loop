@@ -1,0 +1,195 @@
+---
+title: Architecture
+description: How the REST API, TypeScript SDK, MCP server, and CLI fit together as integration layers for Loop.
+---
+
+# Architecture
+
+Loop provides four integration layers that all communicate with the same REST API. Each layer serves a different consumer: the SDK is for programmatic TypeScript usage, the MCP server is for AI agents, the CLI is for humans in a terminal, and the REST API is the foundation that everything else builds on.
+
+## Layer Diagram
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │             Consumers                    │
+                    │                                         │
+                    │  AI Agents    Developers    Dashboards  │
+                    │  (Claude,     (scripts,     (React app, │
+                    │   Cursor,      CI/CD,        custom)    │
+                    │   Codex)       tooling)                 │
+                    └────┬──────────┬──────────────┬──────────┘
+                         │          │              │
+              ┌──────────┴──┐  ┌───┴────┐  ┌──────┴──────┐
+              │  MCP Server │  │  CLI   │  │    SDK      │
+              │  @dork-labs │  │  loop  │  │  @dork-labs │
+              │  /loop-mcp  │  │        │  │  /loop-sdk  │
+              └──────┬──────┘  └───┬────┘  └──────┬──────┘
+                     │             │              │
+                     │     ┌───────┴──────┐       │
+                     │     │    SDK       │       │
+                     │     │  (internal)  │       │
+                     │     └───────┬──────┘       │
+                     │             │              │
+              ┌──────┴─────────────┴──────────────┴──────┐
+              │              REST API                      │
+              │         POST /api/signals                  │
+              │         GET  /api/dispatch/next             │
+              │         PATCH /api/issues/:id               │
+              │         ...all endpoints                    │
+              └─────────────────┬──────────────────────────┘
+                                │
+              ┌─────────────────┴──────────────────────────┐
+              │              PostgreSQL                     │
+              │   issues, signals, projects, goals,        │
+              │   labels, templates, versions, reviews     │
+              └────────────────────────────────────────────┘
+```
+
+The CLI uses the SDK internally. The MCP server uses its own lightweight HTTP client. Both ultimately make HTTP requests to the same REST API, which is the single source of truth backed by PostgreSQL.
+
+## REST API
+
+The REST API is a Hono application deployed as Vercel Functions in production and running on Node.js locally. Every operation in Loop -- creating issues, ingesting signals, dispatching work, managing templates -- is an HTTP endpoint under `/api/*`.
+
+All protected endpoints require a `loop_`-prefixed API key in the `Authorization: Bearer` header. Webhook endpoints (`/api/signals/github`, `/api/signals/sentry`, `/api/signals/posthog`) use provider-specific HMAC verification instead of Bearer tokens.
+
+The API is the only layer that touches the database. All other layers are HTTP clients.
+
+See the [API Reference](/docs/api) for the full endpoint listing.
+
+## TypeScript SDK
+
+The SDK (`@dork-labs/loop-sdk`) is a typed client library built on [ky](https://github.com/sindresorhus/ky). It provides resource-based access to every API endpoint with full TypeScript types from the shared `@dork-labs/loop-types` package.
+
+```typescript
+import { LoopClient } from '@dork-labs/loop-sdk'
+
+const loop = new LoopClient({ apiKey: 'loop_abc123' })
+
+// Claim the next task
+const task = await loop.dispatch.next()
+
+// List issues with filters
+const issues = await loop.issues.list({ status: 'todo', limit: 10 })
+
+// Ingest a signal
+await loop.signals.ingest({
+  source: 'manual',
+  title: 'Latency spike on /api/checkout',
+  severity: 'high',
+})
+```
+
+The SDK organizes methods into resource classes that mirror the API structure:
+
+| Resource     | Methods                                            |
+| ------------ | -------------------------------------------------- |
+| `dispatch`   | `next()`, `queue()`                                |
+| `issues`     | `list()`, `get()`, `create()`, `update()`, `delete()` |
+| `projects`   | `list()`, `get()`, `create()`, `update()`, `delete()` |
+| `goals`      | `list()`, `get()`, `create()`, `update()`, `delete()` |
+| `labels`     | `list()`, `create()`, `delete()`                   |
+| `signals`    | `ingest()`                                         |
+| `comments`   | `list()`, `create()`                               |
+| `relations`  | `create()`, `delete()`                             |
+| `templates`  | `list()`, `get()`, `create()`, `update()`, `delete()` |
+| `reviews`    | `create()`                                         |
+| `dashboard`  | `stats()`, `activity()`, `prompts()`               |
+
+Install with `npm install @dork-labs/loop-sdk`.
+
+## MCP Server
+
+The MCP server (`@dork-labs/loop-mcp`) exposes Loop's capabilities as tools that AI agents can discover and call through the [Model Context Protocol](https://modelcontextprotocol.io). It supports two transports: stdio for local agent integrations and HTTP for remote connections.
+
+The server registers nine tools:
+
+| Tool              | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| `get_next_task`   | Claim the highest-priority unblocked issue          |
+| `complete_task`   | Mark an issue as done or canceled with a summary    |
+| `create_issue`    | Create a new issue of any type                      |
+| `update_issue`    | Update fields on an existing issue                  |
+| `list_issues`     | List issues with optional filters                   |
+| `get_issue`       | Retrieve a single issue with full context           |
+| `ingest_signal`   | Send an external event into the Loop pipeline       |
+| `create_comment`  | Add a comment to an issue                           |
+| `get_dashboard`   | Retrieve system health metrics and activity summary |
+
+An agent using the MCP server follows the same pull-based dispatch cycle as any other integration: call `get_next_task`, execute the returned instructions, then call `complete_task` to report results.
+
+**Stdio transport** (for Claude Code, Cursor, and similar local agents):
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "loop_abc123",
+        "LOOP_API_URL": "https://api.looped.me"
+      }
+    }
+  }
+}
+```
+
+**HTTP transport** (for remote or server-side integrations) can be mounted as a Hono middleware on an existing server.
+
+## CLI
+
+The CLI (`@dork-labs/loop-cli`) is a terminal-native interface for managing Loop. It uses the SDK internally and provides formatted, human-readable output with support for JSON and plain-text modes.
+
+```bash
+# Authenticate
+loop auth login
+
+# List open issues
+loop issues list --status todo
+
+# Ingest a signal
+loop signals ingest --source manual --title "Deploy failed" --severity high
+
+# View dispatch queue
+loop dispatch queue
+
+# Claim and view the next task
+loop dispatch next
+```
+
+The CLI supports the following command groups:
+
+| Command      | Description                              |
+| ------------ | ---------------------------------------- |
+| `auth`       | Manage API key authentication            |
+| `config`     | View and update CLI configuration        |
+| `issues`     | List, create, update, and view issues    |
+| `comments`   | Add comments to issues                   |
+| `signals`    | Ingest signals from the terminal         |
+| `triage`     | Interactive triage workflow               |
+| `projects`   | Manage projects                          |
+| `goals`      | Manage goals                             |
+| `labels`     | Manage labels                            |
+| `templates`  | Manage prompt templates                  |
+| `dispatch`   | View the queue and claim next task       |
+| `dashboard`  | View system health metrics               |
+
+Global flags `--json` and `--plain` control output format. `--api-url` and `--token` override the configured API endpoint and authentication token.
+
+Install with `npx @dork-labs/loop-cli` or `npm install -g @dork-labs/loop-cli`.
+
+## Shared Types
+
+The `@dork-labs/loop-types` package contains Zod schemas and inferred TypeScript types shared across the SDK, CLI, and MCP server. This ensures that all integration layers use the same type definitions for issues, signals, projects, and other domain objects. The types package has no runtime dependencies beyond Zod.
+
+## How the Layers Relate
+
+The four layers form a dependency chain:
+
+- **REST API** is the foundation. It owns the database and all business logic.
+- **SDK** wraps the REST API with typed methods and error handling. It depends on the API and the shared types package.
+- **CLI** uses the SDK for all API communication. It adds terminal formatting, interactive prompts, and shell completions.
+- **MCP server** uses its own HTTP client to call the REST API directly. It translates between the Model Context Protocol's tool interface and Loop's HTTP endpoints.
+
+This layering means that every feature available in the API is available through every integration layer. A signal ingested via the CLI, the SDK, the MCP server, or a raw HTTP call all follow the same code path and produce the same result.

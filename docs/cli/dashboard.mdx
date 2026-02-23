@@ -1,0 +1,135 @@
+---
+title: Dashboard
+description: Display system health metrics and overview using the loop CLI.
+---
+
+# Dashboard
+
+The `dashboard` command shows a system health overview, including issue counts by status and type, dispatch queue metrics, and goal progress. This is the same data available in the web dashboard, accessible from the terminal.
+
+## loop dashboard
+
+```bash
+loop dashboard
+```
+
+### Sample output
+
+```
+  Loop System Status
+
+  Issues
+    Total: 42
+
+    By Status:
+      triage        3
+      todo          8
+      backlog       15
+      in_progress   2
+      done          12
+      canceled      2
+
+    By Type:
+      signal        10
+      hypothesis    5
+      plan          7
+      task          18
+      monitor       2
+
+  Dispatch
+    Queue depth:     8
+    Active:          2
+    Done (24h):      5
+
+  Goals
+    Total:           3
+    Active:          2
+    Achieved:        1
+```
+
+### JSON output
+
+Use `--json` to get the raw metrics as JSON, suitable for monitoring scripts and dashboards:
+
+```bash
+loop dashboard --json
+```
+
+```json
+{
+  "issues": {
+    "total": 42,
+    "byStatus": {
+      "triage": 3,
+      "todo": 8,
+      "backlog": 15,
+      "in_progress": 2,
+      "done": 12,
+      "canceled": 2
+    },
+    "byType": {
+      "signal": 10,
+      "hypothesis": 5,
+      "plan": 7,
+      "task": 18,
+      "monitor": 2
+    }
+  },
+  "goals": {
+    "total": 3,
+    "active": 2,
+    "achieved": 1
+  },
+  "dispatch": {
+    "queueDepth": 8,
+    "activeCount": 2,
+    "completedLast24h": 5
+  }
+}
+```
+
+### Plain output
+
+Use `--plain` for tab-separated values, useful for piping to other tools:
+
+```bash
+loop dashboard --plain
+```
+
+```
+issues_total	42
+queue_depth	8
+active	2
+done_24h	5
+goals_total	3
+goals_achieved	1
+```
+
+### Metrics
+
+| Section  | Metric      | Description                                                            |
+| -------- | ----------- | ---------------------------------------------------------------------- |
+| Issues   | Total       | Total number of non-deleted issues                                     |
+| Issues   | By Status   | Breakdown across all issue statuses                                    |
+| Issues   | By Type     | Breakdown across issue types (signal, hypothesis, plan, task, monitor) |
+| Dispatch | Queue depth | Number of issues waiting in the dispatch queue                         |
+| Dispatch | Active      | Issues currently being worked on (`in_progress`)                       |
+| Dispatch | Done (24h)  | Issues completed in the last 24 hours                                  |
+| Goals    | Total       | Total number of goals                                                  |
+| Goals    | Active      | Goals currently being tracked                                          |
+| Goals    | Achieved    | Goals that have been completed                                         |
+
+### Use in monitoring
+
+The `dashboard` command works well for periodic health checks in scripts:
+
+```bash
+# Quick health check in CI
+loop dashboard --json | jq '.dispatch.queueDepth'
+
+# Alert if queue depth exceeds threshold
+DEPTH=$(loop dashboard --json | jq '.dispatch.queueDepth')
+if [ "$DEPTH" -gt 20 ]; then
+  echo "Warning: dispatch queue depth is $DEPTH"
+fi
+```

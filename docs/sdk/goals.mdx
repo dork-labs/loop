@@ -1,0 +1,118 @@
+---
+title: Goals
+description: Create and manage measurable success indicators attached to projects.
+---
+
+# Goals
+
+The `loop.goals` resource provides CRUD operations for measurable success indicators. Goals give agents strategic context for prioritization -- without goals, agents optimize locally (fix the latest bug). With goals, agents have direction.
+
+## List goals
+
+```typescript
+const page = await loop.goals.list({ limit: 20 });
+
+for (const goal of page.data) {
+  console.log(goal.title, goal.status);
+  if (goal.metric) {
+    console.log(`${goal.currentValue}/${goal.targetValue} ${goal.unit}`);
+  }
+}
+```
+
+## Iterate all goals
+
+```typescript
+for await (const goal of loop.goals.iter()) {
+  console.log(goal.title);
+}
+```
+
+## Get a goal
+
+```typescript
+const goal = await loop.goals.get('clx1abc2def3ghi4jkl5mnop');
+
+console.log(goal.title);
+console.log(goal.metric); // e.g. "signup_conversion"
+console.log(goal.currentValue); // e.g. 3.2
+console.log(goal.targetValue); // e.g. 4.0
+```
+
+## Create a goal
+
+```typescript
+const goal = await loop.goals.create({
+  title: 'Increase sign-up conversion to 4%',
+  description: 'Target based on Q1 baseline of 3.2%',
+  metric: 'signup_conversion',
+  targetValue: 4.0,
+  currentValue: 3.2,
+  unit: '%',
+  status: 'active',
+  projectId: 'clx1abc2def3ghi4jkl5mnop',
+});
+```
+
+## Update a goal
+
+```typescript
+const updated = await loop.goals.update('clx1abc2def3ghi4jkl5mnop', {
+  currentValue: 3.8,
+});
+```
+
+Set nullable fields to `null` to clear them:
+
+```typescript
+await loop.goals.update('clx1abc2def3ghi4jkl5mnop', {
+  description: null,
+  projectId: null,
+});
+```
+
+## Delete a goal
+
+```typescript
+await loop.goals.delete('clx1abc2def3ghi4jkl5mnop');
+```
+
+## Parameters
+
+### `CreateGoalParams`
+
+| Field          | Type         | Required | Description                                 |
+| -------------- | ------------ | -------- | ------------------------------------------- |
+| `title`        | `string`     | Yes      | Goal title                                  |
+| `description`  | `string`     | No       | Detailed description                        |
+| `metric`       | `string`     | No       | Metric identifier (e.g. `"error_rate"`)     |
+| `targetValue`  | `number`     | No       | Target value for the metric                 |
+| `currentValue` | `number`     | No       | Current measured value                      |
+| `unit`         | `string`     | No       | Unit label (e.g. `"%"`, `"ms"`, `"count"`) |
+| `status`       | `GoalStatus` | No       | `"active"`, `"achieved"`, `"abandoned"`     |
+| `projectId`    | `string`     | No       | Link to a project                           |
+
+### `UpdateGoalParams`
+
+All fields from `CreateGoalParams` are optional. Nullable fields accept `null` to clear values.
+
+## Types
+
+### `Goal`
+
+```typescript
+interface Goal {
+  id: string;
+  title: string;
+  description: string | null;
+  metric: string | null;
+  targetValue: number | null;
+  currentValue: number | null;
+  unit: string | null;
+  status: GoalStatus;
+  projectId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+```

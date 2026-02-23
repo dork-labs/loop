@@ -1,0 +1,71 @@
+---
+title: Projects
+description: List and manage projects using the loop CLI.
+---
+
+# Projects
+
+The `projects` command group lets you view projects. Projects group issues toward a shared objective and provide organizational context for the feedback loop.
+
+## loop projects list
+
+List all projects with pagination.
+
+```bash
+loop projects list [options]
+```
+
+### Options
+
+| Flag           | Default | Description              |
+| -------------- | ------- | ------------------------ |
+| `--limit <n>`  | `50`    | Maximum number of results |
+| `--offset <n>` | `0`     | Pagination offset         |
+
+### Examples
+
+List all projects:
+
+```bash
+loop projects list
+```
+
+Output as JSON:
+
+```bash
+loop projects list --json
+```
+
+### Sample output
+
+```
+Showing 3 of 3 projects
+
+┌──────────┬──────────────────────────┬───────────┬──────────┬──────────┐
+│ ID       │ NAME                     │ STATUS    │ HEALTH   │ CREATED  │
+├──────────┼──────────────────────────┼───────────┼──────────┼──────────┤
+│ clx1ab.. │ Improve onboarding       │ active    │ on_track │ 5d ago   │
+│ clx2bc.. │ Checkout reliability     │ active    │ at_risk  │ 7d ago   │
+│ clx3cd.. │ API v2 migration         │ planned   │ on_track │ 10d ago  │
+└──────────┴──────────────────────────┴───────────┴──────────┴──────────┘
+```
+
+### Project statuses
+
+| Status      | Description                           |
+| ----------- | ------------------------------------- |
+| `backlog`   | Project is defined but not yet started |
+| `planned`   | Project is scheduled for work          |
+| `active`    | Project is actively being worked on    |
+| `on_hold`   | Project is paused                      |
+| `completed` | Project is finished                    |
+
+### Health indicators
+
+| Health     | Description                                       |
+| ---------- | ------------------------------------------------- |
+| `on_track` | Project is progressing as expected                 |
+| `at_risk`  | Project may not meet its goals without intervention |
+| `off_track`| Project is behind schedule or failing its goals    |
+
+Health indicators use color coding in terminal output: green for `on_track`, yellow for `at_risk`, and red for `off_track`.

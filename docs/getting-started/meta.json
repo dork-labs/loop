@@ -1,4 +1,4 @@
 {
   "title": "Getting Started",
-  "pages": ["quickstart", "authentication"]
+  "pages": ["quickstart", "authentication", "api-keys"]
 }

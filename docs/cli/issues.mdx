@@ -1,18 +1,18 @@
 ---
 title: Issues
-description: List, view, create, and comment on issues using the looped CLI.
+description: List, view, create, start, and complete issues using the loop CLI.
 ---
 
 # Issues
 
-The CLI provides four commands for working with issues: `list`, `show`, `create`, and `comment`.
+The `issues` command group provides five subcommands for working with issues: `list`, `view`, `create`, `start`, and `done`.
 
-## looped list
+## loop issues list
 
 List issues with optional filters and pagination.
 
 ```bash
-looped list [options]
+loop issues list [options]
 ```
 
 ### Options
@@ -31,25 +31,25 @@ looped list [options]
 List all issues:
 
 ```bash
-looped list
+loop issues list
 ```
 
 Filter by status:
 
 ```bash
-looped list --status todo
+loop issues list --status todo
 ```
 
 Filter by type and project:
 
 ```bash
-looped list --type task --project clx1abc2def3ghi4jkl5mnop
+loop issues list --type task --project clx1abc2def3ghi4jkl5mnop
 ```
 
 Output as JSON for scripting:
 
 ```bash
-looped list --status in_progress --json | jq '.[].title'
+loop issues list --status in_progress --json | jq '.[].title'
 ```
 
 ### Sample output
@@ -58,21 +58,21 @@ looped list --status in_progress --json | jq '.[].title'
 ┌──────┬───────────┬──────────────────────────────┬─────────────┬────────┬──────────┐
 │ #    │ TYPE      │ TITLE                        │ STATUS      │ PRI    │ CREATED  │
 ├──────┼───────────┼──────────────────────────────┼─────────────┼────────┼──────────┤
-│ 42   │ 🔧 task   │ Fix login timeout             │ todo        │ high   │ 2d ago   │
-│ 41   │ ⚡ signal  │ Error rate spike on checkout  │ triage      │ medium │ 3d ago   │
-│ 40   │ 📋 plan   │ Migrate user service to v2    │ in_progress │ urgent │ 5d ago   │
+│ 42   │ task      │ Fix login timeout             │ todo        │ high   │ 2d ago   │
+│ 41   │ signal    │ Error rate spike on checkout  │ triage      │ medium │ 3d ago   │
+│ 40   │ plan      │ Migrate user service to v2    │ in_progress │ urgent │ 5d ago   │
 └──────┴───────────┴──────────────────────────────┴─────────────┴────────┴──────────┘
 Showing 3 of 3 issues
 ```
 
 ---
 
-## looped show
+## loop issues view
 
 Show full detail for a single issue, including labels, relations, children, and agent results.
 
 ```bash
-looped show <id>
+loop issues view <id>
 ```
 
 ### Arguments
@@ -84,13 +84,13 @@ looped show <id>
 ### Example
 
 ```bash
-looped show clx1abc2def3ghi4jkl5mnop
+loop issues view clx1abc2def3ghi4jkl5mnop
 ```
 
 ### Sample output
 
 ```
-#42 [🔧 task] Fix login timeout
+#42 [task] Fix login timeout
 Status: todo   Priority: high   Project: clx9xyz...
 
 Labels: bug, backend
@@ -98,29 +98,34 @@ Labels: bug, backend
 Description:
   Login requests are timing out after 30s when the session cache is cold.
 
-Parent: #38 [📋 plan] Improve auth reliability
+Parent: #38 [plan] Improve auth reliability
 
 Children:
 ┌──────┬───────────┬────────────────────────┬────────┐
 │ #    │ TYPE      │ TITLE                  │ STATUS │
 ├──────┼───────────┼────────────────────────┼────────┤
-│ 43   │ 🔧 task   │ Add cache warming      │ todo   │
-│ 44   │ 🔧 task   │ Increase timeout to 60s│ done   │
+│ 43   │ task      │ Add cache warming      │ todo   │
+│ 44   │ task      │ Increase timeout to 60s│ done   │
 └──────┴───────────┴────────────────────────┴────────┘
 
 Relations:
   blocks clx2bbb...
   relates to clx3ccc...
+
+Agent:
+  Summary: Fixed cache warming logic
+  Commits: abc1234
+  PRs: #47
 ```
 
 ---
 
-## looped create
+## loop issues create
 
-Create a new issue. In a terminal (TTY), the CLI prompts interactively for type, priority, and project if flags are not provided. In non-TTY environments, defaults are used.
+Create a new issue. In a terminal (TTY), the CLI prompts interactively for type and priority if flags are not provided. In non-TTY environments, defaults are used.
 
 ```bash
-looped create <title> [options]
+loop issues create <title> [options]
 ```
 
 ### Arguments
@@ -144,58 +149,102 @@ looped create <title> [options]
 Create with all flags (scriptable):
 
 ```bash
-looped create "Fix login timeout" \
+loop issues create "Fix login timeout" \
   --type task \
   --priority 2 \
   --description "Login requests timing out after 30s" \
   --project clx1abc2def3ghi4jkl5mnop
 ```
 
-Create interactively (terminal prompts for type, priority, project):
+Create interactively (terminal prompts for type, priority):
 
 ```bash
-looped create "Investigate checkout error spike"
+loop issues create "Investigate checkout error spike"
 ```
 
 Create a child issue:
 
 ```bash
-looped create "Add cache warming" --parent clx1abc2def3ghi4jkl5mnop
+loop issues create "Add cache warming" --parent clx1abc2def3ghi4jkl5mnop
 ```
 
 ### Sample output
 
 ```
-Created #45 [🔧 task] Fix login timeout
+Created #45 [task] Fix login timeout
 ```
 
 ---
 
-## looped comment
+## loop issues start
 
-Add a comment to an issue.
+Start working on an issue by setting its status to `in_progress`. Displays the issue details after transitioning.
 
 ```bash
-looped comment <issueId> <body>
+loop issues start <id>
 ```
 
 ### Arguments
 
-| Argument  | Description      |
-| --------- | ---------------- |
-| `issueId` | Issue ID (CUID2) |
-| `body`    | Comment text     |
+| Argument | Description      |
+| -------- | ---------------- |
+| `id`     | Issue ID (CUID2) |
 
 ### Example
 
 ```bash
-looped comment clx1abc2def3ghi4jkl5mnop "Confirmed this is a cache issue"
+loop issues start clx1abc2def3ghi4jkl5mnop
 ```
 
 ### Sample output
 
 ```
-Comment added to issue clx1abc2def3ghi4jkl5mnop
+Issue #42 is now in_progress
+  Fix login timeout
+
+Description:
+  Login requests are timing out after 30s when the session cache is cold.
 ```
 
-Comments are attributed to `looped-cli` with `authorType: human`.
+---
+
+## loop issues done
+
+Mark an issue as complete, optionally adding an outcome comment.
+
+```bash
+loop issues done <id> [options]
+```
+
+### Arguments
+
+| Argument | Description      |
+| -------- | ---------------- |
+| `id`     | Issue ID (CUID2) |
+
+### Options
+
+| Flag               | Description                                      |
+| ------------------ | ------------------------------------------------ |
+| `--outcome <text>` | Outcome description (saved as a comment)         |
+
+### Examples
+
+Mark as done:
+
+```bash
+loop issues done clx1abc2def3ghi4jkl5mnop
+```
+
+Mark as done with an outcome:
+
+```bash
+loop issues done clx1abc2def3ghi4jkl5mnop --outcome "Fixed in PR #47. Cache warming reduces timeout to <500ms."
+```
+
+### Sample output
+
+```
+Issue #42 marked as done
+  Outcome: Fixed in PR #47. Cache warming reduces timeout to <500ms.
+```

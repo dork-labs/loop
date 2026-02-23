@@ -1,18 +1,79 @@
 ---
 title: Dispatch
-description: Preview the dispatch queue and force-claim issues using the looped CLI.
+description: Claim the next highest-priority issue and preview the dispatch queue using the loop CLI.
 ---
 
 # Dispatch
 
-The dispatch commands let you preview the priority-ordered work queue and claim issues for execution. The dispatch queue ranks issues by a composite score that considers priority, goal alignment, age, and issue type.
+The dispatch commands let you claim the next issue for work and preview the priority-ordered work queue. The dispatch queue ranks issues by a composite score that considers priority, goal alignment, age, and issue type.
 
-## looped next
+## loop next
+
+Claim the highest-priority unblocked issue and receive dispatch instructions. This is the primary command agents use to get work. It sets the issue status to `in_progress` and returns the issue with its rendered prompt template.
+
+```bash
+loop next [options]
+```
+
+### Options
+
+| Flag             | Default | Description          |
+| ---------------- | ------- | -------------------- |
+| `--project <id>` | none    | Filter by project ID |
+
+### Examples
+
+Claim the next issue:
+
+```bash
+loop next
+```
+
+Filter by project:
+
+```bash
+loop next --project clx1abc2def3ghi4jkl5mnop
+```
+
+Get as JSON for agent automation:
+
+```bash
+loop next --json
+```
+
+### Sample output
+
+```
+#42 [task] Fix login timeout
+  Status:   in_progress
+  Priority: high
+  ID:       clx1abc2def3ghi4jkl5mnop
+
+Template:
+  Slug:    fix-bug
+  Version: 3
+
+Instructions:
+────────────────────────────────────────────────────────────
+You are working on issue #42: Fix login timeout.
+...
+────────────────────────────────────────────────────────────
+```
+
+When the queue is empty:
+
+```
+No issues ready for dispatch.
+```
+
+---
+
+## loop dispatch queue
 
 Preview the dispatch queue without claiming any issues. Shows the highest-scored unblocked issues ready for work.
 
 ```bash
-looped next [options]
+loop dispatch queue [options]
 ```
 
 ### Options
@@ -27,19 +88,19 @@ looped next [options]
 Preview the queue:
 
 ```bash
-looped next
+loop dispatch queue
 ```
 
 Filter by project:
 
 ```bash
-looped next --project clx1abc2def3ghi4jkl5mnop
+loop dispatch queue --project clx1abc2def3ghi4jkl5mnop
 ```
 
 Show top 5 items as JSON:
 
 ```bash
-looped next --limit 5 --json
+loop dispatch queue --limit 5 --json
 ```
 
 ### Sample output
@@ -48,9 +109,9 @@ looped next --limit 5 --json
 ┌──────┬──────┬───────────┬──────────────────────────────┬────────┬───────┬───────────────────────────────┐
 │ RANK │ #    │ TYPE      │ TITLE                        │ PRI    │ SCORE │ BREAKDOWN                     │
 ├──────┼──────┼───────────┼──────────────────────────────┼────────┼───────┼───────────────────────────────┤
-│ 1    │ 40   │ 📋 plan   │ Migrate user service to v2    │ urgent │ 118   │ pri:75 + goal:20 + age:3 + …  │
-│ 2    │ 42   │ 🔧 task   │ Fix login timeout             │ high   │ 95    │ pri:50 + goal:20 + age:5 + …  │
-│ 3    │ 39   │ 🔬 hypo   │ Cache warming reduces latency │ medium │ 68    │ pri:25 + goal:20 + age:3 + …  │
+│ 1    │ 40   │ plan      │ Migrate user service to v2    │ urgent │ 118   │ pri:75 + goal:20 + age:3 + …  │
+│ 2    │ 42   │ task      │ Fix login timeout             │ high   │ 95    │ pri:50 + goal:20 + age:5 + …  │
+│ 3    │ 39   │ hypo      │ Cache warming reduces latency │ medium │ 68    │ pri:25 + goal:20 + age:3 + …  │
 └──────┴──────┴───────────┴──────────────────────────────┴────────┴───────┴───────────────────────────────┘
 
 Showing 3 of 3 queued issues
@@ -69,65 +130,37 @@ Each issue in the queue has a composite score made up of:
 
 ---
 
-## looped dispatch
-
-Force-claim a specific issue by setting its status to `in_progress`, then display the issue details.
-
-```bash
-looped dispatch <id>
-```
-
-### Arguments
-
-| Argument | Description               |
-| -------- | ------------------------- |
-| `id`     | Issue ID (CUID2) to claim |
-
-### Example
-
-```bash
-looped dispatch clx1abc2def3ghi4jkl5mnop
-```
-
-### Sample output
-
-```
-Dispatched: #42 Fix login timeout
-  Type:     🔧 task
-  Status:   in_progress
-  Priority: high
-  ID:       clx1abc2def3ghi4jkl5mnop
-
-Description:
-  Login requests are timing out after 30s when the session cache is cold.
-```
-
----
-
 ## Typical dispatch workflow
 
 ```bash
 # 1. Preview what is next in the queue
-looped next
+loop dispatch queue
 
 # 2. Inspect the top issue for more detail
-looped show clx1abc2def3ghi4jkl5mnop
+loop issues view clx1abc2def3ghi4jkl5mnop
 
-# 3. Claim the issue
-looped dispatch clx1abc2def3ghi4jkl5mnop
+# 3. Claim the next issue (with prompt instructions)
+loop next
 
-# 4. After completing work, check system status
-looped status
+# 4. After completing work, mark it done
+loop issues done clx1abc2def3ghi4jkl5mnop --outcome "Fixed in PR #47"
+
+# 5. Check system status
+loop dashboard
 ```
 
 ## Agent usage
 
-Agents can use `next` and `dispatch` in automation scripts:
+Agents can use `next` in automation scripts:
 
 ```bash
-# Get the top issue ID from the queue
-ISSUE_ID=$(looped next --limit 1 --json | jq -r '.data[0].issue.id')
+# Claim the next issue and get the prompt as JSON
+RESULT=$(loop next --json)
+ISSUE_ID=$(echo "$RESULT" | jq -r '.issue.id')
+PROMPT=$(echo "$RESULT" | jq -r '.prompt')
 
-# Claim it
-looped dispatch "$ISSUE_ID"
+# Execute work based on the prompt...
+
+# Report completion
+loop issues done "$ISSUE_ID" --outcome "Task completed successfully"
 ```

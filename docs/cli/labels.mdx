@@ -1,0 +1,118 @@
+---
+title: Labels
+description: List, create, and delete labels using the loop CLI.
+---
+
+# Labels
+
+The `labels` command group manages labels for categorizing issues. Labels have a name and a color (hex code).
+
+## loop labels list
+
+List all labels with pagination.
+
+```bash
+loop labels list [options]
+```
+
+### Options
+
+| Flag           | Default | Description              |
+| -------------- | ------- | ------------------------ |
+| `--limit <n>`  | `50`    | Maximum number of results |
+| `--offset <n>` | `0`     | Pagination offset         |
+
+### Example
+
+```bash
+loop labels list
+```
+
+### Sample output
+
+```
+┌──────────────────────────┬──────────────┬─────────┬──────────┐
+│ ID                       │ NAME         │ COLOR   │ CREATED  │
+├──────────────────────────┼──────────────┼─────────┼──────────┤
+│ clx1abc2def3ghi4jkl5mnop │ bug          │ #ef4444 │ 5d ago   │
+│ clx2bcd3efg4hij5klm6nopq │ backend      │ #3b82f6 │ 5d ago   │
+│ clx3cde4fgh5ijk6lmn7opqr │ performance  │ #f59e0b │ 3d ago   │
+└──────────────────────────┴──────────────┴─────────┴──────────┘
+Showing 3 of 3 labels
+```
+
+---
+
+## loop labels create
+
+Create a new label with a name and color.
+
+```bash
+loop labels create --name <name> --color <color>
+```
+
+### Options
+
+| Flag              | Required | Description               |
+| ----------------- | -------- | ------------------------- |
+| `--name <name>`   | Yes      | Label name                |
+| `--color <color>` | Yes      | Label color (hex code)    |
+
+### Examples
+
+```bash
+loop labels create --name bug --color "#ef4444"
+```
+
+```bash
+loop labels create --name infrastructure --color "#6366f1"
+```
+
+### Sample output
+
+```
+Label created: bug (clx1abc2def3ghi4jkl5mnop)
+```
+
+---
+
+## loop labels delete
+
+Delete a label by ID (soft-delete).
+
+```bash
+loop labels delete <id>
+```
+
+### Arguments
+
+| Argument | Description     |
+| -------- | --------------- |
+| `id`     | Label ID (CUID2) |
+
+### Example
+
+```bash
+loop labels delete clx1abc2def3ghi4jkl5mnop
+```
+
+### Sample output
+
+```
+Label clx1abc2def3ghi4jkl5mnop deleted.
+```
+
+---
+
+## Typical label workflow
+
+```bash
+# 1. List existing labels
+loop labels list
+
+# 2. Create a new label
+loop labels create --name "agent-generated" --color "#8b5cf6"
+
+# 3. Delete a label you no longer need
+loop labels delete clx1abc2def3ghi4jkl5mnop
+```

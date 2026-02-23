@@ -1,0 +1,208 @@
+---
+title: Templates
+description: Manage versioned prompt templates that define agent instructions in the dispatch engine.
+---
+
+# Templates
+
+The `loop.templates` resource manages versioned prompt templates with conditions-based matching. Templates are the instruction layer of Loop -- they define what agents receive when dispatched to work on an issue. The dispatch engine selects the most specific matching template based on conditions.
+
+## List templates
+
+```typescript
+const page = await loop.templates.list({ limit: 20 });
+
+for (const template of page.data) {
+  console.log(template.slug, template.specificity);
+}
+```
+
+## Iterate all templates
+
+```typescript
+for await (const template of loop.templates.iter()) {
+  console.log(template.slug);
+}
+```
+
+## Get a template
+
+Returns a `TemplateDetail` with the active version included:
+
+```typescript
+const template = await loop.templates.get('clx1abc2def3ghi4jkl5mnop');
+
+console.log(template.name);
+console.log(template.conditions);
+if (template.activeVersion) {
+  console.log(template.activeVersion.content);
+}
+```
+
+## Create a template
+
+```typescript
+const template = await loop.templates.create({
+  slug: 'triage-posthog-metric',
+  name: 'Triage PostHog Metric Alert',
+  description: 'Specialized triage for PostHog metric signals',
+  conditions: {
+    type: 'signal',
+    signalSource: 'posthog',
+  },
+  specificity: 3,
+});
+```
+
+## Update a template
+
+```typescript
+await loop.templates.update('clx1abc2def3ghi4jkl5mnop', {
+  description: 'Updated triage instructions for PostHog',
+  specificity: 4,
+});
+```
+
+## Delete a template
+
+```typescript
+await loop.templates.delete('clx1abc2def3ghi4jkl5mnop');
+```
+
+## Preview template matching
+
+Test which template and prompt would be selected for a given issue without dispatching it. Useful for debugging conditions-based matching:
+
+```typescript
+const preview = await loop.templates.preview('clx8iss2uea3bcd4efg5hijk');
+
+if (preview.template) {
+  console.log(`Matched: ${preview.template.slug}`);
+  console.log(`Prompt:\n${preview.prompt}`);
+} else {
+  console.log(preview.message); // e.g. "No matching template"
+}
+```
+
+## Version management
+
+### List versions
+
+```typescript
+const versions = await loop.templates.versions('clx1abc2def3ghi4jkl5mnop');
+
+for (const version of versions.data) {
+  console.log(`v${version.version} (${version.status}) - ${version.usageCount} uses`);
+}
+```
+
+### Create a version
+
+New versions are created with `draft` status. They must be promoted to become active.
+
+```typescript
+const version = await loop.templates.createVersion('clx1abc2def3ghi4jkl5mnop', {
+  content: 'You are triaging a PostHog metric alert.\n\n## Context\n{{context}}',
+  changelog: 'Added structured context section',
+  authorType: 'human',
+  authorName: 'dorian',
+});
+```
+
+### Promote a version
+
+Promoting a version sets it as the active version for the template. The previously active version is retired.
+
+```typescript
+const promoted = await loop.templates.promote(
+  'clx1abc2def3ghi4jkl5mnop', // template ID
+  'clx6ver2sid3abc4def5ghij'  // version ID
+);
+
+console.log(promoted.status); // "active"
+```
+
+## Parameters
+
+### `CreateTemplateParams`
+
+| Field         | Type                 | Required | Description                                       |
+| ------------- | -------------------- | -------- | ------------------------------------------------- |
+| `slug`        | `string`             | Yes      | Unique URL-safe identifier                        |
+| `name`        | `string`             | Yes      | Human-readable name                               |
+| `description` | `string`             | No       | Template purpose                                  |
+| `conditions`  | `TemplateConditions` | No       | Matching rules for dispatch                       |
+| `specificity` | `number`             | No       | Higher values win when multiple templates match   |
+| `projectId`   | `string`             | No       | Scope to a specific project                       |
+
+### `TemplateConditions`
+
+| Field                  | Type       | Description                                        |
+| ---------------------- | ---------- | -------------------------------------------------- |
+| `type`                 | `string`   | Issue type to match (e.g. `"signal"`, `"task"`)    |
+| `signalSource`         | `string`   | Signal source to match (e.g. `"posthog"`)          |
+| `labels`               | `string[]` | Label names that must be present                   |
+| `projectId`            | `string`   | Specific project to match                          |
+| `hasFailedSessions`    | `boolean`  | Match issues with prior failed agent sessions      |
+| `hypothesisConfidence` | `number`   | Minimum hypothesis confidence (0-1)                |
+
+### `CreateVersionParams`
+
+| Field        | Type         | Required | Description                         |
+| ------------ | ------------ | -------- | ----------------------------------- |
+| `content`    | `string`     | Yes      | Prompt template content             |
+| `changelog`  | `string`     | No       | Description of changes              |
+| `authorType` | `AuthorType` | Yes      | `"human"` or `"agent"`             |
+| `authorName` | `string`     | Yes      | Author identifier                   |
+
+## Types
+
+### `PromptTemplate`
+
+```typescript
+interface PromptTemplate {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  conditions: TemplateConditions;
+  specificity: number;
+  projectId: string | null;
+  activeVersionId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+```
+
+### `PromptVersion`
+
+```typescript
+interface PromptVersion {
+  id: string;
+  templateId: string;
+  version: number;
+  content: string;
+  changelog: string | null;
+  authorType: AuthorType;
+  authorName: string;
+  status: VersionStatus; // "active" | "draft" | "retired"
+  usageCount: number;
+  completionRate: number | null;
+  avgDurationMs: number | null;
+  reviewScore: number | null;
+  createdAt: string;
+}
+```
+
+### `TemplatePreview`
+
+```typescript
+interface TemplatePreview {
+  issue: Pick<Issue, 'id' | 'number' | 'title' | 'type'>;
+  template: PromptTemplate | null;
+  version: Pick<PromptVersion, 'id' | 'version'> | null;
+  prompt: string | null;
+  message?: string;
+}
+```

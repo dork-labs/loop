@@ -1,0 +1,119 @@
+---
+title: Projects
+description: Create and manage project containers that group issues toward shared objectives.
+---
+
+# Projects
+
+The `loop.projects` resource provides CRUD operations for project containers. Projects group issues toward a shared objective and can be linked to goals for strategic alignment.
+
+## List projects
+
+```typescript
+const page = await loop.projects.list({ limit: 20 });
+
+console.log(page.total); // Total project count
+for (const project of page.data) {
+  console.log(project.name, project.status);
+}
+
+// Check for more pages
+if (page.hasMore) {
+  const next = await loop.projects.list({ limit: 20, offset: 20 });
+}
+```
+
+## Iterate all projects
+
+The `iter()` method auto-paginates through all results:
+
+```typescript
+for await (const project of loop.projects.iter()) {
+  console.log(project.name);
+}
+```
+
+## Get a project
+
+Returns a `ProjectDetail` with the linked goal and issue counts by status:
+
+```typescript
+const project = await loop.projects.get('clx1abc2def3ghi4jkl5mnop');
+
+console.log(project.name);
+console.log(project.goal?.title);
+console.log(project.issueCounts); // { triage: 2, todo: 5, in_progress: 1, ... }
+```
+
+## Create a project
+
+```typescript
+const project = await loop.projects.create({
+  name: 'Improve Onboarding',
+  description: 'Reduce time-to-value for new users',
+  status: 'active',
+  health: 'on_track',
+});
+```
+
+## Update a project
+
+```typescript
+const updated = await loop.projects.update('clx1abc2def3ghi4jkl5mnop', {
+  health: 'at_risk',
+  description: 'Conversion metrics declining',
+});
+```
+
+## Delete a project
+
+Soft-deletes a project. The project is marked as deleted but retained in the database.
+
+```typescript
+await loop.projects.delete('clx1abc2def3ghi4jkl5mnop');
+```
+
+## Parameters
+
+### `CreateProjectParams`
+
+| Field         | Type            | Required | Description                                                      |
+| ------------- | --------------- | -------- | ---------------------------------------------------------------- |
+| `name`        | `string`        | Yes      | Project name                                                     |
+| `description` | `string`        | No       | Detailed description                                             |
+| `status`      | `ProjectStatus` | No       | `"backlog"`, `"planned"`, `"active"`, `"paused"`, `"completed"`, `"canceled"` |
+| `health`      | `ProjectHealth` | No       | `"on_track"`, `"at_risk"`, `"off_track"`                        |
+| `goalId`      | `string`        | No       | Link to an existing goal                                         |
+
+### `UpdateProjectParams`
+
+All fields from `CreateProjectParams` are optional. Set `goalId` to `null` to unlink a goal.
+
+## Types
+
+### `Project`
+
+```typescript
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  status: ProjectStatus;
+  health: ProjectHealth;
+  goalId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+```
+
+### `ProjectDetail`
+
+Extends `Project` with:
+
+```typescript
+interface ProjectDetail extends Project {
+  goal: Goal | null;
+  issueCounts: Record<IssueStatus, number>;
+}
+```

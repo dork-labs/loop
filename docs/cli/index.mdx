@@ -1,40 +1,48 @@
 ---
 title: CLI Reference
-description: Complete command reference for the looped CLI tool. Install, configure, and use the Loop CLI to manage issues, signals, triage, templates, dispatch, and system status.
+description: Complete command reference for the loop CLI tool. Install, configure, and use the Loop CLI to manage issues, signals, triage, templates, dispatch, and system health.
 ---
 
 # CLI Reference
 
-The `looped` CLI provides full command-line access to the Loop API. It is a thin HTTP client that covers issue management, signal submission, triage, prompt templates, dispatch, and system status.
+The `loop` CLI provides full command-line access to the Loop API. It is a thin HTTP client built on the `@dork-labs/loop-sdk` that covers authentication, issue management, signal submission, triage, prompt templates, dispatch, projects, goals, labels, and system health.
 
 ## Installation
 
 ```bash
 # Install globally
-npm install -g looped
+npm install -g @dork-labs/loop-cli
 
 # Or run directly with npx
-npx looped --help
+npx @dork-labs/loop-cli --help
 ```
 
-## Configuration
+## Authentication
 
-Before using the CLI, configure your API endpoint and authentication token:
+The recommended way to authenticate is with the interactive login command:
 
 ```bash
-looped config set url https://api.looped.me
-looped config set token loop_your_api_key_here
+loop auth login
+```
+
+This prompts for your API URL and API key, validates them, and saves them to `~/.loop/config.json`. See [Auth](/docs/cli/auth) for details.
+
+Alternatively, configure manually:
+
+```bash
+loop config set url https://api.looped.me
+loop config set token loop_your_api_key_here
 ```
 
 Configuration is stored in `~/.loop/config.json` with restricted file permissions (`0600`).
 
 ### Config commands
 
-| Command                           | Description                     |
-| --------------------------------- | ------------------------------- |
-| `looped config set <key> <value>` | Set `url` or `token`            |
-| `looped config get <key>`         | Print a config value            |
-| `looped config list`              | Print all config (token masked) |
+| Command                          | Description                     |
+| -------------------------------- | ------------------------------- |
+| `loop config set <key> <value>`  | Set `url` or `token`            |
+| `loop config get <key>`          | Print a config value            |
+| `loop config list`               | Print all config (token masked) |
 
 ### Resolution order
 
@@ -51,6 +59,7 @@ Every command supports these flags:
 | Flag              | Description                                 |
 | ----------------- | ------------------------------------------- |
 | `--json`          | Output raw JSON instead of formatted tables |
+| `--plain`         | Output tab-separated values (no colors)     |
 | `--api-url <url>` | Override API URL for this invocation        |
 | `--token <token>` | Override auth token for this invocation     |
 | `--version`       | Print CLI version                           |
@@ -58,18 +67,33 @@ Every command supports these flags:
 
 ## Commands
 
-| Command                                          | Description                          |
-| ------------------------------------------------ | ------------------------------------ |
-| [`looped list`](/docs/cli/issues)                | List issues with filters             |
-| [`looped show <id>`](/docs/cli/issues)           | Show full issue detail               |
-| [`looped create <title>`](/docs/cli/issues)      | Create a new issue                   |
-| [`looped comment <id> <body>`](/docs/cli/issues) | Add a comment to an issue            |
-| [`looped signal <message>`](/docs/cli/signals)   | Submit a manual signal               |
-| [`looped triage`](/docs/cli/triage)              | View and manage the triage queue     |
-| [`looped templates`](/docs/cli/templates)        | Manage prompt templates and versions |
-| [`looped next`](/docs/cli/dispatch)              | Preview the dispatch queue           |
-| [`looped dispatch <id>`](/docs/cli/dispatch)     | Force-claim an issue                 |
-| [`looped status`](/docs/cli/status)              | Show system health overview          |
+| Command                                                        | Description                          |
+| -------------------------------------------------------------- | ------------------------------------ |
+| [`loop auth login`](/docs/cli/auth)                            | Authenticate with the Loop API       |
+| [`loop auth logout`](/docs/cli/auth)                           | Clear stored credentials             |
+| [`loop auth status`](/docs/cli/auth)                           | Show authentication state            |
+| [`loop issues list`](/docs/cli/issues)                         | List issues with filters             |
+| [`loop issues view <id>`](/docs/cli/issues)                    | Show full issue detail               |
+| [`loop issues create <title>`](/docs/cli/issues)               | Create a new issue                   |
+| [`loop issues start <id>`](/docs/cli/issues)                   | Start working on an issue            |
+| [`loop issues done <id>`](/docs/cli/issues)                    | Mark an issue as complete            |
+| [`loop comments add <id> <body>`](/docs/cli/comments)          | Add a comment to an issue            |
+| [`loop signals ingest <message>`](/docs/cli/signals)           | Submit a manual signal               |
+| [`loop triage`](/docs/cli/triage)                              | View the triage queue                |
+| [`loop triage accept <id>`](/docs/cli/triage)                  | Accept a triage issue                |
+| [`loop triage decline <id>`](/docs/cli/triage)                 | Decline a triage issue               |
+| [`loop templates list`](/docs/cli/templates)                   | List prompt templates                |
+| [`loop templates show <id>`](/docs/cli/templates)              | Show template details                |
+| [`loop templates promote <id> <versionId>`](/docs/cli/templates) | Promote a version to active        |
+| [`loop next`](/docs/cli/dispatch)                              | Claim the next highest-priority issue |
+| [`loop dispatch queue`](/docs/cli/dispatch)                    | Preview the dispatch queue           |
+| [`loop dashboard`](/docs/cli/dashboard)                        | Show system health overview          |
+| [`loop projects list`](/docs/cli/projects)                     | List projects                        |
+| [`loop goals list`](/docs/cli/goals)                           | List goals with progress             |
+| [`loop labels list`](/docs/cli/labels)                         | List labels                          |
+| [`loop labels create`](/docs/cli/labels)                       | Create a label                       |
+| [`loop labels delete <id>`](/docs/cli/labels)                  | Delete a label                       |
+| [`loop completions [shell]`](/docs/cli/completions)            | Output shell completion scripts      |
 
 ## Interactive vs non-interactive
 

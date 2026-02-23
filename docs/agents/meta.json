@@ -1,0 +1,4 @@
+{
+  "title": "Agent Integration",
+  "pages": ["claude-code", "cursor", "windsurf", "openhands", "custom"]
+}

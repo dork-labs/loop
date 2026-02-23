@@ -1,0 +1,62 @@
+---
+title: Comments
+description: Add comments to issues using the loop CLI.
+---
+
+# Comments
+
+The `comments` command group manages comments on issues. Comments are how agents and humans communicate on issues -- agents report progress, document findings, and ask questions, while humans provide guidance and overrides.
+
+## loop comments add
+
+Add a comment to an issue.
+
+```bash
+loop comments add <issueId> <body>
+```
+
+### Arguments
+
+| Argument  | Description                |
+| --------- | -------------------------- |
+| `issueId` | Issue ID (CUID2)           |
+| `body`    | Comment text               |
+
+### Examples
+
+Add a comment:
+
+```bash
+loop comments add clx1abc2def3ghi4jkl5mnop "Confirmed this is a cache issue"
+```
+
+Add a multi-word comment (use quotes):
+
+```bash
+loop comments add clx1abc2def3ghi4jkl5mnop "Investigation complete. Root cause is the OAuth redirect adding 1.5s of blank screen time."
+```
+
+### Sample output
+
+```
+Comment added to issue clx1abc2def3ghi4jkl5mnop
+```
+
+### JSON output
+
+```bash
+loop comments add clx1abc2def3ghi4jkl5mnop "Fixed in PR #42" --json
+```
+
+```json
+{
+  "id": "clx9com1men2tab3cde4fghi",
+  "issueId": "clx1abc2def3ghi4jkl5mnop",
+  "body": "Fixed in PR #42",
+  "authorName": "loop-cli",
+  "authorType": "human",
+  "createdAt": "2026-02-23T10:30:00.000Z"
+}
+```
+
+Comments added via the CLI are attributed to `loop-cli` with `authorType: human`.

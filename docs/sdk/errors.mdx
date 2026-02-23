@@ -1,0 +1,118 @@
+---
+title: Error Handling
+description: Handle API errors with typed error classes in the Loop TypeScript SDK.
+---
+
+# Error Handling
+
+The Loop SDK throws typed error classes for API failures. All errors extend `LoopError`, which provides structured information about the failure including the HTTP status code, an error code, and optional details.
+
+## Error classes
+
+| Class                  | HTTP Status | Code               | When                                  |
+| ---------------------- | ----------- | ------------------ | ------------------------------------- |
+| `LoopNotFoundError`    | 404         | `NOT_FOUND`        | Requested resource does not exist     |
+| `LoopValidationError`  | 422         | `VALIDATION_ERROR` | Request body fails validation         |
+| `LoopConflictError`    | 409         | `CONFLICT`         | Duplicate or conflicting operation    |
+| `LoopRateLimitError`   | 429         | `RATE_LIMITED`     | Too many requests                     |
+| `LoopError`            | any         | `HTTP_{status}`    | All other API errors                  |
+
+## Catching errors
+
+All error classes extend `LoopError`, so you can catch broadly or narrowly:
+
+```typescript
+import {
+  LoopError,
+  LoopNotFoundError,
+  LoopValidationError,
+  LoopRateLimitError,
+} from '@dork-labs/loop-sdk';
+
+try {
+  const issue = await loop.issues.get('nonexistent-id');
+} catch (error) {
+  if (error instanceof LoopNotFoundError) {
+    console.log('Issue not found');
+  } else if (error instanceof LoopValidationError) {
+    console.log('Validation failed:', error.message);
+    console.log('Details:', error.details);
+  } else if (error instanceof LoopRateLimitError) {
+    console.log('Rate limited, retry later');
+  } else if (error instanceof LoopError) {
+    console.log(`API error ${error.status}: ${error.message}`);
+    console.log('Code:', error.code);
+  } else {
+    throw error; // Re-throw non-Loop errors
+  }
+}
+```
+
+## Error properties
+
+Every `LoopError` instance has these properties:
+
+| Property  | Type                            | Description                                 |
+| --------- | ------------------------------- | ------------------------------------------- |
+| `message` | `string`                        | Human-readable error description            |
+| `status`  | `number`                        | HTTP status code                            |
+| `code`    | `string`                        | Machine-readable error code                 |
+| `details` | `Record<string, unknown>`       | Additional error context (validation errors, etc.) |
+| `name`    | `string`                        | Error class name (e.g. `"LoopNotFoundError"`) |
+
+## Validation errors
+
+`LoopValidationError` includes a `details` object with field-level information:
+
+```typescript
+try {
+  await loop.issues.create({ title: '' }); // Empty title
+} catch (error) {
+  if (error instanceof LoopValidationError) {
+    console.log(error.details);
+    // { title: "String must contain at least 1 character(s)" }
+  }
+}
+```
+
+## Pattern: retry on rate limit
+
+```typescript
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error instanceof LoopRateLimitError && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('Unreachable');
+}
+
+const issues = await withRetry(() => loop.issues.list());
+```
+
+## Pattern: safe resource lookup
+
+```typescript
+async function findIssue(id: string) {
+  try {
+    return await loop.issues.get(id);
+  } catch (error) {
+    if (error instanceof LoopNotFoundError) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+const issue = await findIssue('maybe-exists');
+if (issue) {
+  console.log(issue.title);
+}
+```

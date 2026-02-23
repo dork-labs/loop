@@ -1,0 +1,78 @@
+---
+title: Completions
+description: Set up shell tab-completion for the loop CLI in Bash, Zsh, or Fish.
+---
+
+# Completions
+
+The `completions` command generates shell completion scripts for tab-completing loop commands and subcommands. Supports Bash, Zsh, and Fish.
+
+## loop completions
+
+```bash
+loop completions [shell]
+```
+
+### Arguments
+
+| Argument | Description                                     |
+| -------- | ----------------------------------------------- |
+| `shell`  | Shell type: `bash`, `zsh`, or `fish` (optional) |
+
+If no shell is specified, the CLI detects the current shell from the `SHELL` environment variable.
+
+---
+
+## Setup by shell
+
+### Bash
+
+Enable in the current session:
+
+```bash
+eval "$(loop completions bash)"
+```
+
+Persist across sessions:
+
+```bash
+loop completions bash >> ~/.bashrc
+```
+
+### Zsh
+
+Enable in the current session:
+
+```bash
+eval "$(loop completions zsh)"
+```
+
+Persist across sessions:
+
+```bash
+loop completions zsh > ~/.zsh/completions/_loop
+```
+
+### Fish
+
+Enable in the current session:
+
+```bash
+loop completions fish | source
+```
+
+Persist across sessions:
+
+```bash
+loop completions fish > ~/.config/fish/completions/loop.fish
+```
+
+---
+
+## What gets completed
+
+Shell completions cover:
+
+- **Top-level commands**: `issues`, `signals`, `triage`, `templates`, `dispatch`, `auth`, `config`, `labels`, `goals`, `projects`, `comments`, `dashboard`, `next`, `completions`
+- **Subcommands**: `issues list`, `issues view`, `issues create`, `triage accept`, `triage decline`, `labels create`, etc.
+- **Global options**: `--json`, `--plain`, `--api-url`, `--token`, `--help`, `--version`

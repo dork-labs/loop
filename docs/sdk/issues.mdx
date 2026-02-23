@@ -1,0 +1,254 @@
+---
+title: Issues
+description: Create, list, update, and delete issues — Loop's atomic unit of work.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Issues
+
+Issues are the atomic unit of work in Loop. Everything — signals, hypotheses, plans, tasks, and monitors — is an issue with a `type`. The `loop.issues` resource provides full CRUD operations plus auto-pagination.
+
+```typescript
+import { LoopClient } from '@dork-labs/loop-sdk'
+
+const loop = new LoopClient({ apiKey: 'loop_abc123' })
+```
+
+## List issues
+
+Retrieve a paginated list of issues with optional filters.
+
+```typescript
+const result = await loop.issues.list({
+  status: 'todo',
+  type: 'task',
+  projectId: 'clxyz1234567890abcdef',
+  limit: 25,
+  offset: 0,
+})
+
+console.log(result.data)   // Issue[]
+console.log(result.total)  // total matching count
+console.log(result.hasMore) // true if more pages exist
+```
+
+### Filter parameters
+
+| Parameter   | Type     | Description                                              |
+| ----------- | -------- | -------------------------------------------------------- |
+| `status`    | `string` | Filter by status: `triage`, `backlog`, `todo`, `in_progress`, `done`, `canceled` |
+| `type`      | `string` | Filter by type: `signal`, `hypothesis`, `plan`, `task`, `monitor` |
+| `projectId` | `string` | Filter by project ID                                     |
+| `labelId`   | `string` | Filter by label ID                                       |
+| `priority`  | `number` | Filter by priority level                                 |
+| `parentId`  | `string` | Filter by parent issue ID                                |
+| `limit`     | `number` | Page size (default varies by server)                     |
+| `offset`    | `number` | Number of items to skip                                  |
+
+### Return type
+
+`list()` returns a `PaginatedList<Issue>` with three properties:
+
+| Property  | Type      | Description                                  |
+| --------- | --------- | -------------------------------------------- |
+| `data`    | `Issue[]` | Array of issues for the current page         |
+| `total`   | `number`  | Total number of matching issues across pages |
+| `hasMore` | `boolean` | Whether additional pages exist               |
+
+## Auto-paginate with iter
+
+The `iter()` method returns an async generator that automatically pages through all matching issues. It accepts the same filter parameters as `list()` except `limit` and `offset`, which are managed internally.
+
+```typescript
+for await (const issue of loop.issues.iter({ status: 'todo' })) {
+  console.log(`#${issue.number}: ${issue.title}`)
+}
+```
+
+You can also collect all results into an array:
+
+```typescript
+const allTasks: Issue[] = []
+for await (const issue of loop.issues.iter({ type: 'task' })) {
+  allTasks.push(issue)
+}
+```
+
+<Callout type="info">
+  `iter()` fetches pages of 50 items internally. Each page is a separate HTTP request, so iterating
+  over thousands of issues will make multiple API calls.
+</Callout>
+
+## Get an issue
+
+Retrieve a single issue by ID. The response includes the full `IssueDetail` with parent, children, labels, and relations.
+
+```typescript
+const issue = await loop.issues.get('clxyz1234567890abcdef')
+
+console.log(issue.title)
+console.log(issue.parent)     // Issue | null
+console.log(issue.children)   // Issue[]
+console.log(issue.labels)     // Label[]
+console.log(issue.relations)  // IssueRelation[]
+```
+
+### IssueDetail type
+
+`get()` returns an `IssueDetail`, which extends `Issue` with related data:
+
+| Property    | Type              | Description                          |
+| ----------- | ----------------- | ------------------------------------ |
+| `parent`    | `Issue \| null`   | Parent issue, if this is a sub-issue |
+| `children`  | `Issue[]`         | Child issues                         |
+| `labels`    | `Label[]`         | Attached labels                      |
+| `relations` | `IssueRelation[]` | Blocking and related issue links     |
+
+## Create an issue
+
+Create a new issue. Only `title` and `type` are required.
+
+```typescript
+const issue = await loop.issues.create({
+  title: 'Investigate login page 500 errors',
+  type: 'task',
+  status: 'todo',
+  priority: 2,
+  projectId: 'clxyz1234567890abcdef',
+  description: 'Users on mobile Safari are seeing 500 errors on the login page.',
+})
+
+console.log(issue.id)     // CUID2 ID
+console.log(issue.number) // sequential issue number
+```
+
+### Create parameters
+
+| Parameter       | Type             | Required | Description                              |
+| --------------- | ---------------- | -------- | ---------------------------------------- |
+| `title`         | `string`         | Yes      | Issue title                              |
+| `type`          | `IssueType`      | Yes      | `signal`, `hypothesis`, `plan`, `task`, or `monitor` |
+| `description`   | `string`         | No       | Detailed description                     |
+| `status`        | `IssueStatus`    | No       | Initial status (defaults to `triage`)    |
+| `priority`      | `number`         | No       | Priority level                           |
+| `parentId`      | `string`         | No       | Parent issue ID for sub-issues           |
+| `projectId`     | `string`         | No       | Assign to a project                      |
+| `signalSource`  | `string`         | No       | Origin of the signal (e.g. `posthog`)    |
+| `signalPayload` | `SignalPayload`  | No       | Raw signal data as JSON                  |
+| `hypothesis`    | `HypothesisData` | No       | Structured hypothesis with confidence    |
+| `labelIds`      | `string[]`       | No       | Labels to attach on creation             |
+
+### Creating with a hypothesis
+
+Issues of type `hypothesis` can include structured hypothesis data:
+
+```typescript
+const issue = await loop.issues.create({
+  title: 'OAuth redirect adds 1.5s blank screen causing drop-off',
+  type: 'hypothesis',
+  hypothesis: {
+    statement: 'The OAuth redirect change in PR #847 adds a blank screen causing user abandonment.',
+    confidence: 0.82,
+    evidence: [
+      'Conversion dropped 12% in 24h',
+      'PR #847 merged 26h ago',
+      'Error rate unchanged — not a crash',
+    ],
+    validationCriteria: 'Conversion returns above 3.4% within 48 hours of fix.',
+  },
+})
+```
+
+## Update an issue
+
+Update one or more fields on an existing issue. Only the fields you include will be changed.
+
+```typescript
+const updated = await loop.issues.update('clxyz1234567890abcdef', {
+  status: 'done',
+  agentSummary: 'Added loading spinner to OAuth redirect page.',
+})
+
+console.log(updated.status)      // 'done'
+console.log(updated.completedAt) // timestamp set automatically
+```
+
+### Update parameters
+
+| Parameter       | Type                      | Description                        |
+| --------------- | ------------------------- | ---------------------------------- |
+| `title`         | `string`                  | New title                          |
+| `description`   | `string`                  | New description                    |
+| `type`          | `IssueType`               | Change issue type                  |
+| `status`        | `IssueStatus`             | Change status                      |
+| `priority`      | `number`                  | Change priority                    |
+| `parentId`      | `string \| null`          | Set or remove parent               |
+| `projectId`     | `string \| null`          | Set or remove project              |
+| `signalSource`  | `string`                  | Update signal source               |
+| `signalPayload` | `SignalPayload`           | Update signal payload              |
+| `hypothesis`    | `HypothesisData \| null`  | Set or remove hypothesis data      |
+
+<Callout type="info">
+  Pass `null` for `parentId`, `projectId`, or `hypothesis` to explicitly clear the field.
+</Callout>
+
+## Delete an issue
+
+Soft-delete an issue. The issue is marked as deleted but remains in the database.
+
+```typescript
+await loop.issues.delete('clxyz1234567890abcdef')
+```
+
+The method returns `void`. Soft-deleted issues are excluded from `list()` and `iter()` results.
+
+## Issue type reference
+
+The full `Issue` type returned by `list()`, `create()`, and `update()`:
+
+| Field            | Type                    | Description                            |
+| ---------------- | ----------------------- | -------------------------------------- |
+| `id`             | `string`                | CUID2 unique identifier                |
+| `number`         | `number`                | Sequential issue number                |
+| `title`          | `string`                | Issue title                            |
+| `description`    | `string \| null`        | Detailed description                   |
+| `type`           | `IssueType`             | `signal`, `hypothesis`, `plan`, `task`, `monitor` |
+| `status`         | `IssueStatus`           | `triage`, `backlog`, `todo`, `in_progress`, `done`, `canceled` |
+| `priority`       | `number`                | Priority level                         |
+| `parentId`       | `string \| null`        | Parent issue ID                        |
+| `projectId`      | `string \| null`        | Project ID                             |
+| `signalSource`   | `string \| null`        | Signal origin identifier               |
+| `signalPayload`  | `SignalPayload \| null` | Raw signal data                        |
+| `hypothesis`     | `HypothesisData \| null`| Structured hypothesis data             |
+| `agentSessionId` | `string \| null`        | Agent session that worked on this      |
+| `agentSummary`   | `string \| null`        | Summary of agent work                  |
+| `commits`        | `CommitRef[] \| null`   | Linked commits                         |
+| `pullRequests`   | `PullRequestRef[] \| null` | Linked pull requests                |
+| `completedAt`    | `string \| null`        | Completion timestamp                   |
+| `createdAt`      | `string`                | Creation timestamp                     |
+| `updatedAt`      | `string`                | Last update timestamp                  |
+| `deletedAt`      | `string \| null`        | Soft-delete timestamp                  |
+
+## Enums
+
+### IssueType
+
+| Value        | Description                                          |
+| ------------ | ---------------------------------------------------- |
+| `signal`     | Raw incoming data from an external source            |
+| `hypothesis` | A proposed explanation for an observed signal         |
+| `plan`       | A breakdown of work needed to validate a hypothesis  |
+| `task`       | A concrete, agent-executable unit of work            |
+| `monitor`    | A post-execution check to verify outcomes            |
+
+### IssueStatus
+
+| Value         | Description                                  |
+| ------------- | -------------------------------------------- |
+| `triage`      | Awaiting initial review                      |
+| `backlog`     | Accepted but not yet prioritized for work    |
+| `todo`        | Ready to be picked up                        |
+| `in_progress` | Currently being worked on                    |
+| `done`        | Completed                                    |
+| `canceled`    | Will not be worked on                        |

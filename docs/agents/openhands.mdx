@@ -1,0 +1,180 @@
+---
+title: OpenHands
+description: Load the Loop microagent and configure MCP for autonomous development with OpenHands.
+---
+
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# OpenHands
+
+[OpenHands](https://github.com/All-Hands-AI/OpenHands) is an open-source autonomous coding agent. This guide walks through connecting OpenHands to Loop so it can pull work from the dispatch queue, execute tasks, and report results back.
+
+OpenHands integrates with Loop through two surfaces:
+
+- **Microagent** -- a keyword-triggered markdown file that teaches OpenHands how to use the Loop API.
+- **MCP Server** (optional) -- provides tool-based access to Loop for richer agent interactions.
+
+<Callout type="info">
+  The microagent approach is the recommended starting point. It gives OpenHands contextual knowledge about Loop's API without requiring any infrastructure changes.
+</Callout>
+
+## Prerequisites
+
+- A running Loop API instance (local or hosted)
+- A valid `LOOP_API_KEY` ([authentication docs](/docs/getting-started/authentication))
+- OpenHands installed and configured ([OpenHands docs](https://docs.all-hands.dev))
+
+## Microagent Setup
+
+OpenHands supports microagents -- small markdown files that are loaded into the agent's context when specific keywords appear in the conversation. Loop provides a pre-built microagent that teaches OpenHands the full Loop API.
+
+<Steps>
+
+<Step>
+### Create the microagent directory
+
+If your repository does not already have a `.openhands/microagents/` directory, create it:
+
+```bash
+mkdir -p .openhands/microagents
+```
+
+</Step>
+
+<Step>
+### Install the microagent file
+
+Copy the Loop microagent into your repository. You can either install it from the npm package or create it manually.
+
+<Tabs items={['From npm package', 'Manual']}>
+<Tab value="From npm package">
+
+The `@dork-labs/loop-skill` package includes the microagent template:
+
+```bash
+npx @dork-labs/loop-skill init --openhands
+```
+
+This copies the microagent file to `.openhands/microagents/loop.md`.
+
+</Tab>
+<Tab value="Manual">
+
+Create `.openhands/microagents/loop.md` with the following frontmatter and content. The frontmatter tells OpenHands when to activate the microagent:
+
+```yaml
+---
+name: loop
+agent: CodeActAgent
+trigger_type: keyword
+triggers:
+  - loop
+  - looped
+  - looped.me
+  - loop api
+  - loop issue
+  - ingest signal
+---
+```
+
+Below the frontmatter, include the Loop API reference. See the [full microagent template](https://github.com/dork-labs/loop/blob/main/packages/loop-skill/templates/openhands-loop.md) on GitHub for the complete content.
+
+</Tab>
+</Tabs>
+
+</Step>
+
+<Step>
+### Set the API key
+
+Ensure `LOOP_API_KEY` is available in the OpenHands environment. Add it to your `.env` file or pass it as an environment variable when starting OpenHands:
+
+```bash
+export LOOP_API_KEY=loop_your_api_key_here
+```
+
+</Step>
+
+<Step>
+### Verify the microagent loads
+
+Start an OpenHands session and mention "loop" in your prompt. The microagent should activate automatically, giving the agent knowledge of Loop's API endpoints, authentication, and workflow.
+
+Try a simple test:
+
+```
+Check the Loop API health endpoint and list any issues in triage status.
+```
+
+The agent should make HTTP calls to your Loop instance and return results.
+
+</Step>
+
+</Steps>
+
+## Microagent Content
+
+The Loop microagent provides OpenHands with:
+
+- **API base URL** and authentication pattern (`Authorization: Bearer $LOOP_API_KEY`)
+- **Key endpoints** -- issues, signals, projects, goals, dashboard, and dispatch
+- **Code examples** for creating issues and ingesting signals
+- **Links** to full documentation and the machine-readable `llms.txt` index
+
+When the microagent is active, OpenHands can create issues, ingest signals, check the dispatch queue, and report results without any additional configuration.
+
+## Adding MCP Support
+
+For richer tool-based interaction, you can also configure the Loop MCP server. This gives OpenHands named tools like `loop_get_next_task` and `loop_create_issue` instead of relying on raw HTTP calls.
+
+<Callout type="info">
+  MCP support in OpenHands depends on your OpenHands version and configuration. Check the [OpenHands MCP documentation](https://docs.all-hands.dev) for current support status.
+</Callout>
+
+If your OpenHands setup supports MCP, add the Loop server to your MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}
+```
+
+See the [MCP Server docs](/docs/mcp) for the full list of available tools and configuration options.
+
+## Autonomous Polling Pattern
+
+To run OpenHands in a continuous loop -- pulling work from Loop, executing it, and reporting back -- use this pattern in your OpenHands prompt or automation script:
+
+1. **Poll for work** -- call `GET /api/dispatch/next` to claim the highest-priority unblocked issue.
+2. **Execute the task** -- use the returned `prompt` field as instructions. If `prompt` is `null`, use the issue title and description.
+3. **Report results** -- add a comment to the issue with `POST /api/issues/:id/comments` describing what was done.
+4. **Update status** -- mark the issue as `done` with `PATCH /api/issues/:id` and set `status: "done"`.
+5. **Repeat** -- poll for the next issue.
+
+```bash
+# Example: poll for work and show what's next
+curl -s http://localhost:5667/api/dispatch/next \
+  -H "Authorization: Bearer $LOOP_API_KEY" | jq .
+```
+
+<Callout type="info">
+  The dispatch endpoint uses `FOR UPDATE SKIP LOCKED` to ensure that concurrent agents never claim the same issue. See the [dispatch docs](/docs/concepts/dispatch) for details on priority scoring and concurrency.
+</Callout>
+
+## Next Steps
+
+- [**Dispatch**](/docs/concepts/dispatch) -- understand how Loop selects and scores work items.
+- [**Signals**](/docs/concepts/signals) -- learn how to feed external data into the Loop triage queue.
+- [**Agent Skill**](/docs/skill) -- explore the full skill package for additional agent context.
+- [**MCP Server**](/docs/mcp) -- browse the complete list of MCP tools.

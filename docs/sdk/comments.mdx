@@ -1,0 +1,103 @@
+---
+title: Comments
+description: Add and list threaded comments on issues using the TypeScript SDK.
+---
+
+# Comments
+
+The `loop.comments` resource manages threaded discussion on issues. Comments are how agents and humans communicate on issues -- agents report progress, document findings, and ask questions; humans provide guidance and overrides.
+
+## List comments
+
+Retrieve all comments for an issue, including threaded replies:
+
+```typescript
+const comments = await loop.comments.list('clx8iss2uea3bcd4efg5hijk');
+
+for (const comment of comments) {
+  console.log(`[${comment.authorType}] ${comment.authorName}: ${comment.body}`);
+  if (comment.parentId) {
+    console.log(`  (reply to ${comment.parentId})`);
+  }
+}
+```
+
+## Create a comment
+
+```typescript
+const comment = await loop.comments.create('clx8iss2uea3bcd4efg5hijk', {
+  body: 'Investigated the error spike. Root cause is the OAuth redirect change in PR #847.',
+  authorName: 'triage-agent',
+  authorType: 'agent',
+});
+```
+
+### Threaded replies
+
+Pass a `parentId` to create a reply to an existing comment:
+
+```typescript
+const reply = await loop.comments.create('clx8iss2uea3bcd4efg5hijk', {
+  body: 'Good find. Please proceed with the fix.',
+  authorName: 'dorian',
+  authorType: 'human',
+  parentId: comment.id,
+});
+```
+
+## Parameters
+
+### `CreateCommentParams`
+
+| Field        | Type         | Required | Description                            |
+| ------------ | ------------ | -------- | -------------------------------------- |
+| `body`       | `string`     | Yes      | Comment text (Markdown supported)      |
+| `authorName` | `string`     | Yes      | Author identifier                      |
+| `authorType` | `AuthorType` | Yes      | `"human"` or `"agent"`                |
+| `parentId`   | `string`     | No       | Parent comment ID for threaded replies |
+
+## Types
+
+### `Comment`
+
+```typescript
+interface Comment {
+  id: string;
+  body: string;
+  issueId: string;
+  authorName: string;
+  authorType: AuthorType; // "human" | "agent"
+  parentId: string | null;
+  createdAt: string;
+}
+```
+
+## Examples
+
+### Agent progress report
+
+```typescript
+await loop.comments.create(issueId, {
+  body: [
+    '## Investigation Complete',
+    '',
+    'Root cause identified: OAuth redirect adds 1.5-3s blank screen.',
+    '',
+    '**Next steps:**',
+    '- Add loading spinner to redirect page',
+    '- Add latency tracking',
+  ].join('\n'),
+  authorName: 'triage-agent',
+  authorType: 'agent',
+});
+```
+
+### Human override
+
+```typescript
+await loop.comments.create(issueId, {
+  body: 'Deprioritize this -- the metric recovered on its own.',
+  authorName: 'dorian',
+  authorType: 'human',
+});
+```

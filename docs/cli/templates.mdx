@@ -1,18 +1,18 @@
 ---
 title: Templates
-description: List, inspect, and promote prompt template versions using the looped CLI.
+description: List, inspect, and promote prompt template versions using the loop CLI.
 ---
 
 # Templates
 
 The `templates` command group manages prompt templates and their versions. Templates define the prompts that agents receive when dispatched to work on an issue.
 
-## looped templates list
+## loop templates list
 
 List all prompt templates with pagination.
 
 ```bash
-looped templates list [options]
+loop templates list [options]
 ```
 
 ### Options
@@ -25,7 +25,7 @@ looped templates list [options]
 ### Example
 
 ```bash
-looped templates list
+loop templates list
 ```
 
 ### Sample output
@@ -43,12 +43,12 @@ Showing 3 of 3 templates
 
 ---
 
-## looped templates show
+## loop templates show
 
 Show detailed information about a template, including the active version and version history.
 
 ```bash
-looped templates show <id>
+loop templates show <id>
 ```
 
 ### Arguments
@@ -60,7 +60,7 @@ looped templates show <id>
 ### Example
 
 ```bash
-looped templates show clx1abc2def3ghi4jkl5mnop
+loop templates show clx1abc2def3ghi4jkl5mnop
 ```
 
 ### Sample output
@@ -94,12 +94,12 @@ Versions
 
 ---
 
-## looped templates promote
+## loop templates promote
 
 Promote a specific version to be the active version for a template.
 
 ```bash
-looped templates promote <templateId> <versionId>
+loop templates promote <templateId> <versionId>
 ```
 
 ### Arguments
@@ -112,7 +112,7 @@ looped templates promote <templateId> <versionId>
 ### Example
 
 ```bash
-looped templates promote clx1abc2def3ghi4jkl5mnop clx6ver2sid3abc4def5ghij
+loop templates promote clx1abc2def3ghi4jkl5mnop clx6ver2sid3abc4def5ghij
 ```
 
 ### Sample output
@@ -135,14 +135,14 @@ Promoted version 3 to active for template clx1abc2def3ghi4jkl5mnop
 
 ```bash
 # 1. List templates to find the one you want
-looped templates list
+loop templates list
 
 # 2. Inspect a template and its version history
-looped templates show clx1abc2def3ghi4jkl5mnop
+loop templates show clx1abc2def3ghi4jkl5mnop
 
 # 3. Promote a draft version to active
-looped templates promote clx1abc2def3ghi4jkl5mnop clx6ver2sid3abc4def5ghij
+loop templates promote clx1abc2def3ghi4jkl5mnop clx6ver2sid3abc4def5ghij
 
 # 4. Verify the promotion
-looped templates show clx1abc2def3ghi4jkl5mnop
+loop templates show clx1abc2def3ghi4jkl5mnop
 ```

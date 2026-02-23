@@ -1,0 +1,330 @@
+---
+title: Custom / Any Agent
+description: Generic integration pattern for any AI agent that can make HTTP calls -- SDK, CLI, or raw REST API.
+---
+
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Custom / Any Agent
+
+Loop works with any AI agent that can make HTTP calls. There is no vendor lock-in and no special protocol required. This guide covers the generic integration pattern for connecting any agent -- whether it is a custom-built system, a commercial agent platform, or a scheduled script.
+
+## Architecture
+
+Loop uses a **pull architecture**. Agents poll Loop for work rather than Loop pushing work to agents. The integration is a single HTTP call on a schedule:
+
+```
+Agent polls GET /api/dispatch/next
+  -> Loop returns the highest-priority issue + hydrated prompt
+  -> Agent executes the work
+  -> Agent reports results back via the REST API
+  -> Agent polls again
+```
+
+This means Loop never needs to know how to connect to your agent. Your agent never needs to expose an endpoint. Any system that can make HTTP requests works with Loop.
+
+## Prerequisites
+
+- A running Loop API instance (local or hosted)
+- A valid `LOOP_API_KEY` ([authentication docs](/docs/getting-started/authentication))
+- An agent or script that can make HTTP calls
+
+## Integration Surfaces
+
+Depending on your agent's capabilities, choose one or more integration surfaces:
+
+| Surface | Best For | Docs |
+| --- | --- | --- |
+| **REST API** | Any language, any platform | [API Reference](/docs/api) |
+| **TypeScript SDK** | Node.js agents, type-safe access | [SDK docs](/docs/sdk) |
+| **CLI** | Shell scripts, CI pipelines | [CLI docs](/docs/cli) |
+| **MCP Server** | Agents with MCP support | [MCP docs](/docs/mcp) |
+
+<Callout type="info">
+  The REST API is the universal option. Every other surface (SDK, CLI, MCP) is a wrapper around it. If your agent can make HTTP calls, start with the REST API.
+</Callout>
+
+## The Polling Loop
+
+The core integration is a four-step cycle: claim work, execute, report, and repeat.
+
+<Steps>
+
+<Step>
+### Claim the next issue
+
+Call the dispatch endpoint to atomically claim the highest-priority unblocked issue. Loop sets the issue to `in_progress` and returns it with a hydrated prompt.
+
+<Tabs items={['curl', 'TypeScript SDK', 'JavaScript']}>
+<Tab value="curl">
+```bash
+curl -s http://localhost:5667/api/dispatch/next \
+  -H "Authorization: Bearer $LOOP_API_KEY"
+```
+</Tab>
+<Tab value="TypeScript SDK">
+```ts
+import { LoopClient } from "@dork-labs/loop-sdk";
+
+const loop = new LoopClient({
+  apiKey: process.env.LOOP_API_KEY!,
+  baseUrl: "http://localhost:5667",
+});
+
+const task = await loop.dispatch.next();
+if (!task) {
+  console.log("No work available");
+  process.exit(0);
+}
+
+console.log("Claimed:", task.issue.title);
+console.log("Prompt:", task.prompt);
+```
+</Tab>
+<Tab value="JavaScript">
+```js
+const res = await fetch("http://localhost:5667/api/dispatch/next", {
+  headers: { Authorization: `Bearer ${process.env.LOOP_API_KEY}` },
+});
+
+if (res.status === 204) {
+  console.log("No work available");
+  process.exit(0);
+}
+
+const task = await res.json();
+console.log("Claimed:", task.issue.title);
+console.log("Prompt:", task.prompt);
+```
+</Tab>
+</Tabs>
+
+The response shape:
+
+```json
+{
+  "issue": {
+    "id": "iss_abc123",
+    "title": "[manual] error_report: Login page returns 500",
+    "type": "signal",
+    "status": "in_progress",
+    "priority": 2
+  },
+  "prompt": "You are investigating a signal...",
+  "meta": {
+    "templateSlug": "signal-triage",
+    "templateId": "tpl_abc...",
+    "versionId": "ver_xyz...",
+    "reviewUrl": "POST /api/prompt-reviews"
+  }
+}
+```
+
+If `prompt` is `null`, no matching template was found. Use the issue title and description as your instructions.
+
+A `204 No Content` response means no issues are available for dispatch.
+
+</Step>
+
+<Step>
+### Execute the work
+
+Pass the `prompt` field (or the issue details) to your agent as instructions. The prompt is a fully hydrated template containing all the context the agent needs: the issue details, parent chain, project goal, and any prior attempts.
+
+How you execute depends on your agent platform. The key point is that Loop does not care -- it provides the instructions and waits for results.
+
+</Step>
+
+<Step>
+### Report results
+
+After execution, report what the agent did by adding a comment to the issue:
+
+<Tabs items={['curl', 'TypeScript SDK', 'JavaScript']}>
+<Tab value="curl">
+```bash
+curl -X POST "http://localhost:5667/api/issues/$ISSUE_ID/comments" \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"body": "Fixed the login redirect. PR #42 submitted.", "author": "my-agent"}'
+```
+</Tab>
+<Tab value="TypeScript SDK">
+```ts
+await loop.issues.addComment(task.issue.id, {
+  body: "Fixed the login redirect. PR #42 submitted.",
+  author: "my-agent",
+});
+```
+</Tab>
+<Tab value="JavaScript">
+```js
+await fetch(`http://localhost:5667/api/issues/${task.issue.id}/comments`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.LOOP_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    body: "Fixed the login redirect. PR #42 submitted.",
+    author: "my-agent",
+  }),
+});
+```
+</Tab>
+</Tabs>
+
+</Step>
+
+<Step>
+### Update the issue status
+
+Mark the issue as `done` (or `canceled` if the agent could not complete it):
+
+<Tabs items={['curl', 'TypeScript SDK', 'JavaScript']}>
+<Tab value="curl">
+```bash
+curl -X PATCH "http://localhost:5667/api/issues/$ISSUE_ID" \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "done"}'
+```
+</Tab>
+<Tab value="TypeScript SDK">
+```ts
+await loop.issues.update(task.issue.id, { status: "done" });
+```
+</Tab>
+<Tab value="JavaScript">
+```js
+await fetch(`http://localhost:5667/api/issues/${task.issue.id}`, {
+  method: "PATCH",
+  headers: {
+    Authorization: `Bearer ${process.env.LOOP_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ status: "done" }),
+});
+```
+</Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+## Complete Example: Polling Script
+
+Here is a minimal polling script that claims work, logs the instructions, and marks issues complete. Replace the "execute work" section with your agent logic.
+
+```ts
+import { LoopClient } from "@dork-labs/loop-sdk";
+
+const loop = new LoopClient({
+  apiKey: process.env.LOOP_API_KEY!,
+  baseUrl: process.env.LOOP_API_URL ?? "http://localhost:5667",
+});
+
+const POLL_INTERVAL_MS = 60_000; // 1 minute
+
+async function pollOnce() {
+  const task = await loop.dispatch.next();
+  if (!task) {
+    console.log("No work available, sleeping...");
+    return;
+  }
+
+  console.log(`Claimed issue ${task.issue.id}: ${task.issue.title}`);
+
+  // --- Replace this with your agent execution logic ---
+  const result = await executeWithYourAgent(task.prompt ?? task.issue.title);
+  // ---------------------------------------------------
+
+  await loop.issues.addComment(task.issue.id, {
+    body: result.summary,
+    author: "my-agent",
+  });
+
+  await loop.issues.update(task.issue.id, {
+    status: result.success ? "done" : "canceled",
+  });
+
+  console.log(`Issue ${task.issue.id} marked as ${result.success ? "done" : "canceled"}`);
+}
+
+// Poll continuously
+setInterval(pollOnce, POLL_INTERVAL_MS);
+pollOnce(); // Run immediately on start
+```
+
+## Ingesting Signals
+
+Agents can also feed data back into Loop by ingesting signals. Each signal creates a triage issue automatically:
+
+<Tabs items={['curl', 'TypeScript SDK']}>
+<Tab value="curl">
+```bash
+curl -X POST http://localhost:5667/api/signals \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "my-agent",
+    "type": "anomaly",
+    "severity": "high",
+    "payload": {
+      "message": "Response time spike detected",
+      "p99_ms": 4200
+    }
+  }'
+```
+</Tab>
+<Tab value="TypeScript SDK">
+```ts
+await loop.signals.ingest({
+  source: "my-agent",
+  type: "anomaly",
+  severity: "high",
+  payload: {
+    message: "Response time spike detected",
+    p99_ms: 4200,
+  },
+});
+```
+</Tab>
+</Tabs>
+
+This is how the feedback loop closes: agents detect issues during execution, report them as signals, and those signals become new triage issues that enter the dispatch queue.
+
+## Prompt Reviews
+
+If the dispatched task included a `meta` field with template information, the agent can submit a review of the prompt quality after execution:
+
+```bash
+curl -X POST http://localhost:5667/api/prompt-reviews \
+  -H "Authorization: Bearer $LOOP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "versionId": "ver_xyz...",
+    "issueId": "iss_abc123",
+    "rating": 4,
+    "feedback": "Clear instructions, but missing error handling guidance."
+  }'
+```
+
+These reviews feed into Loop's prompt health system, helping improve instructions over time. See [Prompts](/docs/concepts/prompts) for details.
+
+## Concurrency
+
+The dispatch endpoint uses PostgreSQL `FOR UPDATE SKIP LOCKED` to handle concurrent agents safely. If two agents poll at the same time, each gets a different issue. No coordination between agents is needed.
+
+See [Dispatch](/docs/concepts/dispatch) for the full explanation of priority scoring, blocking filters, and concurrency control.
+
+## Next Steps
+
+- [**Dispatch**](/docs/concepts/dispatch) -- understand priority scoring and the claiming mechanism.
+- [**Signals**](/docs/concepts/signals) -- learn how external data enters the Loop triage queue.
+- [**API Reference**](/docs/api) -- browse the full endpoint documentation.
+- [**MCP Server**](/docs/mcp) -- if your agent supports MCP, use named tools instead of raw HTTP.
+- [**TypeScript SDK**](/docs/sdk) -- type-safe client for Node.js agents.
