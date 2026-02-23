@@ -1,6 +1,6 @@
 {
-  "name": "@dork-labs/loop",
-  "version": "0.1.0",
+  "name": "@dork-labs/loop-skill",
+  "version": "0.2.0",
   "description": "Agent skill for Loop — the autonomous improvement engine. Teaches AI agents how to use Loop's REST API.",
   "type": "module",
   "files": [
@@ -11,7 +11,7 @@
   ],
   "keywords": [
     "agent-skill",
-    "openskills",
+    "agentskills",
     "loop",
     "ai-agent",
     "mcp",
