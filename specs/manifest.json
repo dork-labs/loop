@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 13,
+  "nextNumber": 14,
   "specs": [
     {
       "number": 1,
@@ -85,6 +85,13 @@
       "title": "Agent Discovery Layer — llms.txt, SKILL.md, AGENTS.md, Cursor Rules, OpenHands",
       "created": "2026-02-22",
       "status": "tasks"
+    },
+    {
+      "number": 13,
+      "slug": "typescript-sdk",
+      "title": "TypeScript SDK — Idiomatic Client for Loop's REST API",
+      "created": "2026-02-23",
+      "status": "ideation"
     }
   ]
 }

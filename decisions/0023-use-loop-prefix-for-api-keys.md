@@ -1,7 +1,7 @@
 ---
 number: 23
 title: Use loop_ prefix for identifiable API keys
-status: draft
+status: proposed
 created: 2026-02-22
 spec: api-key-dx
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: api-key-dx)
+Proposed
 
 ## Context
 

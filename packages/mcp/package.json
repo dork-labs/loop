@@ -1,0 +1,49 @@
+{
+  "name": "@dork-labs/loop-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Loop — the autonomous improvement engine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "loop-mcp": "./dist/stdio.js"
+  },
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./http": {
+      "import": "./dist/http.js",
+      "types": "./dist/http.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup && NODE_OPTIONS='--max-old-space-size=8192' tsc --emitDeclarationOnly --skipLibCheck",
+    "typecheck": "NODE_OPTIONS='--max-old-space-size=8192' tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "ky": "^1.14",
+    "zod": "^3.24"
+  },
+  "peerDependencies": {
+    "hono": "^4"
+  },
+  "peerDependenciesMeta": {
+    "hono": { "optional": true }
+  },
+  "devDependencies": {
+    "@hono/mcp": "latest",
+    "hono": "^4",
+    "tsup": "latest",
+    "tsx": "latest",
+    "typescript": "^5",
+    "vitest": "^3.2"
+  },
+  "mcpName": "io.github.dork-labs/loop"
+}

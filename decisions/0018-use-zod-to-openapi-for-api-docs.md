@@ -1,7 +1,7 @@
 ---
 number: 18
 title: Use @asteasolutions/zod-to-openapi for API documentation generation
-status: draft
+status: proposed
 created: 2026-02-20
 spec: docs-update-post-mvp
 superseded-by: null
@@ -11,7 +11,7 @@ superseded-by: null
 
 ## Status
 
-Draft (auto-extracted from spec: docs-update-post-mvp)
+Proposed
 
 ## Context
 

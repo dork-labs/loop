@@ -79,6 +79,11 @@ api.route('/dashboard', dashboardRoutes)
 
 app.route('/api', api)
 
+// ─── MCP transport (auth handled via internal ky client Bearer token) ────────
+import { createMcpHandler } from '@dork-labs/loop-mcp/http'
+import { env } from './env'
+app.route('/mcp', createMcpHandler({ apiKey: env.LOOP_API_KEY }))
+
 // ─── Webhook routes (provider-specific auth, not apiKeyAuth) ────────────────
 const webhooks = new Hono<AppEnv>()
 
