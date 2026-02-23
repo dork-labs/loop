@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 19,
+  "nextNumber": 20,
   "specs": [
     {
       "number": 1,
@@ -125,6 +125,13 @@
       "number": 18,
       "slug": "ftue-agent-integration-update",
       "title": "FTUE Update for Agent Integration",
+      "created": "2026-02-23",
+      "status": "specification"
+    },
+    {
+      "number": 19,
+      "slug": "fix-third-party-logos",
+      "title": "Fix Third-Party Logos on Marketing Website",
       "created": "2026-02-23",
       "status": "specification"
     }
