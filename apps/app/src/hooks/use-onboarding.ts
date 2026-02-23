@@ -1,10 +1,14 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
+import type { AgentSource } from './use-agent-detection';
+
 const STORAGE_KEY = 'loop:onboarding';
 
 interface OnboardingState {
   welcomed: boolean;
   completedAt: string | null;
+  agentSource: AgentSource | null;
+  agentSetupDismissed: boolean;
 }
 
 interface UseOnboardingReturn {
@@ -15,9 +19,16 @@ interface UseOnboardingReturn {
   markWelcomed: () => void;
   /** Mark onboarding as complete with current timestamp. */
   markComplete: () => void;
+  /** Persist the detected agent source; no-op if unchanged. */
+  setAgentSource: (source: AgentSource | null) => void;
 }
 
-const DEFAULT_STATE: OnboardingState = { welcomed: false, completedAt: null };
+const DEFAULT_STATE: OnboardingState = {
+  welcomed: false,
+  completedAt: null,
+  agentSource: null,
+  agentSetupDismissed: false,
+};
 
 // Cache the last raw string and parsed result so useSyncExternalStore
 // receives a referentially stable snapshot when the data hasn't changed.
@@ -34,6 +45,8 @@ function getState(): OnboardingState {
     cachedState = {
       welcomed: parsed.welcomed === true,
       completedAt: typeof parsed.completedAt === 'string' ? parsed.completedAt : null,
+      agentSource: (parsed.agentSource as AgentSource) ?? null,
+      agentSetupDismissed: parsed.agentSetupDismissed === true,
     };
     return cachedState;
   } catch {
@@ -70,5 +83,12 @@ export function useOnboarding(issueCount: number): UseOnboardingReturn {
     setState({ ...getState(), completedAt: new Date().toISOString() });
   }, []);
 
-  return { state, isOnboarding, markWelcomed, markComplete };
+  const setAgentSource = useCallback((source: AgentSource | null) => {
+    const current = getState();
+    // No-op if the value hasn't changed
+    if (current.agentSource === source) return;
+    setState({ ...current, agentSource: source });
+  }, []);
+
+  return { state, isOnboarding, markWelcomed, markComplete, setAgentSource };
 }

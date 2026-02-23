@@ -2,17 +2,32 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Check, Copy, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SetupCodeSnippet } from '@/components/setup-code-snippet';
+import { AgentSetupStep } from '@/components/agent-setup/agent-setup-step';
 import { env } from '@/env';
+import type { AgentSource } from '@/hooks/use-agent-detection';
 
 interface SetupChecklistProps {
   onComplete: () => void;
   issueCount: number;
   firstIssueId?: string;
+  agentSource: AgentSource | null;
+}
+
+function getWaitingSubtext(agentSource: AgentSource | null): string {
+  switch (agentSource) {
+    case 'loop-connect':
+      return 'loop-connect configured your agent. Create an issue to verify.';
+    case 'cursor':
+      return 'Your Cursor MCP server is configured. Use Loop tools in a Cursor conversation.';
+    case 'claude-code':
+      return 'Your Claude Code MCP server is configured. Ask Claude to create an issue.';
+    default:
+      return 'Send a signal via the API or run npx @dork-labs/loop-connect to configure your agent.';
+  }
 }
 
 /** FTUE setup checklist guiding users through their first API connection. */
-export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupChecklistProps) {
+export function SetupChecklist({ onComplete, issueCount, firstIssueId, agentSource }: SetupChecklistProps) {
   const [copiedSteps, setCopiedSteps] = useState<Record<number, boolean>>({});
   const [showKey, setShowKey] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -61,7 +76,7 @@ export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupCh
         <div className="flex size-16 items-center justify-center rounded-full bg-green-500/10">
           <Check className="size-8 text-green-500" />
         </div>
-        <h2 className="text-2xl font-bold">Loop is connected!</h2>
+        <h2 className="text-2xl font-bold">Your agent is connected to Loop.</h2>
         <p className="text-muted-foreground">
           Your first issue just arrived. The loop is ready to run.
         </p>
@@ -72,6 +87,18 @@ export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupCh
             </Link>
           </Button>
         )}
+        <p className="text-muted-foreground mt-4 text-sm">
+          Next: Install the{' '}
+          <a
+            href="https://www.looped.me/docs/agent-skill"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Loop Agent Skill
+          </a>
+          {' '}for autonomous dispatch
+        </p>
       </div>
     );
   }
@@ -131,20 +158,21 @@ export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupCh
           </div>
         </SetupStep>
 
-        {/* Step 3: Code Snippet */}
-        <SetupStep number={3} title="Send your first issue" completed={copiedSteps[3] ?? false}>
-          <SetupCodeSnippet
+        {/* Step 3: Connect your agent */}
+        <SetupStep number={3} title="Connect your agent" completed={copiedSteps[3] ?? false}>
+          <AgentSetupStep
+            agentSource={agentSource}
             apiUrl={apiUrl}
             apiKey={apiKey}
             onCopy={() => setCopiedSteps((prev) => ({ ...prev, [3]: true }))}
           />
         </SetupStep>
 
-        {/* Step 4: Listening */}
-        <SetupStep number={4} title="Listening for your first issue..." completed={false}>
+        {/* Step 4: Waiting */}
+        <SetupStep number={4} title="Waiting for your agent to send its first issue..." completed={false}>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Loader2 className="size-4 animate-spin" />
-            <span>Polling every 3 seconds...</span>
+            <span>{getWaitingSubtext(agentSource)}</span>
           </div>
         </SetupStep>
       </div>

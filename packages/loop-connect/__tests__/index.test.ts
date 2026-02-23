@@ -111,7 +111,7 @@ describe('run (index.ts)', () => {
 
       // Verify intro and outro were called
       expect(p.intro).toHaveBeenCalledWith(expect.stringContaining('Loop'));
-      expect(p.outro).toHaveBeenCalledWith(expect.stringContaining(PROJECT.id));
+      expect(p.outro).toHaveBeenCalledWith(expect.stringContaining('/issues?from=loop-connect'));
 
       // Verify password was prompted
       expect(p.password).toHaveBeenCalledOnce();
@@ -327,7 +327,7 @@ describe('run (index.ts)', () => {
 
       // Verify createProject was called
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
-      expect(p.outro).toHaveBeenCalledWith(expect.stringContaining(newProject.id));
+      expect(p.outro).toHaveBeenCalledWith(expect.stringContaining('/issues?from=loop-connect'));
     });
 
     it('writes detected environment files and shows summary', async () => {

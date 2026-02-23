@@ -350,10 +350,7 @@ async function runInteractive(options: RunOptions): Promise<void> {
   p.note(summary, 'Files written');
 
   // Step 6: Outro
-  const outroUrl = project
-    ? `Connected! Visit https://app.looped.me/projects/${project.id}`
-    : 'Connected! Visit https://app.looped.me';
-  p.outro(outroUrl);
+  p.outro('Connected! Visit https://app.looped.me/issues?from=loop-connect');
 }
 
 /** Run the non-interactive setup flow (--yes mode). */
@@ -406,6 +403,7 @@ async function runNonInteractive(options: RunOptions): Promise<void> {
   }
 
   console.log(`\nConnected to project: ${project.name}`);
+  console.log('Visit https://app.looped.me/issues?from=loop-connect');
 }
 
 /**

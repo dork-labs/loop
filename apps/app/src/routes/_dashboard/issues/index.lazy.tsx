@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/error-state';
 import { WelcomeModal } from '@/components/welcome-modal';
 import { SetupChecklist } from '@/components/setup-checklist';
 import { useOnboarding } from '@/hooks/use-onboarding';
+import { useAgentDetection } from '@/hooks/use-agent-detection';
 
 export const Route = createLazyFileRoute('/_dashboard/issues/')({
   component: IssueListPage,
@@ -48,6 +49,7 @@ function IssueListPage() {
 
   const issueCount = data?.data?.length ?? 0;
   const { state, isOnboarding, markWelcomed, markComplete } = useOnboarding(issueCount);
+  const agentSource = useAgentDetection();
 
   if (error) {
     return (
@@ -71,6 +73,7 @@ function IssueListPage() {
           onComplete={markComplete}
           issueCount={issueCount}
           firstIssueId={firstIssueId}
+          agentSource={agentSource}
         />
       ) : issueCount === 0 && !isFetching ? (
         <div className="border-border bg-card flex flex-col items-center justify-center gap-4 rounded-lg border py-20 text-center">

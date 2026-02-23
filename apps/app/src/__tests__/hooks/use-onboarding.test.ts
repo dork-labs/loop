@@ -13,7 +13,12 @@ describe('useOnboarding', () => {
   it('returns default state when localStorage is empty', () => {
     const { result } = renderHook(() => useOnboarding(0));
 
-    expect(result.current.state).toEqual({ welcomed: false, completedAt: null });
+    expect(result.current.state).toEqual({
+      welcomed: false,
+      completedAt: null,
+      agentSource: null,
+      agentSetupDismissed: false,
+    });
     expect(result.current.isOnboarding).toBe(false);
   });
 
@@ -28,6 +33,8 @@ describe('useOnboarding', () => {
     expect(result.current.state).toEqual({
       welcomed: true,
       completedAt: '2026-01-01T00:00:00.000Z',
+      agentSource: null,
+      agentSetupDismissed: false,
     });
   });
 
@@ -86,7 +93,36 @@ describe('useOnboarding', () => {
 
     const { result } = renderHook(() => useOnboarding(0));
 
-    expect(result.current.state).toEqual({ welcomed: false, completedAt: null });
+    expect(result.current.state).toEqual({
+      welcomed: false,
+      completedAt: null,
+      agentSource: null,
+      agentSetupDismissed: false,
+    });
     expect(result.current.isOnboarding).toBe(false);
+  });
+
+  it('state includes agentSource and agentSetupDismissed with defaults', () => {
+    const { result } = renderHook(() => useOnboarding(0));
+    expect(result.current.state.agentSource).toBeNull();
+    expect(result.current.state.agentSetupDismissed).toBe(false);
+  });
+
+  it('setAgentSource persists to localStorage and triggers re-render', () => {
+    const { result } = renderHook(() => useOnboarding(0));
+    act(() => {
+      result.current.setAgentSource('cursor');
+    });
+    expect(result.current.state.agentSource).toBe('cursor');
+    const stored = JSON.parse(localStorage.getItem('loop:onboarding')!);
+    expect(stored.agentSource).toBe('cursor');
+  });
+
+  it('backward compatibility: old localStorage format parses safely', () => {
+    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }));
+    const { result } = renderHook(() => useOnboarding(0));
+    expect(result.current.state.agentSource).toBeNull();
+    expect(result.current.state.agentSetupDismissed).toBe(false);
+    expect(result.current.state.welcomed).toBe(true);
   });
 });
