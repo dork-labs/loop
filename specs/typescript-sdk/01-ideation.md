@@ -68,14 +68,14 @@ status: ideation
 
 **Primary Components/Modules:**
 
-| File | Role |
-|------|------|
+| File                                    | Role                                                                       |
+| --------------------------------------- | -------------------------------------------------------------------------- |
 | `apps/api/src/routes/*.ts` (13 modules) | Define the full API surface — request/response Zod schemas, route handlers |
-| `apps/api/src/db/schema/*.ts` (5 files) | Database schema with enums, JSONB types, column helpers |
-| `apps/api/src/middleware/auth.ts` | Bearer token auth pattern |
-| `apps/app/src/lib/api-client.ts` | Existing ky-based API consumer (reference pattern) |
-| `apps/app/src/types/*.ts` | Client-side type definitions (will be replaced by shared types) |
-| `packages/mcp/src/client.ts` | Existing ky wrapper with retry (will be refactored to use SDK) |
+| `apps/api/src/db/schema/*.ts` (5 files) | Database schema with enums, JSONB types, column helpers                    |
+| `apps/api/src/middleware/auth.ts`       | Bearer token auth pattern                                                  |
+| `apps/app/src/lib/api-client.ts`        | Existing ky-based API consumer (reference pattern)                         |
+| `apps/app/src/types/*.ts`               | Client-side type definitions (will be replaced by shared types)            |
+| `packages/mcp/src/client.ts`            | Existing ky wrapper with retry (will be refactored to use SDK)             |
 
 **Shared Dependencies:**
 
@@ -168,6 +168,7 @@ Write client by hand; extract types from shared `packages/types` Zod schemas.
 ### Recommendation
 
 **Hand-written SDK with shared Zod types package.** This is a hybrid of approaches 1 and 3:
+
 - Hand-write the client class structure, resource methods, retry logic, and pagination
 - Extract types into `packages/types` from API Zod schemas (user's preference for shared types)
 - Ship `dispatch.next()` as a first-class method — Loop's core differentiator
