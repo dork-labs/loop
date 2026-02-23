@@ -9,7 +9,7 @@ import * as schema from '../db/schema'
 
 // Set the API key env var so auth middleware passes in all tests.
 // This mirrors the LOOP_API_KEY secret used in production.
-process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'test-api-key'
+process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'loop_test-api-key'
 
 import type { AppEnv } from '../types'
 

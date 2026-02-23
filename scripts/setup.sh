@@ -66,6 +66,12 @@ else
   echo "  apps/web/.env already exists, skipping"
 fi
 
+# ─── API Key ────────────────────────────────────────────────────────────────
+
+echo ""
+echo "Generating API key..."
+node scripts/generate-api-key.js
+
 # ─── Database ────────────────────────────────────────────────────────────────
 
 echo ""

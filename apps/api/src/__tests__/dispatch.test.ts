@@ -16,7 +16,7 @@ import { dispatchRoutes } from '../routes/dispatch'
 import { templateRoutes } from '../routes/templates'
 import { withTestDb, getTestDb, type TestAppEnv } from './setup'
 
-const AUTH_HEADER = { Authorization: 'Bearer test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' }
 
 /** Creates a Hono app with auth + dispatch routes at /api/dispatch and template routes at /api/templates. */
 function buildApp() {

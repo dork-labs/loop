@@ -6,7 +6,7 @@ import { apiKeyAuth } from '../middleware/auth'
 import { issueRoutes } from '../routes/issues'
 import { withTestDb, getTestDb, type TestAppEnv } from './setup'
 
-const AUTH_HEADER = { Authorization: 'Bearer test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' }
 const JSON_HEADERS = { ...AUTH_HEADER, 'Content-Type': 'application/json' }
 
 /** Creates a Hono app with auth + issue routes mounted at /api/issues. */

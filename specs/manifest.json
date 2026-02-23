@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 10,
+  "nextNumber": 13,
   "specs": [
     {
       "number": 1,
@@ -64,6 +64,27 @@
       "title": "FTUE Onboarding — Guide New Users to Connect Their AI Agent",
       "created": "2026-02-22",
       "status": "specification"
+    },
+    {
+      "number": 10,
+      "slug": "api-key-dx",
+      "title": "API Key DX — Identifiable Keys, Auto-Generation & Better Errors",
+      "created": "2026-02-22",
+      "status": "specification"
+    },
+    {
+      "number": 11,
+      "slug": "mcp-server",
+      "title": "MCP Server — Native AI Agent Interface for Loop",
+      "created": "2026-02-22",
+      "status": "specification"
+    },
+    {
+      "number": 12,
+      "slug": "agent-discovery-layer",
+      "title": "Agent Discovery Layer — llms.txt, SKILL.md, AGENTS.md, Cursor Rules, OpenHands",
+      "created": "2026-02-22",
+      "status": "tasks"
     }
   ]
 }

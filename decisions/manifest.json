@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 23,
+  "nextNumber": 31,
   "decisions": [
     {
       "number": 1,
@@ -181,6 +181,78 @@
       "created": "2026-02-22",
       "extractedFrom": "ftue-onboarding",
       "specSlug": "ftue-onboarding"
+    },
+    {
+      "number": 23,
+      "slug": "use-loop-prefix-for-api-keys",
+      "title": "Use loop_ prefix for identifiable API keys",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "api-key-dx",
+      "specSlug": "api-key-dx"
+    },
+    {
+      "number": 24,
+      "slug": "use-env-hints-for-actionable-errors",
+      "title": "Use ENV_HINTS map for actionable environment variable errors",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "api-key-dx",
+      "specSlug": "api-key-dx"
+    },
+    {
+      "number": 25,
+      "slug": "dual-transport-mcp-package",
+      "title": "Use dual-transport single package for MCP server",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "mcp-server",
+      "specSlug": "mcp-server"
+    },
+    {
+      "number": 26,
+      "slug": "outcomes-over-operations-tool-design",
+      "title": "Use outcomes-over-operations design for MCP tools",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "mcp-server",
+      "specSlug": "mcp-server"
+    },
+    {
+      "number": 27,
+      "slug": "use-hono-mcp-for-http-transport",
+      "title": "Use @hono/mcp for Streamable HTTP transport",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "mcp-server",
+      "specSlug": "mcp-server"
+    },
+    {
+      "number": 28,
+      "slug": "content-only-npm-package-for-agent-skill",
+      "title": "Use content-only npm package for agent discovery artifacts",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "agent-discovery-layer",
+      "specSlug": "agent-discovery-layer"
+    },
+    {
+      "number": 29,
+      "slug": "agent-requested-mode-for-cursor-rules",
+      "title": "Use Agent-Requested mode for Cursor rules over alwaysApply",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "agent-discovery-layer",
+      "specSlug": "agent-discovery-layer"
+    },
+    {
+      "number": 30,
+      "slug": "progressive-disclosure-across-discovery-artifacts",
+      "title": "Use progressive disclosure across layered discovery artifacts",
+      "status": "draft",
+      "created": "2026-02-22",
+      "extractedFrom": "agent-discovery-layer",
+      "specSlug": "agent-discovery-layer"
     }
   ]
 }

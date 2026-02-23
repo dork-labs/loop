@@ -6,7 +6,7 @@ import { commentRoutes } from '../routes/comments'
 import { issues } from '../db/schema'
 
 /** Auth header used for all test requests. */
-const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'test-api-key'}` }
+const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'loop_test-api-key'}` }
 
 /** Creates a test issue and returns it. */
 async function createIssue(overrides: Partial<{ title: string }> = {}) {

@@ -21,7 +21,7 @@ export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupCh
   const apiUrl = env.VITE_API_URL
   const apiKey = env.VITE_LOOP_API_KEY
 
-  const maskedKey = `${apiKey.slice(0, 3)}${'•'.repeat(Math.max(apiKey.length - 3, 8))}`
+  const maskedKey = `${apiKey.slice(0, 5)}${'•'.repeat(Math.max(apiKey.length - 5, 8))}`
 
   const handleCopy = useCallback(async (step: number, text: string) => {
     await navigator.clipboard.writeText(text)

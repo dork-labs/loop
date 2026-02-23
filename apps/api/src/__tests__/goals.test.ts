@@ -4,7 +4,7 @@ import { goalRoutes } from '../routes/goals'
 import { goals } from '../db/schema/projects'
 import { eq } from 'drizzle-orm'
 
-const AUTH_HEADER = { Authorization: 'Bearer test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' }
 
 /** Mount goal routes on a fresh test app and return it. */
 function buildApp() {

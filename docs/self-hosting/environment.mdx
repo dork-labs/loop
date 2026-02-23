@@ -50,17 +50,23 @@ The local default connects to the PostgreSQL container started by `npm run db:de
 A secret token that protects all API endpoints under `/api/*`. Every request must include it in the `Authorization` header:
 
 ```
-Authorization: Bearer tok_your_secret_key_here
+Authorization: Bearer loop_your_secret_key_here
 ```
 
-To generate a secure key, use any cryptographically random string generator:
+To generate a secure key, use the built-in key generation command:
+
+```bash
+npm run generate-key
+```
+
+This generates a cryptographically secure `loop_` prefixed key and writes it to both `.env` files automatically. To generate a key manually, use any cryptographically random string generator:
 
 ```bash
 # Using openssl
 openssl rand -hex 32
 
 # Using Node.js
-node -e "console.log('tok_' + require('crypto').randomBytes(32).toString('hex'))"
+node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ### Webhook Secrets
@@ -97,7 +103,7 @@ VITE_API_URL=https://api.looped.me
 The API key the dashboard uses to authenticate with the API server. This must be the same value as the `LOOP_API_KEY` configured on the API server:
 
 ```
-VITE_LOOP_API_KEY=tok_your_secret_key_here
+VITE_LOOP_API_KEY=loop_your_secret_key_here
 ```
 
 ## Example `.env` Files
@@ -106,7 +112,7 @@ VITE_LOOP_API_KEY=tok_your_secret_key_here
 
 ```bash
 DATABASE_URL=postgresql://user:password@host/dbname
-LOOP_API_KEY=tok_your_secret_key_here
+LOOP_API_KEY=loop_your_secret_key_here
 
 # Optional: webhook integrations
 GITHUB_WEBHOOK_SECRET=whsec_your_github_secret
@@ -118,5 +124,5 @@ POSTHOG_WEBHOOK_SECRET=your_posthog_secret
 
 ```bash
 VITE_API_URL=https://api.looped.me
-VITE_LOOP_API_KEY=tok_your_secret_key_here
+VITE_LOOP_API_KEY=loop_your_secret_key_here
 ```

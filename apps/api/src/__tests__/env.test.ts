@@ -5,14 +5,14 @@ describe('API env schema', () => {
   it('accepts valid config with all required fields', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
     })
     expect(result.success).toBe(true)
   })
 
   it('rejects missing DATABASE_URL', () => {
     const result = apiEnvSchema.safeParse({
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
     })
     expect(result.success).toBe(false)
   })
@@ -20,7 +20,7 @@ describe('API env schema', () => {
   it('rejects invalid DATABASE_URL format', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'not-a-url',
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
     })
     expect(result.success).toBe(false)
   })
@@ -36,7 +36,7 @@ describe('API env schema', () => {
   it('applies defaults for optional fields', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
     })
     expect(result.success).toBe(true)
     if (result.success) {
@@ -49,7 +49,7 @@ describe('API env schema', () => {
   it('coerces PORT from string to number', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
       PORT: '3000',
     })
     expect(result.success).toBe(true)
@@ -61,7 +61,7 @@ describe('API env schema', () => {
   it('rejects PORT outside valid range', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
       PORT: '99999',
     })
     expect(result.success).toBe(false)
@@ -70,7 +70,7 @@ describe('API env schema', () => {
   it('accepts optional webhook secrets', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
       GITHUB_WEBHOOK_SECRET: 'gh-secret',
       SENTRY_CLIENT_SECRET: 'sentry-secret',
       POSTHOG_WEBHOOK_SECRET: 'posthog-secret',
@@ -86,7 +86,7 @@ describe('API env schema', () => {
   it('rejects invalid NODE_ENV value', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
-      LOOP_API_KEY: 'test-key',
+      LOOP_API_KEY: 'loop_test-key',
       NODE_ENV: 'staging',
     })
     expect(result.success).toBe(false)

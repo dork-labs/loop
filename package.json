@@ -20,6 +20,7 @@
     "db:dev:up": "docker compose -f docker-compose.dev.yml up -d",
     "db:dev:down": "docker compose -f docker-compose.dev.yml down",
     "db:dev:reset": "docker compose -f docker-compose.dev.yml down -v",
+    "generate-key": "node scripts/generate-api-key.js",
     "setup": "bash scripts/setup.sh"
   },
   "devDependencies": {
