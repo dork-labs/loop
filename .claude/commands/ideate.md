@@ -191,13 +191,25 @@ If the task is a bug fix:
 
 2. Select the most likely hypothesis with evidence from exploration
 
-### Step 4.2: Clarification Questions
+### Step 4.2: Clarification Questions (Interactive)
 
-Based on exploration and research findings, create a list of:
+Based on exploration and research findings, identify:
 
 - Unspecified requirements
 - Decisions the user needs to make
 - Trade-offs that need resolution
+
+**If there are clarification questions, ask them interactively:**
+
+1. For each question, think deeply about the potential answers before asking
+2. Formulate 2-4 concrete options based on what you learned from exploration and research
+3. Put your recommended answer as the **first option** with "(Recommended)" appended to the label
+4. Include a brief rationale in the description for why you recommend that option
+5. Ask questions **one at a time** using the `AskUserQuestion` tool
+6. Wait for each answer before asking the next question
+7. Record all answers for inclusion in section 6 of the ideation document
+
+**If there are no clarification questions**, skip this step and note "No clarifications needed" in the document.
 
 ### Step 4.3: Write Ideation Document
 
@@ -263,9 +275,10 @@ status: ideation
 - **Potential solutions:** {numbered list with pros and cons}
 - **Recommendation:** {concise description}
 
-## 6) Clarification
+## 6) Clarifications & Decisions
 
-- **Clarifications:** {numbered list with decisions for user}
+- **Decisions made:** {numbered list of questions asked + answers chosen}
+- **Open questions:** {any remaining items, or "None"}
 ```
 
 ### Step 4.4: Update Spec Manifest
@@ -288,13 +301,11 @@ After writing the ideation document, update `specs/manifest.json`:
    - Components mapped: [Y]
    - Approaches researched: [Z]
 
-📝 Clarifications needed: [N] items
-   (Review section 6 of the ideation document)
+📝 Clarifications: [N] resolved interactively
 
 🚀 Next Steps:
    1. Review the ideation document
-   2. Answer clarification questions if any
-   3. Run: /ideate-to-spec specs/[slug]/01-ideation.md
+   2. Run: /ideate-to-spec specs/[slug]/01-ideation.md
 
 ═══════════════════════════════════════════════════
 ```
