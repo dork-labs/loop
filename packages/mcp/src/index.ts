@@ -4,14 +4,14 @@
  * @module @dork-labs/loop-mcp
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { createApiClient } from './client.js'
-import { registerAllTools } from './tools/index.js'
-import type { LoopMcpConfig } from './types.js'
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { createApiClient } from './client.js';
+import { registerAllTools } from './tools/index.js';
+import type { LoopMcpConfig } from './types.js';
 
-export { type LoopMcpConfig, type ApiClient, type ApiClientConfig } from './types.js'
+export { type LoopMcpConfig, type ApiClient, type ApiClientConfig } from './types.js';
 
-const DEFAULT_API_URL = 'http://localhost:5667'
+const DEFAULT_API_URL = 'http://localhost:5667';
 
 /**
  * Create a configured Loop MCP server with all tools registered.
@@ -23,14 +23,14 @@ export function createLoopMcpServer(config: LoopMcpConfig): McpServer {
   const server = new McpServer({
     name: 'loop-mcp',
     version: '0.1.0',
-  })
+  });
 
   const client = createApiClient({
     apiKey: config.apiKey,
     apiUrl: config.apiUrl ?? DEFAULT_API_URL,
-  })
+  });
 
-  registerAllTools(server, client)
+  registerAllTools(server, client);
 
-  return server
+  return server;
 }

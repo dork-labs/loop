@@ -284,6 +284,7 @@ status: ideation
 ### Step 4.4: Update Spec Manifest
 
 After writing the ideation document, update `specs/manifest.json`:
+
 1. Add a new entry to the `specs` array with `number`, `slug`, `title`, `created` (today), and `status: "ideation"`
 2. Increment `nextNumber`
 

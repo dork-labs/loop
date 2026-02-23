@@ -99,7 +99,6 @@ N/A — this is a DX improvement, not a bug fix.
 Full research at `research/20260221_dev-setup-dx.md`.
 
 - **Potential solutions:**
-
   1. **Conditional driver swap in `db/index.ts`** (recommended)
      - Pros: Simple (~15 lines), works offline, no extra containers, dev dep only
      - Cons: Doesn't exercise production Neon code path locally

@@ -1,6 +1,6 @@
-import { queryOptions } from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query-keys'
-import { dashboardApi } from '@/lib/api-client'
+import { queryOptions } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-keys';
+import { dashboardApi } from '@/lib/api-client';
 
 /** Query options for dashboard system health stats. Refreshes every 30 seconds. */
 export const dashboardStatsOptions = () =>
@@ -8,7 +8,7 @@ export const dashboardStatsOptions = () =>
     queryKey: queryKeys.dashboard.stats,
     queryFn: () => dashboardApi.stats().then((r) => r.data),
     staleTime: 30_000,
-  })
+  });
 
 /**
  * Query options for the Loop Activity timeline.
@@ -20,7 +20,7 @@ export const dashboardActivityOptions = () =>
     queryFn: () => dashboardApi.activity(),
     staleTime: 30_000,
     refetchInterval: 15_000,
-  })
+  });
 
 /** Query options for prompt template health data. */
 export const dashboardPromptsOptions = () =>
@@ -28,4 +28,4 @@ export const dashboardPromptsOptions = () =>
     queryKey: queryKeys.dashboard.prompts,
     queryFn: () => dashboardApi.prompts().then((r) => r.data),
     staleTime: 300_000,
-  })
+  });

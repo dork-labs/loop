@@ -85,6 +85,7 @@ N/A — not a bug fix.
 ### Potential Solutions
 
 **1. Hand-write all documentation pages (MDX)**
+
 - Description: Write every page manually as MDX, including API reference
 - Pros:
   - Full control over content and presentation
@@ -98,6 +99,7 @@ N/A — not a bug fix.
 - Maintenance: High
 
 **2. Hybrid: Auto-generate API reference + hand-write everything else**
+
 - Description: Generate an OpenAPI spec from Hono routes, use fumadocs-openapi to auto-generate API reference pages, hand-write conceptual docs, guides, CLI reference
 - Pros:
   - API reference stays in sync with code
@@ -111,6 +113,7 @@ N/A — not a bug fix.
 - Maintenance: Low (API docs auto-update)
 
 **3. Hand-write all docs now, add OpenAPI auto-generation later**
+
 - Description: Write all docs manually for MVP, defer OpenAPI integration to a follow-up
 - Pros:
   - Ship docs faster (no tooling setup)
@@ -191,6 +194,7 @@ docs/
 ```
 
 **~35 pages total.** Priority order for writing:
+
 1. Getting Started (3 pages) — unblocks all users
 2. Concepts (6 pages) — explains the mental model
 3. API Reference (12 pages) — enables integration
@@ -201,10 +205,11 @@ docs/
 8. Contributing (1 page) — dev onboarding
 
 ### Fumadocs Features to Leverage
+
 - **`<Steps>`** — For quickstart walkthroughs
 - **`<Tabs>`** — For curl/JS/CLI examples side-by-side
 - **`<Callout>`** — For warnings, tips, important notes
-- **`<Card>`** and `<Cards>`** — For section landing pages
+- **`<Card>`** and `<Cards>`\*\* — For section landing pages
 - **Code blocks with title** — For named examples
 - **`<TypeTable>`** — For request/response schemas
 

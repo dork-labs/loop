@@ -82,6 +82,7 @@ Reports task completion with outcome comment and returns unblocked issues.
 **File:** `packages/mcp/src/tools/complete-task.ts`
 
 **Implementation steps:**
+
 1. `PATCH /api/issues/{issueId}` with `{ status: 'done' }`
 2. `POST /api/issues/{issueId}/comments` with `{ body: outcome, authorName: 'agent', authorType: 'agent' }`
 3. `GET /api/issues?status=todo` then filter for issues blocked by this one

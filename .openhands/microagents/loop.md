@@ -26,17 +26,17 @@ All protected endpoints require: `Authorization: Bearer $LOOP_API_KEY`
 
 ## Key Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/issues | List issues (filter: status, type, projectId) |
-| POST | /api/issues | Create an issue |
-| PATCH | /api/issues/:id | Update an issue |
-| DELETE | /api/issues/:id | Soft-delete an issue |
-| POST | /api/signals | Ingest a signal (creates signal + triage issue) |
-| GET | /api/projects | List projects |
-| POST | /api/projects | Create a project |
-| GET | /api/goals | List goals |
-| GET | /api/dashboard/stats | System health metrics |
+| Method | Path                 | Description                                     |
+| ------ | -------------------- | ----------------------------------------------- |
+| GET    | /api/issues          | List issues (filter: status, type, projectId)   |
+| POST   | /api/issues          | Create an issue                                 |
+| PATCH  | /api/issues/:id      | Update an issue                                 |
+| DELETE | /api/issues/:id      | Soft-delete an issue                            |
+| POST   | /api/signals         | Ingest a signal (creates signal + triage issue) |
+| GET    | /api/projects        | List projects                                   |
+| POST   | /api/projects        | Create a project                                |
+| GET    | /api/goals           | List goals                                      |
+| GET    | /api/dashboard/stats | System health metrics                           |
 
 ## Create an Issue
 

@@ -21,12 +21,7 @@ Create the `packages/loop-skill/` directory and `package.json` file.
   "version": "0.1.0",
   "description": "Agent skill for Loop — the autonomous improvement engine. Teaches AI agents how to use Loop's REST API.",
   "type": "module",
-  "files": [
-    "SKILL.md",
-    "references/",
-    "templates/",
-    "README.md"
-  ],
+  "files": ["SKILL.md", "references/", "templates/", "README.md"],
   "keywords": [
     "agent-skill",
     "openskills",
@@ -48,6 +43,7 @@ Create the `packages/loop-skill/` directory and `package.json` file.
 ```
 
 Key notes:
+
 - No `main`, `bin`, or `exports` fields — this is a content-only package
 - `files` explicitly lists what gets published (no build step needed)
 - The `openskills` installer looks for `SKILL.md` at the package root
@@ -55,6 +51,7 @@ Key notes:
 - `turbo.json` needs no changes — content-only package has no build/test tasks
 
 **Acceptance Criteria:**
+
 - [ ] `packages/loop-skill/` directory exists
 - [ ] `package.json` has name `@dork-labs/loop`, version `0.1.0`
 - [ ] No `main`, `bin`, or `exports` fields present
@@ -83,7 +80,7 @@ license: MIT
 compatibility: Requires internet access to reach https://app.looped.me
 metadata:
   author: dork-labs
-  version: "1.0"
+  version: '1.0'
 ---
 
 # Loop
@@ -97,7 +94,7 @@ and **signal ingestion** (webhook-style data that auto-creates triage issues).
 Set before making API calls:
 
 \`\`\`bash
-export LOOP_API_KEY=loop_...
+export LOOP*API_KEY=loop*...
 \`\`\`
 
 Base URL: `https://app.looped.me/api`
@@ -122,43 +119,43 @@ The core agent workflow:
 
 \`\`\`bash
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
-  "https://app.looped.me/api/issues?status=open&limit=1"
+ "https://app.looped.me/api/issues?status=open&limit=1"
 \`\`\`
 
 ### Create an issue
 
 \`\`\`bash
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Fix login redirect","type":"bug"}' \
-  https://app.looped.me/api/issues
+ -H "Content-Type: application/json" \
+ -d '{"title":"Fix login redirect","type":"bug"}' \
+ https://app.looped.me/api/issues
 \`\`\`
 
 ### Ingest a signal
 
 \`\`\`bash
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"source":"agent","title":"Error rate spike","data":{"count":47}}' \
-  https://app.looped.me/api/signals
+ -H "Content-Type: application/json" \
+ -d '{"source":"agent","title":"Error rate spike","data":{"count":47}}' \
+ https://app.looped.me/api/signals
 \`\`\`
 
 ### Complete an issue
 
 \`\`\`bash
 curl -X PATCH -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"status":"done"}' \
-  https://app.looped.me/api/issues/{id}
+ -H "Content-Type: application/json" \
+ -d '{"status":"done"}' \
+ https://app.looped.me/api/issues/{id}
 \`\`\`
 
 ### Add a progress comment
 
 \`\`\`bash
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"body":"Investigating root cause...","authorName":"agent"}' \
-  https://app.looped.me/api/issues/{id}/comments
+ -H "Content-Type: application/json" \
+ -d '{"body":"Investigating root cause...","authorName":"agent"}' \
+ https://app.looped.me/api/issues/{id}/comments
 \`\`\`
 
 ## Issue Types
@@ -182,10 +179,12 @@ curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
 ```
 
 **Token budget constraints:**
+
 - SKILL.md `description` frontmatter field: must be under 1,024 characters
 - SKILL.md body (everything after frontmatter): must be under 5,000 tokens (~20,000 chars)
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `packages/loop-skill/SKILL.md`
 - [ ] YAML frontmatter parses correctly with `name`, `description`, `license`, `compatibility`, `metadata` fields
 - [ ] `name` is lowercase, max 64 chars
@@ -207,65 +206,66 @@ Content should be the complete protected API endpoint table extracted from CLAUD
 
 **Protected endpoints (`/api/*` — requires `Authorization: Bearer $LOOP_API_KEY`):**
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/issues` | List issues (filterable by status, type, projectId; paginated) |
-| `POST` | `/api/issues` | Create an issue |
-| `GET` | `/api/issues/:id` | Get issue by ID with labels, relations, comments |
-| `PATCH` | `/api/issues/:id` | Update an issue |
-| `DELETE` | `/api/issues/:id` | Soft-delete an issue |
-| `POST` | `/api/issues/:id/relations` | Create a relation between two issues |
-| `GET` | `/api/issues/:id/comments` | List comments for an issue (threaded) |
-| `POST` | `/api/issues/:id/comments` | Add a comment to an issue |
-| `GET` | `/api/projects` | List projects (paginated) |
-| `POST` | `/api/projects` | Create a project |
-| `GET` | `/api/projects/:id` | Get project with goal and issue counts |
-| `PATCH` | `/api/projects/:id` | Update a project |
-| `DELETE` | `/api/projects/:id` | Soft-delete a project |
-| `GET` | `/api/goals` | List goals (paginated) |
-| `POST` | `/api/goals` | Create a goal |
-| `GET` | `/api/goals/:id` | Get goal by ID |
-| `PATCH` | `/api/goals/:id` | Update a goal |
-| `DELETE` | `/api/goals/:id` | Soft-delete a goal |
-| `GET` | `/api/labels` | List labels (paginated) |
-| `POST` | `/api/labels` | Create a label |
-| `DELETE` | `/api/labels/:id` | Soft-delete a label |
-| `DELETE` | `/api/relations/:id` | Hard-delete a relation |
-| `POST` | `/api/signals` | Ingest a signal (creates signal + linked issue) |
-| `GET` | `/api/templates` | List prompt templates (paginated) |
-| `POST` | `/api/templates` | Create a prompt template |
-| `GET` | `/api/templates/:id` | Get template with active version |
-| `PATCH` | `/api/templates/:id` | Update a template |
-| `DELETE` | `/api/templates/:id` | Soft-delete a template |
-| `GET` | `/api/templates/:id/versions` | List versions for a template |
-| `POST` | `/api/templates/:id/versions` | Create a new version |
-| `POST` | `/api/templates/:id/versions/:versionId/promote` | Promote a version to active |
-| `GET` | `/api/templates/:id/reviews` | List reviews across all versions |
-| `POST` | `/api/prompt-reviews` | Create a prompt review |
-| `GET` | `/api/dashboard/stats` | System health metrics |
-| `GET` | `/api/dashboard/activity` | Signal chains for activity timeline |
-| `GET` | `/api/dashboard/prompts` | Template health with scores |
+| Method   | Path                                             | Description                                                    |
+| -------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| `GET`    | `/api/issues`                                    | List issues (filterable by status, type, projectId; paginated) |
+| `POST`   | `/api/issues`                                    | Create an issue                                                |
+| `GET`    | `/api/issues/:id`                                | Get issue by ID with labels, relations, comments               |
+| `PATCH`  | `/api/issues/:id`                                | Update an issue                                                |
+| `DELETE` | `/api/issues/:id`                                | Soft-delete an issue                                           |
+| `POST`   | `/api/issues/:id/relations`                      | Create a relation between two issues                           |
+| `GET`    | `/api/issues/:id/comments`                       | List comments for an issue (threaded)                          |
+| `POST`   | `/api/issues/:id/comments`                       | Add a comment to an issue                                      |
+| `GET`    | `/api/projects`                                  | List projects (paginated)                                      |
+| `POST`   | `/api/projects`                                  | Create a project                                               |
+| `GET`    | `/api/projects/:id`                              | Get project with goal and issue counts                         |
+| `PATCH`  | `/api/projects/:id`                              | Update a project                                               |
+| `DELETE` | `/api/projects/:id`                              | Soft-delete a project                                          |
+| `GET`    | `/api/goals`                                     | List goals (paginated)                                         |
+| `POST`   | `/api/goals`                                     | Create a goal                                                  |
+| `GET`    | `/api/goals/:id`                                 | Get goal by ID                                                 |
+| `PATCH`  | `/api/goals/:id`                                 | Update a goal                                                  |
+| `DELETE` | `/api/goals/:id`                                 | Soft-delete a goal                                             |
+| `GET`    | `/api/labels`                                    | List labels (paginated)                                        |
+| `POST`   | `/api/labels`                                    | Create a label                                                 |
+| `DELETE` | `/api/labels/:id`                                | Soft-delete a label                                            |
+| `DELETE` | `/api/relations/:id`                             | Hard-delete a relation                                         |
+| `POST`   | `/api/signals`                                   | Ingest a signal (creates signal + linked issue)                |
+| `GET`    | `/api/templates`                                 | List prompt templates (paginated)                              |
+| `POST`   | `/api/templates`                                 | Create a prompt template                                       |
+| `GET`    | `/api/templates/:id`                             | Get template with active version                               |
+| `PATCH`  | `/api/templates/:id`                             | Update a template                                              |
+| `DELETE` | `/api/templates/:id`                             | Soft-delete a template                                         |
+| `GET`    | `/api/templates/:id/versions`                    | List versions for a template                                   |
+| `POST`   | `/api/templates/:id/versions`                    | Create a new version                                           |
+| `POST`   | `/api/templates/:id/versions/:versionId/promote` | Promote a version to active                                    |
+| `GET`    | `/api/templates/:id/reviews`                     | List reviews across all versions                               |
+| `POST`   | `/api/prompt-reviews`                            | Create a prompt review                                         |
+| `GET`    | `/api/dashboard/stats`                           | System health metrics                                          |
+| `GET`    | `/api/dashboard/activity`                        | Signal chains for activity timeline                            |
+| `GET`    | `/api/dashboard/prompts`                         | Template health with scores                                    |
 
 **Webhook endpoints (`/api/signals/*` — provider-specific auth):**
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/api/signals/posthog` | `POSTHOG_WEBHOOK_SECRET` | PostHog metric alerts |
-| `POST` | `/api/signals/github` | `GITHUB_WEBHOOK_SECRET` (HMAC-SHA256) | GitHub events |
-| `POST` | `/api/signals/sentry` | `SENTRY_CLIENT_SECRET` (HMAC-SHA256) | Sentry error alerts |
+| Method | Path                   | Auth                                  | Description           |
+| ------ | ---------------------- | ------------------------------------- | --------------------- |
+| `POST` | `/api/signals/posthog` | `POSTHOG_WEBHOOK_SECRET`              | PostHog metric alerts |
+| `POST` | `/api/signals/github`  | `GITHUB_WEBHOOK_SECRET` (HMAC-SHA256) | GitHub events         |
+| `POST` | `/api/signals/sentry`  | `SENTRY_CLIENT_SECRET` (HMAC-SHA256)  | Sentry error alerts   |
 
 **Public endpoints (no auth):**
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/` | Service info |
+| Method | Path      | Description  |
+| ------ | --------- | ------------ |
+| `GET`  | `/health` | Health check |
+| `GET`  | `/`       | Service info |
 
 Include request/response examples for the most common operations (create issue, list issues, ingest signal, create project, dashboard stats). Format as a clean markdown reference document.
 
 Target: ~3,000 tokens. No hard limit (on-demand loading).
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `packages/loop-skill/references/api.md`
 - [ ] Contains all protected API endpoints from CLAUDE.md
 - [ ] Contains webhook endpoints with their auth mechanisms
@@ -282,6 +282,7 @@ Create a README for the npm package that explains what it is and how to install/
 **File:** `packages/loop-skill/README.md`
 
 The README should include:
+
 1. Package name and description matching package.json
 2. What the package contains (SKILL.md, templates, references)
 3. Installation instructions via `npx openskills install @dork-labs/loop` and `npm install`
@@ -295,6 +296,7 @@ The README should include:
 6. MIT license note
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `packages/loop-skill/README.md`
 - [ ] Contains installation instructions for both openskills and npm
 - [ ] Lists all artifacts in the package
@@ -334,19 +336,23 @@ Base URL: `https://app.looped.me/api`
 ### Quick Reference
 
 \`\`\`bash
+
 # List open issues
+
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
-  "https://app.looped.me/api/issues?status=open"
+ "https://app.looped.me/api/issues?status=open"
 
 # Create an issue
+
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"...","type":"bug"}' \
-  https://app.looped.me/api/issues
+ -H "Content-Type: application/json" \
+ -d '{"title":"...","type":"bug"}' \
+ https://app.looped.me/api/issues
 
 # Dashboard stats
+
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
-  https://app.looped.me/api/dashboard/stats
+ https://app.looped.me/api/dashboard/stats
 \`\`\`
 
 ### Docs
@@ -359,6 +365,7 @@ curl -H "Authorization: Bearer $LOOP_API_KEY" \
 **Token budget:** Under 600 tokens (loaded every session in integrated repos).
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `packages/loop-skill/templates/AGENTS.md`
 - [ ] Content is under 600 tokens
 - [ ] Contains Auth, When to Create, Quick Reference, Docs sections
@@ -388,7 +395,7 @@ alwaysApply: false
 ## Auth
 
 \`\`\`bash
-export LOOP_API_KEY=loop_...
+export LOOP*API_KEY=loop*...
 \`\`\`
 
 All `/api/*` endpoints: `Authorization: Bearer $LOOP_API_KEY`
@@ -396,21 +403,25 @@ All `/api/*` endpoints: `Authorization: Bearer $LOOP_API_KEY`
 ## Common Operations
 
 \`\`\`bash
+
 # List open issues
+
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
-  "https://app.looped.me/api/issues?status=open"
+ "https://app.looped.me/api/issues?status=open"
 
 # Create issue
+
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"<title>","type":"bug|feature|task"}' \
-  https://app.looped.me/api/issues
+ -H "Content-Type: application/json" \
+ -d '{"title":"<title>","type":"bug|feature|task"}' \
+ https://app.looped.me/api/issues
 
 # Ingest a signal
+
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"source":"custom","title":"<title>","data":{}}' \
-  https://app.looped.me/api/signals
+ -H "Content-Type: application/json" \
+ -d '{"source":"custom","title":"<title>","data":{}}' \
+ https://app.looped.me/api/signals
 \`\`\`
 
 ## Issue Types
@@ -431,6 +442,7 @@ Machine-readable: https://www.looped.me/llms.txt
 **Mode:** `alwaysApply: false` — agent-requested, no globs.
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `packages/loop-skill/templates/loop.mdc`
 - [ ] MDC frontmatter has `description` and `alwaysApply: false`
 - [ ] No `globs` field in frontmatter
@@ -474,36 +486,36 @@ All protected endpoints require: `Authorization: Bearer $LOOP_API_KEY`
 
 ## Key Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/issues | List issues (filter: status, type, projectId) |
-| POST | /api/issues | Create an issue |
-| PATCH | /api/issues/:id | Update an issue |
-| DELETE | /api/issues/:id | Soft-delete an issue |
-| POST | /api/signals | Ingest a signal (creates signal + triage issue) |
-| GET | /api/projects | List projects |
-| POST | /api/projects | Create a project |
-| GET | /api/goals | List goals |
-| GET | /api/dashboard/stats | System health metrics |
+| Method | Path                 | Description                                     |
+| ------ | -------------------- | ----------------------------------------------- |
+| GET    | /api/issues          | List issues (filter: status, type, projectId)   |
+| POST   | /api/issues          | Create an issue                                 |
+| PATCH  | /api/issues/:id      | Update an issue                                 |
+| DELETE | /api/issues/:id      | Soft-delete an issue                            |
+| POST   | /api/signals         | Ingest a signal (creates signal + triage issue) |
+| GET    | /api/projects        | List projects                                   |
+| POST   | /api/projects        | Create a project                                |
+| GET    | /api/goals           | List goals                                      |
+| GET    | /api/dashboard/stats | System health metrics                           |
 
 ## Create an Issue
 
 \`\`\`bash
 curl -X POST \
-  -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Fix login flow","type":"bug"}' \
-  https://app.looped.me/api/issues
+ -H "Authorization: Bearer $LOOP_API_KEY" \
+ -H "Content-Type: application/json" \
+ -d '{"title":"Fix login flow","type":"bug"}' \
+ https://app.looped.me/api/issues
 \`\`\`
 
 ## Ingest a Signal
 
 \`\`\`bash
 curl -X POST \
-  -H "Authorization: Bearer $LOOP_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"source":"agent","title":"Error spike","data":{"count":47}}' \
-  https://app.looped.me/api/signals
+ -H "Authorization: Bearer $LOOP_API_KEY" \
+ -H "Content-Type: application/json" \
+ -d '{"source":"agent","title":"Error spike","data":{"count":47}}' \
+ https://app.looped.me/api/signals
 \`\`\`
 
 ## Documentation
@@ -516,6 +528,7 @@ Machine-readable index: https://www.looped.me/llms.txt
 **Trigger keywords:** loop, looped, looped.me, loop api, loop issue, ingest signal
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `packages/loop-skill/templates/openhands-loop.md`
 - [ ] YAML frontmatter has `name`, `agent`, `trigger_type`, `triggers` fields
 - [ ] `trigger_type` is `keyword`
@@ -600,6 +613,7 @@ export async function GET() {
 ```
 
 **Notes:**
+
 - Content is an inline string constant, not a file read, for zero-latency serving
 - Cache headers: 1h browser cache (`max-age=3600`), 24h CDN cache (`s-maxage=86400`)
 - No rewrite needed in `next.config.ts` — Next.js App Router handles `/llms.txt` natively via the `llms.txt/route.ts` directory path
@@ -607,6 +621,7 @@ export async function GET() {
 - Create the `apps/web/src/app/llms.txt/` directory (the directory name includes the dot)
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `apps/web/src/app/llms.txt/route.ts`
 - [ ] `GET` handler returns Response with `Content-Type: text/plain; charset=utf-8`
 - [ ] `Cache-Control` header is `public, max-age=3600, s-maxage=86400`
@@ -626,22 +641,25 @@ Copy the three template files to their dogfood locations in the Loop repository.
 
 **Copies to make:**
 
-| Source | Destination |
-|--------|-------------|
-| `packages/loop-skill/templates/AGENTS.md` | `./AGENTS.md` |
-| `packages/loop-skill/templates/loop.mdc` | `./.cursor/rules/loop.mdc` |
+| Source                                            | Destination                        |
+| ------------------------------------------------- | ---------------------------------- |
+| `packages/loop-skill/templates/AGENTS.md`         | `./AGENTS.md`                      |
+| `packages/loop-skill/templates/loop.mdc`          | `./.cursor/rules/loop.mdc`         |
 | `packages/loop-skill/templates/openhands-loop.md` | `./.openhands/microagents/loop.md` |
 
 **Directory creation:**
+
 - Create `.cursor/rules/` if it doesn't exist
 - Create `.openhands/microagents/` if it doesn't exist
 
 **Gitignore considerations:**
+
 - Verify `.openhands/` is NOT in `.gitignore` (these files are intentionally committed)
 - Verify `.cursor/rules/loop.mdc` is NOT in `.gitignore` (intentionally committed)
 - If either is gitignored, add negation rules or remove the ignore entry
 
 **Acceptance Criteria:**
+
 - [ ] `AGENTS.md` exists at repo root with Loop Integration content
 - [ ] `.cursor/rules/loop.mdc` exists with Cursor rule content
 - [ ] `.openhands/microagents/loop.md` exists with OpenHands microagent content
@@ -700,6 +718,7 @@ describe('GET /llms.txt', () => {
 **Note:** Check if `apps/web/` already has Vitest configured. If not, the test may need to be placed differently or a test config added. The `vitest.workspace.ts` at repo root currently configures `apps/api` and `apps/app` — may need to add `apps/web`.
 
 **Acceptance Criteria:**
+
 - [ ] Test file exists and runs with `npx vitest run`
 - [ ] Tests verify Content-Type header
 - [ ] Tests verify Cache-Control header
@@ -799,9 +818,7 @@ describe('Content Consistency', () => {
   it('all artifacts use Bearer auth pattern', () => {
     for (const artifact of artifacts) {
       const content = readArtifact(artifact.path);
-      expect(content, `${artifact.name} missing Bearer auth`).toContain(
-        'Authorization: Bearer'
-      );
+      expect(content, `${artifact.name} missing Bearer auth`).toContain('Authorization: Bearer');
     }
   });
 });
@@ -810,6 +827,7 @@ describe('Content Consistency', () => {
 **Note:** May need to add `packages/loop-skill` to `vitest.workspace.ts` or create a local vitest config. Token estimation uses chars/4 as a rough approximation per the spec.
 
 **Acceptance Criteria:**
+
 - [ ] Test file exists and runs with `npx vitest run`
 - [ ] Token budget tests pass for SKILL.md description (<1024 chars), SKILL.md body (<5000 tokens), AGENTS.md (<600 tokens), loop.mdc (<1000 tokens), openhands-loop.md (<1500 tokens)
 - [ ] Content consistency tests verify all artifacts use `https://app.looped.me/api`
@@ -848,10 +866,10 @@ Task 3.1 (llms.txt route) ─────────── Task 4.2 (llms.txt t
 
 ## Summary
 
-| Phase | Tasks | Description |
-|-------|-------|-------------|
-| Phase 1 | 4 | Package scaffold, SKILL.md, API reference, README |
-| Phase 2 | 3 | AGENTS.md, Cursor rule, OpenHands microagent |
-| Phase 3 | 1 | llms.txt route handler |
-| Phase 4 | 3 | Dogfood copies, route tests, artifact tests |
-| **Total** | **11** | |
+| Phase     | Tasks  | Description                                       |
+| --------- | ------ | ------------------------------------------------- |
+| Phase 1   | 4      | Package scaffold, SKILL.md, API reference, README |
+| Phase 2   | 3      | AGENTS.md, Cursor rule, OpenHands microagent      |
+| Phase 3   | 1      | llms.txt route handler                            |
+| Phase 4   | 3      | Dogfood copies, route tests, artifact tests       |
+| **Total** | **11** |                                                   |

@@ -27,7 +27,7 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 | Git Hooks    | 1     | `.claude/git-hooks/`, installed via `.claude/scripts/install-git-hooks.sh` |
 | MCP Servers  | 3     | `.mcp.json`                                                                |
 | ADRs         | 5     | `decisions/`                                                               |
-| Guides       | 15    | `contributing/` (14 guides + INDEX.md)                                           |
+| Guides       | 15    | `contributing/` (14 guides + INDEX.md)                                     |
 
 ## Component Types
 
@@ -83,34 +83,34 @@ Agents run in isolated context windows via the Task tool. Use for complex, multi
 
 Skills provide reusable expertise that Claude applies automatically when relevant. They teach "how to think" about problems.
 
-| Skill                          | Expertise                                       | When Applied                                                       |
-| ------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------ |
-| `clarifying-requirements`      | Identifying gaps, asking clarifying questions   | Vague requests, ambiguous scope, hidden complexity                 |
-| `debugging-systematically`     | Debugging methodology, troubleshooting patterns | Investigating bugs, tracing issues                                 |
-| `designing-frontend`           | Calm Tech design language, UI decisions         | Planning UI, reviewing designs, hierarchy decisions                |
-| `styling-with-tailwind-shadcn` | Tailwind CSS v4, Shadcn UI implementation       | Writing styles, building components, theming                       |
-| `managing-roadmap-moscow`      | MoSCoW prioritization, roadmap utilities        | Product planning, prioritization decisions                         |
-| `writing-developer-guides`     | Developer guide structure for AI agents         | Creating/updating files in contributing/                                 |
-| `orchestrating-parallel-work`  | Parallel agent execution, batch scheduling      | Coordinating multiple concurrent tasks, optimizing task ordering   |
-| `writing-changelogs`           | Human-friendly changelog entries, release notes | Populating changelog, preparing releases                           |
-| `organizing-fsd-architecture`  | Feature-Sliced Design layer placement, imports  | Structuring client code, creating features, reviewing architecture |
+| Skill                          | Expertise                                             | When Applied                                                       |
+| ------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| `clarifying-requirements`      | Identifying gaps, asking clarifying questions         | Vague requests, ambiguous scope, hidden complexity                 |
+| `debugging-systematically`     | Debugging methodology, troubleshooting patterns       | Investigating bugs, tracing issues                                 |
+| `designing-frontend`           | Calm Tech design language, UI decisions               | Planning UI, reviewing designs, hierarchy decisions                |
+| `styling-with-tailwind-shadcn` | Tailwind CSS v4, Shadcn UI implementation             | Writing styles, building components, theming                       |
+| `managing-roadmap-moscow`      | MoSCoW prioritization, roadmap utilities              | Product planning, prioritization decisions                         |
+| `writing-developer-guides`     | Developer guide structure for AI agents               | Creating/updating files in contributing/                           |
+| `orchestrating-parallel-work`  | Parallel agent execution, batch scheduling            | Coordinating multiple concurrent tasks, optimizing task ordering   |
+| `writing-changelogs`           | Human-friendly changelog entries, release notes       | Populating changelog, preparing releases                           |
+| `organizing-fsd-architecture`  | Feature-Sliced Design layer placement, imports        | Structuring client code, creating features, reviewing architecture |
 | `executing-specs`              | Parallel spec implementation, incremental persistence | Orchestrating `/spec:execute` with batch result tracking           |
-| `writing-adrs`                 | Architecture Decision Records, decision signals | Creating ADRs, extracting decisions from specs, ADR quality        |
+| `writing-adrs`                 | Architecture Decision Records, decision signals       | Creating ADRs, extracting decisions from specs, ADR quality        |
 
 ### Rules (Path-Triggered)
 
 Rules inject context-specific guidance when Claude works with matching files. Each rule has `paths:` frontmatter with glob patterns.
 
-| Rule                  | Applies To                                           | Key Guidance                                         |
-| --------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| `api.md`              | `apps/server/src/routes/**/*.ts`                     | Zod validation, service layer usage, error handling  |
-| `testing.md`          | `**/__tests__/**/*.ts`, `**/*.test.ts`               | Vitest patterns, mocking, component testing          |
-| `components.md`       | `apps/client/src/**/*.tsx`                           | Shadcn patterns, accessibility, styling              |
-| `fsd-layers.md`       | `apps/client/src/layers/**/*.ts(x)`                  | FSD layer dependency rules, barrel imports           |
-| `server-structure.md` | `apps/server/src/services/**/*.ts`, `routes/**/*.ts` | Service count monitoring, domain grouping thresholds |
-| `code-quality.md`    | `**/*.ts`, `**/*.tsx`                                | DRY violations, complexity limits, naming conventions |
-| `file-size.md`       | `**/*.ts`, `**/*.tsx`                                | File size thresholds, extraction patterns             |
-| `documentation.md`   | `**/*.ts`, `**/*.tsx`                                | TSDoc standards, barrel export docs                   |
+| Rule                  | Applies To                                           | Key Guidance                                          |
+| --------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| `api.md`              | `apps/server/src/routes/**/*.ts`                     | Zod validation, service layer usage, error handling   |
+| `testing.md`          | `**/__tests__/**/*.ts`, `**/*.test.ts`               | Vitest patterns, mocking, component testing           |
+| `components.md`       | `apps/client/src/**/*.tsx`                           | Shadcn patterns, accessibility, styling               |
+| `fsd-layers.md`       | `apps/client/src/layers/**/*.ts(x)`                  | FSD layer dependency rules, barrel imports            |
+| `server-structure.md` | `apps/server/src/services/**/*.ts`, `routes/**/*.ts` | Service count monitoring, domain grouping thresholds  |
+| `code-quality.md`     | `**/*.ts`, `**/*.tsx`                                | DRY violations, complexity limits, naming conventions |
+| `file-size.md`        | `**/*.ts`, `**/*.tsx`                                | File size thresholds, extraction patterns             |
+| `documentation.md`    | `**/*.ts`, `**/*.tsx`                                | TSDoc standards, barrel export docs                   |
 
 ### Hooks (Event-Triggered)
 
@@ -141,22 +141,22 @@ External tools available via Model Context Protocol.
 
 All documentation lives in `contributing/`:
 
-| Guide                                | Content                                                             |
-| ------------------------------------ | ------------------------------------------------------------------- |
-| `project-structure.md`               | FSD layer hierarchy, directory layout, adding features              |
-| `architecture.md`                    | Hexagonal architecture, Transport interface, Electron compatibility |
-| `design-system.md`                   | Color palette, typography, spacing, motion specs                    |
-| `api-reference.md`                   | OpenAPI spec, Scalar docs UI, Zod schema patterns                   |
-| `configuration.md`                   | Config file system, settings reference, CLI commands, precedence    |
-| `interactive-tools.md`               | Tool approval, AskUserQuestion, TaskList flows                      |
-| `keyboard-shortcuts.md`              | Keyboard shortcuts and hotkeys                                      |
-| `obsidian-plugin-development.md`     | Plugin lifecycle, Vite build, Electron quirks                       |
-| `data-fetching.md`                   | TanStack Query patterns, Transport abstraction, SSE streaming       |
-| `state-management.md`                | Zustand vs TanStack Query decision guide                            |
-| `animations.md`                      | Motion library patterns                                             |
-| `styling-theming.md`                 | Tailwind v4, dark mode, Shadcn                                      |
-| `parallel-execution.md`              | Parallel agent execution patterns, batching                         |
-| `autonomous-roadmap-execution.md`    | Autonomous workflow, `/roadmap:work`                                |
+| Guide                             | Content                                                             |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `project-structure.md`            | FSD layer hierarchy, directory layout, adding features              |
+| `architecture.md`                 | Hexagonal architecture, Transport interface, Electron compatibility |
+| `design-system.md`                | Color palette, typography, spacing, motion specs                    |
+| `api-reference.md`                | OpenAPI spec, Scalar docs UI, Zod schema patterns                   |
+| `configuration.md`                | Config file system, settings reference, CLI commands, precedence    |
+| `interactive-tools.md`            | Tool approval, AskUserQuestion, TaskList flows                      |
+| `keyboard-shortcuts.md`           | Keyboard shortcuts and hotkeys                                      |
+| `obsidian-plugin-development.md`  | Plugin lifecycle, Vite build, Electron quirks                       |
+| `data-fetching.md`                | TanStack Query patterns, Transport abstraction, SSE streaming       |
+| `state-management.md`             | Zustand vs TanStack Query decision guide                            |
+| `animations.md`                   | Motion library patterns                                             |
+| `styling-theming.md`              | Tailwind v4, dark mode, Shadcn                                      |
+| `parallel-execution.md`           | Parallel agent execution patterns, batching                         |
+| `autonomous-roadmap-execution.md` | Autonomous workflow, `/roadmap:work`                                |
 
 Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
 

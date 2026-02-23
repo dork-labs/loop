@@ -17,6 +17,7 @@ The recommended stack for the Loop dashboard is **TanStack Router** (file-based,
 ### 1. Routing: TanStack Router wins for this use case
 
 TanStack Router v1 (stable) has first-class support for:
+
 - Fully typed search params with Zod validation
 - Nested layouts via pathless (underscore-prefixed) layout routes
 - File-based routing with a Vite plugin that generates the route tree
@@ -27,6 +28,7 @@ React Router v7 only gains these capabilities in "framework mode" (Remix-style),
 ### 2. TanStack Query v5 is fully React 19 compatible
 
 The v5 API is stable. Key patterns:
+
 - `queryOptions()` helper creates reusable typed query configs for use with both `useQuery`/`useSuspenseQuery` and route loaders
 - `QueryClient` + `QueryClientProvider` at the app root
 - v5 uses a single config object: `useQuery({ queryKey, queryFn })` — the overloaded variants are gone
@@ -39,6 +41,7 @@ The v5 API is stable. Key patterns:
 ### 4. Data table: shadcn/ui guide + TanStack Table v8
 
 shadcn/ui does not ship a data table component — it ships a `Table` primitive and a documented pattern for assembling it with `@tanstack/react-table`. Key points:
+
 - Column definitions with `ColumnDef<T>[]`
 - `useReactTable` hook with `getCoreRowModel`, `getSortingRowModel`, `getFilteredRowModel`, `getPaginationRowModel`
 - Server-side mode where TanStack Table handles UI state (sort, page) and those values feed the TanStack Query query key to trigger refetches
@@ -48,6 +51,7 @@ For the Issue List, server-side pagination + filtering is the right approach sin
 ### 5. Timeline / Activity Feed: custom CSS + OriginUI patterns
 
 There is no first-party shadcn/ui timeline component, but the pattern is simple CSS:
+
 - A vertical `div` with a left border (`border-l-2 border-border`)
 - Absolutely-positioned dots at each event node
 - `timelineData` array mapped into event cards
@@ -58,6 +62,7 @@ For real-time updates on the "Loop Activity" view: **polling is the correct star
 ### 6. Dashboard layout: shadcn/ui Sidebar component
 
 shadcn/ui v1 now includes a full first-class `Sidebar` component system:
+
 - `SidebarProvider` wraps the app and manages collapsible state
 - `SidebarTrigger` is a button to toggle open/closed
 - Collapsible modes: `icon` (collapses to icon strip), `offcanvas` (slides off screen), `none` (always visible)
@@ -68,6 +73,7 @@ shadcn/ui v1 now includes a full first-class `Sidebar` component system:
 ### 7. Markdown rendering: `react-markdown` + `rehype-pretty-code`
 
 For rendering issue descriptions, comments, and prompt template content:
+
 - `react-markdown` with `remark-gfm` handles GitHub Flavored Markdown (tables, strikethrough, task lists)
 - `rehype-pretty-code` (Shiki-powered) handles syntax highlighting, parsing at render time with pre-styled HTML output
 - `@tailwindcss/typography` handles typographic styles with a single `prose` class wrapper
@@ -101,6 +107,7 @@ src/routes/
 The `_dashboard.tsx` pathless layout route renders the sidebar and navigation chrome without contributing to the URL path. All views under `_dashboard/` inherit the layout.
 
 **Issue detail as a route vs slide-over:** both are valid. The recommendation is a **full-page route** (`/issues/$issueId`) for the MVP because:
+
 1. Deep-linkable by default
 2. Easier to implement correctly — no stacking context, z-index, or scroll-lock issues
 3. A slide-over `Sheet` can be layered on later as a UX enhancement with a `?preview=true` search param
@@ -115,7 +122,7 @@ const issuesSearchSchema = z.object({
   projectId: z.string().optional(),
   page: z.number().int().min(1).default(1),
   q: z.string().optional(),
-})
+});
 ```
 
 TanStack Router validates, serializes, and types these params automatically. Components call `useSearch({ from: '/_dashboard/issues/' })` to get the typed params.
@@ -128,12 +135,12 @@ TanStack Router validates, serializes, and types these params automatically. Com
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000,      // 1 minute default
-      gcTime: 5 * 60 * 1000,     // 5 minutes garbage collect
+      staleTime: 60 * 1000, // 1 minute default
+      gcTime: 5 * 60 * 1000, // 5 minutes garbage collect
       retry: 1,
     },
   },
-})
+});
 ```
 
 **Query key factory pattern** (recommended over ad-hoc keys):
@@ -146,7 +153,7 @@ export const issueKeys = {
   list: (filters: IssueFilters) => [...issueKeys.lists(), filters] as const,
   details: () => [...issueKeys.all, 'detail'] as const,
   detail: (id: string) => [...issueKeys.details(), id] as const,
-}
+};
 ```
 
 **`queryOptions` helper** (v5 pattern for reusability):
@@ -158,13 +165,13 @@ export const issueListQuery = (filters: IssueFilters) =>
     queryKey: issueKeys.list(filters),
     queryFn: () => apiClient.issues.list(filters),
     staleTime: 30 * 1000,
-  })
+  });
 
 export const issueDetailQuery = (id: string) =>
   queryOptions({
     queryKey: issueKeys.detail(id),
     queryFn: () => apiClient.issues.get(id),
-  })
+  });
 ```
 
 These `queryOptions` objects can be passed to `useQuery(issueListQuery(filters))` in components, and to `context.queryClient.ensureQueryData(issueDetailQuery(id))` in route loaders for data prefetching.
@@ -176,22 +183,22 @@ const mutation = useMutation({
   mutationFn: (vars: { id: string; status: IssueStatus }) =>
     apiClient.issues.update(vars.id, { status: vars.status }),
   onMutate: async (vars) => {
-    await queryClient.cancelQueries({ queryKey: issueKeys.detail(vars.id) })
-    const previous = queryClient.getQueryData(issueKeys.detail(vars.id))
+    await queryClient.cancelQueries({ queryKey: issueKeys.detail(vars.id) });
+    const previous = queryClient.getQueryData(issueKeys.detail(vars.id));
     queryClient.setQueryData(issueKeys.detail(vars.id), (old) => ({
       ...old,
       status: vars.status,
-    }))
-    return { previous }
+    }));
+    return { previous };
   },
   onError: (_err, vars, ctx) => {
-    queryClient.setQueryData(issueKeys.detail(vars.id), ctx?.previous)
+    queryClient.setQueryData(issueKeys.detail(vars.id), ctx?.previous);
   },
   onSettled: (_data, _err, vars) => {
-    queryClient.invalidateQueries({ queryKey: issueKeys.detail(vars.id) })
-    queryClient.invalidateQueries({ queryKey: issueKeys.lists() })
+    queryClient.invalidateQueries({ queryKey: issueKeys.detail(vars.id) });
+    queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
   },
-})
+});
 ```
 
 ### API Client Architecture
@@ -200,7 +207,7 @@ const mutation = useMutation({
 
 ```ts
 // src/lib/api-client.ts
-import ky from 'ky'
+import ky from 'ky';
 
 const http = ky.create({
   prefixUrl: import.meta.env.VITE_API_URL,
@@ -210,28 +217,28 @@ const http = ky.create({
   hooks: {
     beforeError: [
       async (error) => {
-        const { response } = error
-        error.message = await response.json().then((b) => b.error ?? error.message)
-        return error
+        const { response } = error;
+        error.message = await response.json().then((b) => b.error ?? error.message);
+        return error;
       },
     ],
   },
-})
+});
 
 export const apiClient = {
   issues: {
     list: (filters: IssueFilters) =>
       http.get('api/issues', { searchParams: filters }).json<IssueListResponse>(),
-    get: (id: string) =>
-      http.get(`api/issues/${id}`).json<IssueDetailResponse>(),
+    get: (id: string) => http.get(`api/issues/${id}`).json<IssueDetailResponse>(),
     update: (id: string, data: Partial<Issue>) =>
       http.patch(`api/issues/${id}`, { json: data }).json<Issue>(),
   },
   // projects, goals, templates, signals follow the same pattern
-}
+};
 ```
 
 This pattern:
+
 - Keeps full TypeScript types end-to-end
 - No Axios overhead
 - `ky`'s `searchParams` option handles URL encoding automatically
@@ -258,17 +265,17 @@ The "Loop Activity" view shows signals arriving, issues being created/updated, a
 // A pure CSS timeline — no extra library needed
 function ActivityTimeline({ items }: { items: ActivityItem[] }) {
   return (
-    <ol className="relative border-l border-border">
+    <ol className="border-border relative border-l">
       {items.map((item) => (
         <li key={item.id} className="mb-10 ml-6">
-          <span className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-background ring-8 ring-background">
+          <span className="bg-background ring-background absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full ring-8">
             <ActivityIcon type={item.type} />
           </span>
           <ActivityCard item={item} />
         </li>
       ))}
     </ol>
-  )
+  );
 }
 ```
 
@@ -279,11 +286,13 @@ function ActivityTimeline({ items }: { items: ActivityItem[] }) {
 ### Goals Dashboard and Prompt Health Views
 
 **Goals Dashboard:**
+
 - Stats cards showing counts: total goals, active projects, open issues vs resolved
 - A `Progress` component (shadcn/ui) per goal showing `resolvedIssues / totalIssues`
 - Group issues by goal using data from `GET /api/goals/:id` responses
 
 **Prompt Health view:**
+
 - Cards per active template showing: template name, active version, review count, average score
 - A small `AreaChart` (shadcn/ui charts — built on Recharts) per template showing score trend over time
 - Status badge: `healthy` / `degrading` / `no-data` based on EWMA score from prompt_reviews
@@ -304,6 +313,7 @@ AppShell
 ```
 
 **Nav items:**
+
 - Issues — `ListChecks` icon
 - Activity — `Activity` icon
 - Goals — `Target` icon
@@ -312,6 +322,7 @@ AppShell
 Use the shadcn/ui Sidebar's `SidebarMenu` / `SidebarMenuItem` / `SidebarMenuButton` components for nav items, with TanStack Router's `Link` rendered inside `SidebarMenuButton asChild`.
 
 **Responsive behavior:**
+
 - Desktop: persistent `icon` collapse mode (collapses to icon-only strip, restores on hover or toggle)
 - Mobile: `offcanvas` mode (slides in as a drawer over content)
 
@@ -319,9 +330,9 @@ Use the shadcn/ui Sidebar's `SidebarMenu` / `SidebarMenuItem` / `SidebarMenuButt
 
 ```tsx
 // src/components/markdown-content.tsx
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import rehypePrettyCode from 'rehype-pretty-code'
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypePrettyCode from 'rehype-pretty-code';
 
 export function MarkdownContent({ content }: { content: string }) {
   return (
@@ -333,7 +344,7 @@ export function MarkdownContent({ content }: { content: string }) {
         {content}
       </ReactMarkdown>
     </div>
-  )
+  );
 }
 ```
 
@@ -371,10 +382,12 @@ Tailwind CSS v4 adds the typography plugin via CSS: `@plugin "@tailwindcss/typog
 ### API Key Handling
 
 The `VITE_LOOP_API_KEY` approach embeds the bearer token in the compiled JS bundle. This is acceptable for:
+
 - Internal team tooling hosted behind auth (Vercel password protection, VPN)
 - Local development
 
 It is **not acceptable** for public deployment without additional protections. The correct production path:
+
 1. Add a session/JWT auth layer to the Hono API
 2. Exchange credentials for a short-lived JWT on login
 3. Store the JWT in an `httpOnly` cookie (not `localStorage`)
@@ -387,6 +400,7 @@ The Hono API needs to allow requests from `http://localhost:3000` (dev) and `htt
 ### XSS and Markdown Rendering
 
 `react-markdown` strips dangerous HTML by default. Key rules:
+
 - Do not add the `rehype-raw` plugin unless markdown source is fully controlled
 - User-generated markdown in issue descriptions and comments should be sanitized server-side before storage as a second line of defense
 - Never use `innerHTML` or React's `__html` escape hatch for any markdown-derived content — always use `react-markdown`
@@ -399,15 +413,15 @@ The Hono API needs to allow requests from `http://localhost:3000` (dev) and `htt
 
 Estimated additions to the current clean-slate bundle:
 
-| Library | Size (min+gz) |
-|---|---|
-| `@tanstack/react-router` | ~45KB |
-| `@tanstack/react-query` | ~13KB |
-| `ky` | ~4KB |
-| `@tanstack/react-table` | ~15KB |
-| `react-markdown` + plugins | ~25KB |
-| `rehype-pretty-code` + shiki (web bundle) | ~695KB |
-| `shadcn/ui` (tree-shaken per component) | minimal |
+| Library                                   | Size (min+gz) |
+| ----------------------------------------- | ------------- |
+| `@tanstack/react-router`                  | ~45KB         |
+| `@tanstack/react-query`                   | ~13KB         |
+| `ky`                                      | ~4KB          |
+| `@tanstack/react-table`                   | ~15KB         |
+| `react-markdown` + plugins                | ~25KB         |
+| `rehype-pretty-code` + shiki (web bundle) | ~695KB        |
+| `shadcn/ui` (tree-shaken per component)   | minimal       |
 
 Shiki bundle size is the main concern. Use the web bundle (`shiki/bundle/web`) with on-demand grammar loading. As an alternative, `react-syntax-highlighter` with the PrismLight build (~50KB) is an acceptable downgrade if bundle size is critical.
 
@@ -417,14 +431,14 @@ TanStack Router supports route-level code splitting via `createLazyFileRoute`. R
 
 ### Query Caching Strategy
 
-| Data type | staleTime | Notes |
-|---|---|---|
-| Issue list | 30s | Can go stale quickly as team works |
-| Issue detail | 60s | Less volatile |
-| Projects and Goals | 5min | Changes infrequently |
-| Templates and versions | 5min | Changes on explicit promotion |
-| Activity feed | 0 (always stale) | `refetchInterval: 15_000` |
-| Prompt reviews | 2min | Background refresh sufficient |
+| Data type              | staleTime        | Notes                              |
+| ---------------------- | ---------------- | ---------------------------------- |
+| Issue list             | 30s              | Can go stale quickly as team works |
+| Issue detail           | 60s              | Less volatile                      |
+| Projects and Goals     | 5min             | Changes infrequently               |
+| Templates and versions | 5min             | Changes on explicit promotion      |
+| Activity feed          | 0 (always stale) | `refetchInterval: 15_000`          |
+| Prompt reviews         | 2min             | Background refresh sufficient      |
 
 Use `queryClient.invalidateQueries` on mutations, not manual refetches — TanStack Query will only refetch queries that are currently mounted.
 
@@ -474,6 +488,7 @@ apps/app/src/
 ```
 
 **Package installs needed (from `apps/app/`):**
+
 ```bash
 npm install @tanstack/react-router @tanstack/router-devtools
 npm install @tanstack/react-query @tanstack/react-query-devtools

@@ -101,33 +101,17 @@
             "example": "[PostHog] error_rate: Login failures spiked"
           },
           "description": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "Auth failure rate exceeded 20% over the last hour."
           },
           "type": {
             "type": "string",
-            "enum": [
-              "signal",
-              "hypothesis",
-              "plan",
-              "task",
-              "monitor"
-            ],
+            "enum": ["signal", "hypothesis", "plan", "task", "monitor"],
             "example": "signal"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "triage",
-              "backlog",
-              "todo",
-              "in_progress",
-              "done",
-              "canceled"
-            ],
+            "enum": ["triage", "backlog", "todo", "in_progress", "done", "canceled"],
             "example": "triage"
           },
           "priority": {
@@ -137,31 +121,19 @@
             "example": 2
           },
           "parentId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": null
           },
           "projectId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": null
           },
           "signalSource": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "posthog"
           },
           "signalPayload": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "additionalProperties": {},
             "example": {
               "event": "error_rate",
@@ -172,42 +144,27 @@
             "$ref": "#/components/schemas/HypothesisData"
           },
           "agentSessionId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": null
           },
           "agentSummary": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": null
           },
           "commits": {
-            "type": [
-              "array",
-              "null"
-            ],
+            "type": ["array", "null"],
             "items": {
               "$ref": "#/components/schemas/CommitRef"
             }
           },
           "pullRequests": {
-            "type": [
-              "array",
-              "null"
-            ],
+            "type": ["array", "null"],
             "items": {
               "$ref": "#/components/schemas/PullRequestRef"
             }
           },
           "completedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "example": null
           },
@@ -222,10 +179,7 @@
             "example": "2026-02-20T12:00:00.000Z"
           },
           "deletedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "example": null
           }
@@ -254,10 +208,7 @@
         ]
       },
       "HypothesisData": {
-        "type": [
-          "object",
-          "null"
-        ],
+        "type": ["object", "null"],
         "properties": {
           "statement": {
             "type": "string",
@@ -274,10 +225,7 @@
             "items": {
               "type": "string"
             },
-            "example": [
-              "Login failure rate up 20%",
-              "PostHog session data shows 15% drop-off"
-            ]
+            "example": ["Login failure rate up 20%", "PostHog session data shows 15% drop-off"]
           },
           "validationCriteria": {
             "type": "string",
@@ -288,12 +236,7 @@
             "example": "Failure rate reduced to ~2%"
           }
         },
-        "required": [
-          "statement",
-          "confidence",
-          "evidence",
-          "validationCriteria"
-        ]
+        "required": ["statement", "confidence", "evidence", "validationCriteria"]
       },
       "CommitRef": {
         "type": "object",
@@ -319,10 +262,7 @@
             "example": "2026-02-20T10:00:00Z"
           }
         },
-        "required": [
-          "sha",
-          "message"
-        ]
+        "required": ["sha", "message"]
       },
       "PullRequestRef": {
         "type": "object",
@@ -344,17 +284,11 @@
             "example": "merged"
           },
           "mergedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "2026-02-20T11:00:00Z"
           }
         },
-        "required": [
-          "number",
-          "title"
-        ]
+        "required": ["number", "title"]
       },
       "Label": {
         "type": "object",
@@ -377,21 +311,12 @@
             "example": "2026-02-20T12:00:00.000Z"
           },
           "deletedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "example": "2026-02-20T12:00:00.000Z"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "color",
-          "createdAt",
-          "deletedAt"
-        ]
+        "required": ["id", "name", "color", "createdAt", "deletedAt"]
       },
       "IssueRelation": {
         "type": "object",
@@ -402,12 +327,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "blocks",
-              "blocked_by",
-              "related",
-              "duplicate"
-            ],
+            "enum": ["blocks", "blocked_by", "related", "duplicate"],
             "example": "blocks"
           },
           "issueId": {
@@ -424,13 +344,7 @@
             "example": "2026-02-20T12:00:00.000Z"
           }
         },
-        "required": [
-          "id",
-          "type",
-          "issueId",
-          "relatedIssueId",
-          "createdAt"
-        ]
+        "required": ["id", "type", "issueId", "relatedIssueId", "createdAt"]
       },
       "Comment": {
         "type": "object",
@@ -453,17 +367,11 @@
           },
           "authorType": {
             "type": "string",
-            "enum": [
-              "human",
-              "agent"
-            ],
+            "enum": ["human", "agent"],
             "example": "agent"
           },
           "parentId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "cuid2_abc123"
           },
           "createdAt": {
@@ -472,15 +380,7 @@
             "example": "2026-02-20T12:00:00.000Z"
           }
         },
-        "required": [
-          "id",
-          "body",
-          "issueId",
-          "authorName",
-          "authorType",
-          "parentId",
-          "createdAt"
-        ]
+        "required": ["id", "body", "issueId", "authorName", "authorType", "parentId", "createdAt"]
       },
       "Goal": {
         "type": "object",
@@ -494,54 +394,32 @@
             "example": "Reduce login failure rate to < 5%"
           },
           "description": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "Track auth failure rates from PostHog."
           },
           "metric": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "login_failure_rate"
           },
           "targetValue": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "example": 0.05
           },
           "currentValue": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "example": 0.18
           },
           "unit": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "ratio"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "achieved",
-              "abandoned"
-            ],
+            "enum": ["active", "achieved", "abandoned"],
             "example": "active"
           },
           "projectId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "cuid2_abc123"
           },
           "createdAt": {
@@ -555,10 +433,7 @@
             "example": "2026-02-20T12:00:00.000Z"
           },
           "deletedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "example": "2026-02-20T12:00:00.000Z"
           }
@@ -590,38 +465,21 @@
             "example": "Auth Reliability"
           },
           "description": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "Improve authentication reliability and reduce failures."
           },
           "status": {
             "type": "string",
-            "enum": [
-              "backlog",
-              "planned",
-              "active",
-              "paused",
-              "completed",
-              "canceled"
-            ],
+            "enum": ["backlog", "planned", "active", "paused", "completed", "canceled"],
             "example": "active"
           },
           "health": {
             "type": "string",
-            "enum": [
-              "on_track",
-              "at_risk",
-              "off_track"
-            ],
+            "enum": ["on_track", "at_risk", "off_track"],
             "example": "on_track"
           },
           "goalId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "cuid2_abc123"
           },
           "createdAt": {
@@ -635,10 +493,7 @@
             "example": "2026-02-20T12:00:00.000Z"
           },
           "deletedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "example": "2026-02-20T12:00:00.000Z"
           }
@@ -667,10 +522,7 @@
             "example": "posthog"
           },
           "sourceId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "evt_12345"
           },
           "type": {
@@ -679,12 +531,7 @@
           },
           "severity": {
             "type": "string",
-            "enum": [
-              "low",
-              "medium",
-              "high",
-              "critical"
-            ],
+            "enum": ["low", "medium", "high", "critical"],
             "example": "high"
           },
           "payload": {
@@ -732,10 +579,7 @@
             "example": "Signal Triage"
           },
           "description": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "Default template for triaging incoming signals."
           },
           "conditions": {
@@ -743,13 +587,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "signal",
-                  "hypothesis",
-                  "plan",
-                  "task",
-                  "monitor"
-                ]
+                "enum": ["signal", "hypothesis", "plan", "task", "monitor"]
               },
               "signalSource": {
                 "type": "string"
@@ -784,17 +622,11 @@
             "example": 10
           },
           "projectId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "cuid2_abc123"
           },
           "activeVersionId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "cuid2_abc123"
           },
           "createdAt": {
@@ -808,10 +640,7 @@
             "example": "2026-02-20T12:00:00.000Z"
           },
           "deletedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "example": "2026-02-20T12:00:00.000Z"
           }
@@ -850,18 +679,12 @@
             "example": "# Signal Triage: {{issue.title}}\n\nYou are triaging signal #{{issue.number}}."
           },
           "changelog": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "Initial version"
           },
           "authorType": {
             "type": "string",
-            "enum": [
-              "human",
-              "agent"
-            ],
+            "enum": ["human", "agent"],
             "example": "human"
           },
           "authorName": {
@@ -870,11 +693,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "draft",
-              "retired"
-            ],
+            "enum": ["active", "draft", "retired"],
             "example": "active"
           },
           "usageCount": {
@@ -882,24 +701,15 @@
             "example": 0
           },
           "completionRate": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "example": null
           },
           "avgDurationMs": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "example": null
           },
           "reviewScore": {
-            "type": [
-              "number",
-              "null"
-            ],
+            "type": ["number", "null"],
             "example": null
           },
           "createdAt": {
@@ -958,18 +768,12 @@
             "example": 3
           },
           "feedback": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "example": "Instructions were clear but missing error handling steps."
           },
           "authorType": {
             "type": "string",
-            "enum": [
-              "human",
-              "agent"
-            ],
+            "enum": ["human", "agent"],
             "example": "agent"
           },
           "createdAt": {
@@ -996,9 +800,7 @@
   "paths": {
     "/health": {
       "get": {
-        "tags": [
-          "System"
-        ],
+        "tags": ["System"],
         "summary": "Health check",
         "description": "Returns service health status. No authentication required.",
         "responses": {
@@ -1023,11 +825,7 @@
                       "example": "2026-02-20T12:00:00.000Z"
                     }
                   },
-                  "required": [
-                    "ok",
-                    "service",
-                    "timestamp"
-                  ]
+                  "required": ["ok", "service", "timestamp"]
                 }
               }
             }
@@ -1037,9 +835,7 @@
     },
     "/": {
       "get": {
-        "tags": [
-          "System"
-        ],
+        "tags": ["System"],
         "summary": "Service info",
         "description": "Returns service name and version. No authentication required.",
         "responses": {
@@ -1059,10 +855,7 @@
                       "example": "0.1.0"
                     }
                   },
-                  "required": [
-                    "name",
-                    "version"
-                  ]
+                  "required": ["name", "version"]
                 }
               }
             }
@@ -1072,9 +865,7 @@
     },
     "/api/issues": {
       "get": {
-        "tags": [
-          "Issues"
-        ],
+        "tags": ["Issues"],
         "summary": "List issues",
         "description": "Returns a paginated list of issues, filterable by status, type, projectId, labelId, priority, and parentId.",
         "security": [
@@ -1125,10 +916,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "maximum": 4,
               "example": 2
@@ -1160,10 +948,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "example": 0
@@ -1192,10 +977,7 @@
                       "example": 42
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -1206,9 +988,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Issues"
-        ],
+        "tags": ["Issues"],
         "summary": "Create an issue",
         "security": [
           {
@@ -1233,25 +1013,12 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "signal",
-                      "hypothesis",
-                      "plan",
-                      "task",
-                      "monitor"
-                    ],
+                    "enum": ["signal", "hypothesis", "plan", "task", "monitor"],
                     "example": "signal"
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "triage",
-                      "backlog",
-                      "todo",
-                      "in_progress",
-                      "done",
-                      "canceled"
-                    ],
+                    "enum": ["triage", "backlog", "todo", "in_progress", "done", "canceled"],
                     "default": "triage",
                     "example": "triage"
                   },
@@ -1287,10 +1054,7 @@
                     "example": []
                   }
                 },
-                "required": [
-                  "title",
-                  "type"
-                ]
+                "required": ["title", "type"]
               }
             }
           }
@@ -1307,9 +1071,7 @@
                       "$ref": "#/components/schemas/Issue"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1325,9 +1087,7 @@
     },
     "/api/issues/{id}": {
       "get": {
-        "tags": [
-          "Issues"
-        ],
+        "tags": ["Issues"],
         "summary": "Get issue by ID",
         "description": "Returns the issue with its parent, children, labels, and relations.",
         "security": [
@@ -1368,10 +1128,7 @@
                                   "$ref": "#/components/schemas/Issue"
                                 },
                                 {
-                                  "type": [
-                                    "object",
-                                    "null"
-                                  ]
+                                  "type": ["object", "null"]
                                 }
                               ]
                             },
@@ -1394,19 +1151,12 @@
                               }
                             }
                           },
-                          "required": [
-                            "parent",
-                            "children",
-                            "labels",
-                            "relations"
-                          ]
+                          "required": ["parent", "children", "labels", "relations"]
                         }
                       ]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1417,9 +1167,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Issues"
-        ],
+        "tags": ["Issues"],
         "summary": "Update an issue",
         "security": [
           {
@@ -1453,24 +1201,11 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "signal",
-                      "hypothesis",
-                      "plan",
-                      "task",
-                      "monitor"
-                    ]
+                    "enum": ["signal", "hypothesis", "plan", "task", "monitor"]
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "triage",
-                      "backlog",
-                      "todo",
-                      "in_progress",
-                      "done",
-                      "canceled"
-                    ]
+                    "enum": ["triage", "backlog", "todo", "in_progress", "done", "canceled"]
                   },
                   "priority": {
                     "type": "integer",
@@ -1478,16 +1213,10 @@
                     "maximum": 4
                   },
                   "parentId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   },
                   "projectId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   },
                   "signalSource": {
                     "type": "string"
@@ -1516,9 +1245,7 @@
                       "$ref": "#/components/schemas/Issue"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1532,9 +1259,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Issues"
-        ],
+        "tags": ["Issues"],
         "summary": "Soft-delete an issue",
         "security": [
           {
@@ -1564,9 +1289,7 @@
     },
     "/api/issues/{id}/relations": {
       "post": {
-        "tags": [
-          "Relations"
-        ],
+        "tags": ["Relations"],
         "summary": "Create a relation between two issues",
         "security": [
           {
@@ -1592,12 +1315,7 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "blocks",
-                      "blocked_by",
-                      "related",
-                      "duplicate"
-                    ],
+                    "enum": ["blocks", "blocked_by", "related", "duplicate"],
                     "example": "blocks"
                   },
                   "relatedIssueId": {
@@ -1606,10 +1324,7 @@
                     "description": "ID of the related issue"
                   }
                 },
-                "required": [
-                  "type",
-                  "relatedIssueId"
-                ]
+                "required": ["type", "relatedIssueId"]
               }
             }
           }
@@ -1626,9 +1341,7 @@
                       "$ref": "#/components/schemas/IssueRelation"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1644,9 +1357,7 @@
     },
     "/api/relations/{id}": {
       "delete": {
-        "tags": [
-          "Relations"
-        ],
+        "tags": ["Relations"],
         "summary": "Hard-delete a relation",
         "security": [
           {
@@ -1676,9 +1387,7 @@
     },
     "/api/issues/{id}/comments": {
       "get": {
-        "tags": [
-          "Comments"
-        ],
+        "tags": ["Comments"],
         "summary": "List comments for an issue",
         "description": "Returns threaded comments (top-level with nested replies).",
         "security": [
@@ -1722,17 +1431,13 @@
                                 }
                               }
                             },
-                            "required": [
-                              "replies"
-                            ]
+                            "required": ["replies"]
                           }
                         ]
                       }
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1743,9 +1448,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Comments"
-        ],
+        "tags": ["Comments"],
         "summary": "Add a comment to an issue",
         "security": [
           {
@@ -1781,10 +1484,7 @@
                   },
                   "authorType": {
                     "type": "string",
-                    "enum": [
-                      "human",
-                      "agent"
-                    ],
+                    "enum": ["human", "agent"],
                     "example": "agent"
                   },
                   "parentId": {
@@ -1792,11 +1492,7 @@
                     "description": "Parent comment ID for threaded replies"
                   }
                 },
-                "required": [
-                  "body",
-                  "authorName",
-                  "authorType"
-                ]
+                "required": ["body", "authorName", "authorType"]
               }
             }
           }
@@ -1813,9 +1509,7 @@
                       "$ref": "#/components/schemas/Comment"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1831,9 +1525,7 @@
     },
     "/api/labels": {
       "get": {
-        "tags": [
-          "Labels"
-        ],
+        "tags": ["Labels"],
         "summary": "List labels",
         "security": [
           {
@@ -1857,10 +1549,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "description": "Number of records to skip",
@@ -1891,10 +1580,7 @@
                       "example": 42
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -1902,9 +1588,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Labels"
-        ],
+        "tags": ["Labels"],
         "summary": "Create a label",
         "security": [
           {
@@ -1930,10 +1614,7 @@
                     "example": "#ff6b6b"
                   }
                 },
-                "required": [
-                  "name",
-                  "color"
-                ]
+                "required": ["name", "color"]
               }
             }
           }
@@ -1950,9 +1631,7 @@
                       "$ref": "#/components/schemas/Label"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -1968,9 +1647,7 @@
     },
     "/api/labels/{id}": {
       "delete": {
-        "tags": [
-          "Labels"
-        ],
+        "tags": ["Labels"],
         "summary": "Soft-delete a label",
         "security": [
           {
@@ -2000,9 +1677,7 @@
     },
     "/api/projects": {
       "get": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "summary": "List projects",
         "security": [
           {
@@ -2026,10 +1701,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "description": "Number of records to skip",
@@ -2060,10 +1732,7 @@
                       "example": 42
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -2071,9 +1740,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "summary": "Create a project",
         "security": [
           {
@@ -2098,24 +1765,13 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "backlog",
-                      "planned",
-                      "active",
-                      "paused",
-                      "completed",
-                      "canceled"
-                    ],
+                    "enum": ["backlog", "planned", "active", "paused", "completed", "canceled"],
                     "default": "backlog",
                     "example": "active"
                   },
                   "health": {
                     "type": "string",
-                    "enum": [
-                      "on_track",
-                      "at_risk",
-                      "off_track"
-                    ],
+                    "enum": ["on_track", "at_risk", "off_track"],
                     "default": "on_track",
                     "example": "on_track"
                   },
@@ -2123,9 +1779,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -2142,9 +1796,7 @@
                       "$ref": "#/components/schemas/Project"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2157,9 +1809,7 @@
     },
     "/api/projects/{id}": {
       "get": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "summary": "Get project by ID",
         "description": "Returns the project with linked goal and issue counts by status.",
         "security": [
@@ -2200,10 +1850,7 @@
                                   "$ref": "#/components/schemas/Goal"
                                 },
                                 {
-                                  "type": [
-                                    "object",
-                                    "null"
-                                  ]
+                                  "type": ["object", "null"]
                                 }
                               ]
                             },
@@ -2219,17 +1866,12 @@
                               }
                             }
                           },
-                          "required": [
-                            "goal",
-                            "issueCounts"
-                          ]
+                          "required": ["goal", "issueCounts"]
                         }
                       ]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2240,9 +1882,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "summary": "Update a project",
         "security": [
           {
@@ -2276,28 +1916,14 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "backlog",
-                      "planned",
-                      "active",
-                      "paused",
-                      "completed",
-                      "canceled"
-                    ]
+                    "enum": ["backlog", "planned", "active", "paused", "completed", "canceled"]
                   },
                   "health": {
                     "type": "string",
-                    "enum": [
-                      "on_track",
-                      "at_risk",
-                      "off_track"
-                    ]
+                    "enum": ["on_track", "at_risk", "off_track"]
                   },
                   "goalId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   }
                 }
               }
@@ -2316,9 +1942,7 @@
                       "$ref": "#/components/schemas/Project"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2332,9 +1956,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "summary": "Soft-delete a project",
         "security": [
           {
@@ -2364,9 +1986,7 @@
     },
     "/api/goals": {
       "get": {
-        "tags": [
-          "Goals"
-        ],
+        "tags": ["Goals"],
         "summary": "List goals",
         "security": [
           {
@@ -2390,10 +2010,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "description": "Number of records to skip",
@@ -2424,10 +2041,7 @@
                       "example": 42
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -2435,9 +2049,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Goals"
-        ],
+        "tags": ["Goals"],
         "summary": "Create a goal",
         "security": [
           {
@@ -2477,11 +2089,7 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "active",
-                      "achieved",
-                      "abandoned"
-                    ],
+                    "enum": ["active", "achieved", "abandoned"],
                     "default": "active",
                     "example": "active"
                   },
@@ -2489,9 +2097,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "title"
-                ]
+                "required": ["title"]
               }
             }
           }
@@ -2508,9 +2114,7 @@
                       "$ref": "#/components/schemas/Goal"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2523,9 +2127,7 @@
     },
     "/api/goals/{id}": {
       "get": {
-        "tags": [
-          "Goals"
-        ],
+        "tags": ["Goals"],
         "summary": "Get goal by ID",
         "security": [
           {
@@ -2555,9 +2157,7 @@
                       "$ref": "#/components/schemas/Goal"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2568,9 +2168,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Goals"
-        ],
+        "tags": ["Goals"],
         "summary": "Update a goal",
         "security": [
           {
@@ -2600,48 +2198,26 @@
                     "maxLength": 500
                   },
                   "description": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   },
                   "metric": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   },
                   "targetValue": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "currentValue": {
-                    "type": [
-                      "number",
-                      "null"
-                    ]
+                    "type": ["number", "null"]
                   },
                   "unit": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "active",
-                      "achieved",
-                      "abandoned"
-                    ]
+                    "enum": ["active", "achieved", "abandoned"]
                   },
                   "projectId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   }
                 }
               }
@@ -2660,9 +2236,7 @@
                       "$ref": "#/components/schemas/Goal"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2676,9 +2250,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Goals"
-        ],
+        "tags": ["Goals"],
         "summary": "Soft-delete a goal",
         "security": [
           {
@@ -2708,9 +2280,7 @@
     },
     "/api/signals": {
       "post": {
-        "tags": [
-          "Signals"
-        ],
+        "tags": ["Signals"],
         "summary": "Ingest a signal",
         "description": "Creates a signal and atomically creates a linked triage issue.",
         "security": [
@@ -2740,12 +2310,7 @@
                   },
                   "severity": {
                     "type": "string",
-                    "enum": [
-                      "low",
-                      "medium",
-                      "high",
-                      "critical"
-                    ],
+                    "enum": ["low", "medium", "high", "critical"],
                     "example": "high"
                   },
                   "payload": {
@@ -2760,12 +2325,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "source",
-                  "type",
-                  "severity",
-                  "payload"
-                ]
+                "required": ["source", "type", "severity", "payload"]
               }
             }
           }
@@ -2788,15 +2348,10 @@
                           "$ref": "#/components/schemas/Issue"
                         }
                       },
-                      "required": [
-                        "signal",
-                        "issue"
-                      ]
+                      "required": ["signal", "issue"]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -2809,9 +2364,7 @@
     },
     "/api/templates": {
       "get": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "List prompt templates",
         "security": [
           {
@@ -2835,10 +2388,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "description": "Number of records to skip",
@@ -2869,10 +2419,7 @@
                       "example": 42
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -2880,9 +2427,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "Create a prompt template",
         "security": [
           {
@@ -2917,13 +2462,7 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": [
-                          "signal",
-                          "hypothesis",
-                          "plan",
-                          "task",
-                          "monitor"
-                        ]
+                        "enum": ["signal", "hypothesis", "plan", "task", "monitor"]
                       },
                       "signalSource": {
                         "type": "string"
@@ -2963,10 +2502,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "slug",
-                  "name"
-                ]
+                "required": ["slug", "name"]
               }
             }
           }
@@ -2983,9 +2519,7 @@
                       "$ref": "#/components/schemas/PromptTemplate"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3001,9 +2535,7 @@
     },
     "/api/templates/{id}": {
       "get": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "Get template by ID",
         "description": "Returns the template with its active version.",
         "security": [
@@ -3044,24 +2576,17 @@
                                   "$ref": "#/components/schemas/PromptVersion"
                                 },
                                 {
-                                  "type": [
-                                    "object",
-                                    "null"
-                                  ]
+                                  "type": ["object", "null"]
                                 }
                               ]
                             }
                           },
-                          "required": [
-                            "activeVersion"
-                          ]
+                          "required": ["activeVersion"]
                         }
                       ]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3072,9 +2597,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "Update a template",
         "security": [
           {
@@ -3111,13 +2634,7 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": [
-                          "signal",
-                          "hypothesis",
-                          "plan",
-                          "task",
-                          "monitor"
-                        ]
+                        "enum": ["signal", "hypothesis", "plan", "task", "monitor"]
                       },
                       "signalSource": {
                         "type": "string"
@@ -3151,10 +2668,7 @@
                     "maximum": 100
                   },
                   "projectId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": ["string", "null"]
                   }
                 }
               }
@@ -3173,9 +2687,7 @@
                       "$ref": "#/components/schemas/PromptTemplate"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3186,9 +2698,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "Soft-delete a template",
         "security": [
           {
@@ -3218,9 +2728,7 @@
     },
     "/api/templates/{id}/versions": {
       "get": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "List versions for a template",
         "security": [
           {
@@ -3253,10 +2761,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "description": "Number of records to skip",
@@ -3287,10 +2792,7 @@
                       "example": 42
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -3301,9 +2803,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "Create a new version",
         "description": "Auto-increments version number. Rejects content containing triple-braces to prevent template injection.",
         "security": [
@@ -3339,10 +2839,7 @@
                   },
                   "authorType": {
                     "type": "string",
-                    "enum": [
-                      "human",
-                      "agent"
-                    ],
+                    "enum": ["human", "agent"],
                     "example": "human"
                   },
                   "authorName": {
@@ -3351,11 +2848,7 @@
                     "example": "dorian"
                   }
                 },
-                "required": [
-                  "content",
-                  "authorType",
-                  "authorName"
-                ]
+                "required": ["content", "authorType", "authorName"]
               }
             }
           }
@@ -3372,9 +2865,7 @@
                       "$ref": "#/components/schemas/PromptVersion"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3390,9 +2881,7 @@
     },
     "/api/templates/{id}/versions/{versionId}/promote": {
       "post": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "Promote a version to active",
         "description": "Sets the version as active and retires the current active version.",
         "security": [
@@ -3432,9 +2921,7 @@
                       "$ref": "#/components/schemas/PromptVersion"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3450,9 +2937,7 @@
     },
     "/api/templates/{id}/reviews": {
       "get": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "List reviews for a template",
         "description": "Returns reviews across all versions of the template.",
         "security": [
@@ -3486,10 +2971,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "description": "Number of records to skip",
@@ -3520,10 +3002,7 @@
                       "example": 42
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -3536,9 +3015,7 @@
     },
     "/api/templates/preview/{issueId}": {
       "get": {
-        "tags": [
-          "Templates"
-        ],
+        "tags": ["Templates"],
         "summary": "Preview template selection for an issue",
         "description": "Selects and hydrates a template for the given issue without claiming it. Useful for debugging template selection.",
         "security": [
@@ -3580,27 +3057,13 @@
                         },
                         "type": {
                           "type": "string",
-                          "enum": [
-                            "signal",
-                            "hypothesis",
-                            "plan",
-                            "task",
-                            "monitor"
-                          ]
+                          "enum": ["signal", "hypothesis", "plan", "task", "monitor"]
                         }
                       },
-                      "required": [
-                        "id",
-                        "number",
-                        "title",
-                        "type"
-                      ]
+                      "required": ["id", "number", "title", "type"]
                     },
                     "template": {
-                      "type": [
-                        "object",
-                        "null"
-                      ],
+                      "type": ["object", "null"],
                       "properties": {
                         "id": {
                           "type": "string",
@@ -3617,13 +3080,7 @@
                           "properties": {
                             "type": {
                               "type": "string",
-                              "enum": [
-                                "signal",
-                                "hypothesis",
-                                "plan",
-                                "task",
-                                "monitor"
-                              ]
+                              "enum": ["signal", "hypothesis", "plan", "task", "monitor"]
                             },
                             "signalSource": {
                               "type": "string"
@@ -3655,18 +3112,10 @@
                           "type": "integer"
                         }
                       },
-                      "required": [
-                        "id",
-                        "slug",
-                        "conditions",
-                        "specificity"
-                      ]
+                      "required": ["id", "slug", "conditions", "specificity"]
                     },
                     "version": {
-                      "type": [
-                        "object",
-                        "null"
-                      ],
+                      "type": ["object", "null"],
                       "properties": {
                         "id": {
                           "type": "string",
@@ -3676,16 +3125,10 @@
                           "type": "integer"
                         }
                       },
-                      "required": [
-                        "id",
-                        "version"
-                      ]
+                      "required": ["id", "version"]
                     },
                     "prompt": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Hydrated Handlebars prompt content"
                     },
                     "message": {
@@ -3693,12 +3136,7 @@
                       "example": "No matching template found"
                     }
                   },
-                  "required": [
-                    "issue",
-                    "template",
-                    "version",
-                    "prompt"
-                  ]
+                  "required": ["issue", "template", "version", "prompt"]
                 }
               }
             }
@@ -3711,9 +3149,7 @@
     },
     "/api/prompt-reviews": {
       "post": {
-        "tags": [
-          "Prompt Reviews"
-        ],
+        "tags": ["Prompt Reviews"],
         "summary": "Submit a prompt review",
         "description": "Submits a quality review for a prompt version. Updates the version's EWMA review score and triggers an improvement issue if quality degrades below threshold.",
         "security": [
@@ -3761,10 +3197,7 @@
                   },
                   "authorType": {
                     "type": "string",
-                    "enum": [
-                      "human",
-                      "agent"
-                    ],
+                    "enum": ["human", "agent"],
                     "example": "agent"
                   }
                 },
@@ -3792,9 +3225,7 @@
                       "$ref": "#/components/schemas/PromptReview"
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -3810,9 +3241,7 @@
     },
     "/api/dispatch/next": {
       "get": {
-        "tags": [
-          "Dispatch"
-        ],
+        "tags": ["Dispatch"],
         "summary": "Claim the highest-priority unblocked issue",
         "description": "Atomically claims the highest-priority unblocked todo issue using FOR UPDATE SKIP LOCKED, sets it to in_progress, selects the best matching template, and returns a hydrated prompt. Returns 204 when queue is empty.",
         "security": [
@@ -3858,13 +3287,7 @@
                         },
                         "type": {
                           "type": "string",
-                          "enum": [
-                            "signal",
-                            "hypothesis",
-                            "plan",
-                            "task",
-                            "monitor"
-                          ],
+                          "enum": ["signal", "hypothesis", "plan", "task", "monitor"],
                           "example": "signal"
                         },
                         "priority": {
@@ -3873,38 +3296,18 @@
                         },
                         "status": {
                           "type": "string",
-                          "enum": [
-                            "triage",
-                            "backlog",
-                            "todo",
-                            "in_progress",
-                            "done",
-                            "canceled"
-                          ],
+                          "enum": ["triage", "backlog", "todo", "in_progress", "done", "canceled"],
                           "example": "in_progress"
                         }
                       },
-                      "required": [
-                        "id",
-                        "number",
-                        "title",
-                        "type",
-                        "priority",
-                        "status"
-                      ]
+                      "required": ["id", "number", "title", "type", "priority", "status"]
                     },
                     "prompt": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
+                      "type": ["string", "null"],
                       "description": "Hydrated prompt text, or null if no template matched"
                     },
                     "meta": {
-                      "type": [
-                        "object",
-                        "null"
-                      ],
+                      "type": ["object", "null"],
                       "properties": {
                         "templateSlug": {
                           "type": "string",
@@ -3936,11 +3339,7 @@
                       ]
                     }
                   },
-                  "required": [
-                    "issue",
-                    "prompt",
-                    "meta"
-                  ]
+                  "required": ["issue", "prompt", "meta"]
                 }
               }
             }
@@ -3956,9 +3355,7 @@
     },
     "/api/dispatch/queue": {
       "get": {
-        "tags": [
-          "Dispatch"
-        ],
+        "tags": ["Dispatch"],
         "summary": "Preview the priority-ordered dispatch queue",
         "description": "Returns unblocked todo issues sorted by priority score (does not claim any issues).",
         "security": [
@@ -3990,10 +3387,7 @@
           },
           {
             "schema": {
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": ["integer", "null"],
               "minimum": 0,
               "default": 0,
               "example": 0
@@ -4043,19 +3437,10 @@
                                 "example": 50
                               }
                             },
-                            "required": [
-                              "priorityWeight",
-                              "goalBonus",
-                              "ageBonus",
-                              "typeBonus"
-                            ]
+                            "required": ["priorityWeight", "goalBonus", "ageBonus", "typeBonus"]
                           }
                         },
-                        "required": [
-                          "issue",
-                          "score",
-                          "breakdown"
-                        ]
+                        "required": ["issue", "score", "breakdown"]
                       }
                     },
                     "total": {
@@ -4063,10 +3448,7 @@
                       "example": 25
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -4079,9 +3461,7 @@
     },
     "/api/dashboard/stats": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "summary": "System health metrics",
         "description": "Returns aggregated issue counts by status/type, goal counts, and dispatch queue metrics.",
         "security": [
@@ -4133,11 +3513,7 @@
                               }
                             }
                           },
-                          "required": [
-                            "total",
-                            "byStatus",
-                            "byType"
-                          ]
+                          "required": ["total", "byStatus", "byType"]
                         },
                         "goals": {
                           "type": "object",
@@ -4155,11 +3531,7 @@
                               "example": 2
                             }
                           },
-                          "required": [
-                            "total",
-                            "active",
-                            "achieved"
-                          ]
+                          "required": ["total", "active", "achieved"]
                         },
                         "dispatch": {
                           "type": "object",
@@ -4177,23 +3549,13 @@
                               "example": 12
                             }
                           },
-                          "required": [
-                            "queueDepth",
-                            "activeCount",
-                            "completedLast24h"
-                          ]
+                          "required": ["queueDepth", "activeCount", "completedLast24h"]
                         }
                       },
-                      "required": [
-                        "issues",
-                        "goals",
-                        "dispatch"
-                      ]
+                      "required": ["issues", "goals", "dispatch"]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -4206,9 +3568,7 @@
     },
     "/api/dashboard/activity": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "summary": "Signal chains for activity timeline",
         "description": "Returns pre-assembled signal chains (root issues with children and relations), sorted by most recent activity.",
         "security": [
@@ -4261,10 +3621,7 @@
                                   }
                                 }
                               },
-                              "required": [
-                                "issue",
-                                "relations"
-                              ]
+                              "required": ["issue", "relations"]
                             }
                           },
                           "latestActivity": {
@@ -4273,11 +3630,7 @@
                             "example": "2026-02-20T12:00:00.000Z"
                           }
                         },
-                        "required": [
-                          "root",
-                          "children",
-                          "latestActivity"
-                        ]
+                        "required": ["root", "children", "latestActivity"]
                       }
                     },
                     "total": {
@@ -4285,10 +3638,7 @@
                       "example": 20
                     }
                   },
-                  "required": [
-                    "data",
-                    "total"
-                  ]
+                  "required": ["data", "total"]
                 }
               }
             }
@@ -4301,9 +3651,7 @@
     },
     "/api/dashboard/prompts": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "summary": "Template health with scores",
         "description": "Returns all prompt templates with version history and aggregated review scores.",
         "security": [
@@ -4333,10 +3681,7 @@
                                 "$ref": "#/components/schemas/PromptVersion"
                               },
                               {
-                                "type": [
-                                  "object",
-                                  "null"
-                                ]
+                                "type": ["object", "null"]
                               }
                             ]
                           },
@@ -4355,31 +3700,19 @@
                                 "example": 12
                               },
                               "avgClarity": {
-                                "type": [
-                                  "number",
-                                  "null"
-                                ],
+                                "type": ["number", "null"],
                                 "example": 4.1
                               },
                               "avgCompleteness": {
-                                "type": [
-                                  "number",
-                                  "null"
-                                ],
+                                "type": ["number", "null"],
                                 "example": 3.8
                               },
                               "avgRelevance": {
-                                "type": [
-                                  "number",
-                                  "null"
-                                ],
+                                "type": ["number", "null"],
                                 "example": 4.3
                               },
                               "compositeScore": {
-                                "type": [
-                                  "number",
-                                  "null"
-                                ],
+                                "type": ["number", "null"],
                                 "example": 4.07
                               }
                             },
@@ -4407,9 +3740,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -4422,9 +3753,7 @@
     },
     "/api/signals/posthog": {
       "post": {
-        "tags": [
-          "Webhooks"
-        ],
+        "tags": ["Webhooks"],
         "summary": "PostHog metric alert webhook",
         "description": "Receives metric alert webhooks from PostHog. Authenticated via POSTHOG_WEBHOOK_SECRET in the Authorization header.",
         "requestBody": {
@@ -4456,15 +3785,10 @@
                           "$ref": "#/components/schemas/Issue"
                         }
                       },
-                      "required": [
-                        "signal",
-                        "issue"
-                      ]
+                      "required": ["signal", "issue"]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -4480,9 +3804,7 @@
     },
     "/api/signals/github": {
       "post": {
-        "tags": [
-          "Webhooks"
-        ],
+        "tags": ["Webhooks"],
         "summary": "GitHub events webhook",
         "description": "Receives GitHub events (push, pull_request, issues). Verified via HMAC-SHA256 signature using GITHUB_WEBHOOK_SECRET.",
         "requestBody": {
@@ -4514,15 +3836,10 @@
                           "$ref": "#/components/schemas/Issue"
                         }
                       },
-                      "required": [
-                        "signal",
-                        "issue"
-                      ]
+                      "required": ["signal", "issue"]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }
@@ -4538,9 +3855,7 @@
     },
     "/api/signals/sentry": {
       "post": {
-        "tags": [
-          "Webhooks"
-        ],
+        "tags": ["Webhooks"],
         "summary": "Sentry error alert webhook",
         "description": "Receives Sentry error alerts. Verified via HMAC-SHA256 signature using SENTRY_CLIENT_SECRET.",
         "requestBody": {
@@ -4572,15 +3887,10 @@
                           "$ref": "#/components/schemas/Issue"
                         }
                       },
-                      "required": [
-                        "signal",
-                        "issue"
-                      ]
+                      "required": ["signal", "issue"]
                     }
                   },
-                  "required": [
-                    "data"
-                  ]
+                  "required": ["data"]
                 }
               }
             }

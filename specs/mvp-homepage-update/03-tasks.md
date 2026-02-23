@@ -1,4 +1,5 @@
 # Task Breakdown: Update Marketing Homepage Post-MVP
+
 Generated: 2026-02-20
 Source: specs/mvp-homepage-update/02-specification.md
 Last Decompose: 2026-02-20
@@ -14,6 +15,7 @@ Update the Loop marketing homepage (`apps/web`) to accurately describe the compl
 **Objective:** Remove 20 files that describe the wrong product vision (autonomous codebase scanner) and are unused dead code.
 
 **Files to delete (15 UI components):**
+
 - `apps/web/src/layers/features/marketing/ui/HonestySection.tsx`
 - `apps/web/src/layers/features/marketing/ui/ProblemSection.tsx`
 - `apps/web/src/layers/features/marketing/ui/NotSection.tsx`
@@ -31,6 +33,7 @@ Update the Loop marketing homepage (`apps/web`) to accurately describe the compl
 - `apps/web/src/layers/features/marketing/ui/CredibilityBar.tsx`
 
 **Files to delete (5 data/types):**
+
 - `apps/web/src/layers/features/marketing/lib/projects.ts`
 - `apps/web/src/layers/features/marketing/lib/philosophy.ts`
 - `apps/web/src/layers/features/marketing/lib/modules.ts`
@@ -38,6 +41,7 @@ Update the Loop marketing homepage (`apps/web`) to accurately describe the compl
 - `apps/web/src/layers/features/marketing/lib/types.ts`
 
 **Acceptance Criteria:**
+
 - [ ] All 20 files are deleted from the repository
 - [ ] No other files reference these deleted files (check imports)
 - [ ] `git status` shows 20 deleted files
@@ -50,21 +54,21 @@ Update the Loop marketing homepage (`apps/web`) to accurately describe the compl
 
 ```typescript
 // UI components
-export { ContactSection } from './ui/ContactSection'
-export { MarketingNav } from './ui/MarketingNav'
-export { MarketingHeader } from './ui/MarketingHeader'
-export { MarketingFooter } from './ui/MarketingFooter'
-export { LoopHero } from './ui/LoopHero'
-export { LoopValueProps } from './ui/LoopValueProps'
-export { IntegrationsBar } from './ui/IntegrationsBar'
-export { HowItWorksFlow } from './ui/HowItWorksFlow'
-export { QuickStartSection } from './ui/QuickStartSection'
+export { ContactSection } from './ui/ContactSection';
+export { MarketingNav } from './ui/MarketingNav';
+export { MarketingHeader } from './ui/MarketingHeader';
+export { MarketingFooter } from './ui/MarketingFooter';
+export { LoopHero } from './ui/LoopHero';
+export { LoopValueProps } from './ui/LoopValueProps';
+export { IntegrationsBar } from './ui/IntegrationsBar';
+export { HowItWorksFlow } from './ui/HowItWorksFlow';
+export { QuickStartSection } from './ui/QuickStartSection';
 
 // Motion
-export { SPRING, VIEWPORT, REVEAL, STAGGER, SCALE_IN, DRAW_PATH } from './lib/motion-variants'
+export { SPRING, VIEWPORT, REVEAL, STAGGER, SCALE_IN, DRAW_PATH } from './lib/motion-variants';
 
 // Types
-export type { NavLink } from './ui/MarketingNav'
+export type { NavLink } from './ui/MarketingNav';
 ```
 
 **Update `apps/web/src/config/site.ts`:**
@@ -81,7 +85,7 @@ export const siteConfig = {
   npm: 'https://www.npmjs.com/package/looped',
   ogImage: '/og-image.png',
   disableCookieBanner: true,
-} as const
+} as const;
 ```
 
 Changes: `description` updated to reflect actual product. `npm` URL updated from `loop` to `looped`.
@@ -90,6 +94,7 @@ Changes: `description` updated to reflect actual product. `npm` URL updated from
 Change `v0.2.0 · System Online` to `v0.1.0 · System Online`.
 
 **Acceptance Criteria:**
+
 - [ ] Barrel export file has no references to deleted files
 - [ ] New component exports are declared (IntegrationsBar, HowItWorksFlow, QuickStartSection)
 - [ ] `site.ts` description mentions signals, issues, and hydrated prompts
@@ -106,6 +111,7 @@ Change `v0.2.0 · System Online` to `v0.1.0 · System Online`.
 **File:** `apps/web/src/layers/features/marketing/ui/LoopHero.tsx`
 
 **Left Panel Content:**
+
 - **Eyebrow:** `"Open source"` — `font-mono text-2xs tracking-[0.2em] uppercase text-brand-orange`
 - **Headline:** `"Close the feedback loop on AI-powered development."` — `font-bold text-charcoal tracking-[-0.04em]` with `clamp(32px, 5.5vw, 64px)`
 - **Subhead:** `"Loop collects signals from your stack — errors, metrics, user feedback — organizes them into prioritized issues, and tells your agents exactly what to fix next."` — `text-warm-gray font-light leading-[1.75]`
@@ -117,6 +123,7 @@ Change `v0.2.0 · System Online` to `v0.1.0 · System Online`.
 **Layout:** `grid grid-cols-1 lg:grid-cols-[55%_1fr]` matching the existing `ActivityFeedHero` grid pattern.
 
 **Right Panel — Feedback Loop SVG Diagram:**
+
 - SVG `viewBox="0 0 400 320"` with 5 nodes arranged in a rounded rectangle flow
 - Nodes: `Signal` (top-left), `Issue` (top-right), `Prompt` (right), `Dispatch` (bottom-right), `Outcome` (bottom-left)
 - Each node: circle with `SCALE_IN` variant + text label
@@ -132,6 +139,7 @@ Change `v0.2.0 · System Online` to `v0.1.0 · System Online`.
 **Background:** Subtle graph-paper grid (reuse existing pattern from current LoopHero).
 
 **Acceptance Criteria:**
+
 - [ ] Split-panel layout renders: text left (55%), diagram right (45%)
 - [ ] On mobile (< lg), stacks vertically: text on top, diagram below
 - [ ] Headline reads "Close the feedback loop on AI-powered development."
@@ -179,7 +187,7 @@ const VALUE_PROPS: ValueProp[] = [
     description:
       '13 commands for issue management, signals, triage, dispatch, templates, and system status. JSON output for scripting.',
   },
-]
+];
 ```
 
 **Card style:** `bg-cream-white rounded-lg p-6 border border-[var(--border-warm)]` with optional hover lift.
@@ -187,6 +195,7 @@ const VALUE_PROPS: ValueProp[] = [
 **Animation:** `whileInView` + `STAGGER` container, `REVEAL` per card.
 
 **Acceptance Criteria:**
+
 - [ ] Section has `id="features"` for anchor navigation
 - [ ] 4 cards render with correct labels, titles, and descriptions
 - [ ] Layout is 1-col on mobile, 2-col on tablet, 4-col on desktop
@@ -208,10 +217,11 @@ const navLinks = [
   { label: 'get started', href: '#get-started' },
   { label: 'contact', href: '#contact' },
   { label: 'docs', href: '/docs' },
-]
+];
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Nav links match the section IDs: `#how-it-works`, `#features`, `#get-started`, `#contact`
 - [ ] `docs` link navigates to `/docs`
 - [ ] Old `#about` and `blog` links removed
@@ -227,6 +237,7 @@ const navLinks = [
 **Layout:** Full-width strip with centered content. Background: `bg-cream-secondary`.
 
 **Content:**
+
 - **Eyebrow:** `"Built-in integrations"` — centered, mono font (`font-mono text-2xs tracking-[0.2em] uppercase text-brand-orange text-center`)
 - **Logo row:** 3 integration logos (PostHog, GitHub, Sentry) displayed horizontally with adequate spacing
 - **Description:** `"Ingest signals from the tools your team already uses."` — centered subtext
@@ -236,6 +247,7 @@ const navLinks = [
 **Animation:** `whileInView` with `STAGGER` container + `REVEAL` children.
 
 **Acceptance Criteria:**
+
 - [ ] Three logos render correctly (PostHog, GitHub, Sentry)
 - [ ] Logos are monochrome warm-gray for brand consistency
 - [ ] Eyebrow text "Built-in integrations" is centered
@@ -253,23 +265,25 @@ const navLinks = [
 
 **4 steps data:**
 
-| Step | Icon | Label | Title | Description |
-|------|------|-------|-------|-------------|
-| 1 | Lightning bolt | Signal | Collect Signals | Errors from Sentry, metrics from PostHog, events from GitHub arrive as typed signals |
-| 2 | List/clipboard | Issue | Organize Work | Signals become triaged issues with type, priority, and project assignment |
-| 3 | File/template | Prompt | Hydrate Prompts | The best-matching template is selected and filled with full system context |
-| 4 | Play/send | Dispatch | Dispatch to Agents | The highest-priority unblocked issue is claimed and dispatched with its hydrated prompt |
+| Step | Icon           | Label    | Title              | Description                                                                             |
+| ---- | -------------- | -------- | ------------------ | --------------------------------------------------------------------------------------- |
+| 1    | Lightning bolt | Signal   | Collect Signals    | Errors from Sentry, metrics from PostHog, events from GitHub arrive as typed signals    |
+| 2    | List/clipboard | Issue    | Organize Work      | Signals become triaged issues with type, priority, and project assignment               |
+| 3    | File/template  | Prompt   | Hydrate Prompts    | The best-matching template is selected and filled with full system context              |
+| 4    | Play/send      | Dispatch | Dispatch to Agents | The highest-priority unblocked issue is claimed and dispatched with its hydrated prompt |
 
 **Icons:** Use Lucide React icons (already installed): `Zap` (lightning bolt), `ClipboardList`, `FileText`, `Send`.
 
 **Visual connectors:** On desktop, horizontal arrows or lines connecting the 4 steps. On mobile, vertical flow with connecting lines.
 
 **Animation:**
+
 - Container: `whileInView` + `STAGGER`
 - Each step: `REVEAL` variant
 - Optional: `DRAW_PATH` on connecting lines
 
 **Acceptance Criteria:**
+
 - [ ] Section has `id="how-it-works"` for anchor navigation
 - [ ] 4 steps render with icons, labels, titles, and descriptions
 - [ ] Horizontal layout on desktop with visual connectors
@@ -286,6 +300,7 @@ const navLinks = [
 **Layout:** Centered content with a code block. Section `id="get-started"`. Background: `bg-cream-tertiary`.
 
 **Content:**
+
 - **Eyebrow:** `"Get started"` — mono font, brand-orange
 - **Headline:** `"Up and running in 60 seconds."` — charcoal, medium weight
 - **Code block:** Terminal-style panel with:
@@ -302,6 +317,7 @@ const navLinks = [
 **Animation:** `whileInView` + `REVEAL` for entrance. No animation on the code block itself to avoid CLS.
 
 **Acceptance Criteria:**
+
 - [ ] Section has `id="get-started"` for anchor navigation
 - [ ] Terminal-style code block with dark background renders correctly
 - [ ] All 4 commands display with `$` prefix
@@ -321,7 +337,7 @@ const navLinks = [
 **New page composition:**
 
 ```tsx
-import { siteConfig } from '@/config/site'
+import { siteConfig } from '@/config/site';
 import {
   ContactSection,
   MarketingNav,
@@ -332,7 +348,7 @@ import {
   HowItWorksFlow,
   LoopValueProps,
   QuickStartSection,
-} from '@/layers/features/marketing'
+} from '@/layers/features/marketing';
 
 const navLinks = [
   { label: 'how it works', href: '#how-it-works' },
@@ -340,7 +356,7 @@ const navLinks = [
   { label: 'get started', href: '#get-started' },
   { label: 'contact', href: '#contact' },
   { label: 'docs', href: '/docs' },
-]
+];
 
 const socialLinks = [
   {
@@ -352,7 +368,7 @@ const socialLinks = [
       </svg>
     ),
   },
-]
+];
 
 export default function HomePage() {
   return (
@@ -372,17 +388,19 @@ export default function HomePage() {
       <MarketingFooter email={siteConfig.contactEmail} socialLinks={socialLinks} />
       <MarketingNav links={navLinks} />
     </>
-  )
+  );
 }
 ```
 
 **Section IDs required:**
+
 - HowItWorksFlow: `id="how-it-works"`
 - LoopValueProps: `id="features"`
 - QuickStartSection: `id="get-started"`
 - ContactSection: `id="contact"` (verify existing)
 
 **Acceptance Criteria:**
+
 - [ ] All 7 sections render in order: Hero, IntegrationsBar, HowItWorksFlow, LoopValueProps, QuickStart, Contact
 - [ ] navLinks anchor to correct section IDs
 - [ ] All anchor links scroll to the correct sections
@@ -394,6 +412,7 @@ export default function HomePage() {
 **Objective:** Verify the complete implementation passes all automated checks and renders correctly.
 
 **Checks to run:**
+
 1. `npm run typecheck` — passes for all packages
 2. `npm run lint` — passes for `apps/web`
 3. `npm run build` — produces valid static output without errors
@@ -401,6 +420,7 @@ export default function HomePage() {
 5. Verify all deleted files are no longer referenced anywhere
 
 **Manual verification:**
+
 - Homepage loads at `localhost:3000` with no console errors
 - All 7 sections render in correct order
 - Hero diagram animates on load
@@ -411,6 +431,7 @@ export default function HomePage() {
 - Responsive layouts render correctly at mobile/tablet/desktop
 
 **Acceptance Criteria:**
+
 - [ ] `npm run typecheck` passes
 - [ ] `npm run lint` passes
 - [ ] `npm run build` succeeds

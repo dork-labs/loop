@@ -1,16 +1,16 @@
-import { useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface SignalDataProps {
-  source: string | null
-  payload: Record<string, unknown>
+  source: string | null;
+  payload: Record<string, unknown>;
 }
 
 /** Signal source badge and collapsible raw payload block. */
 export function SignalData({ source, payload }: SignalDataProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <Card>
@@ -20,7 +20,7 @@ export function SignalData({ source, payload }: SignalDataProps) {
       <CardContent className="space-y-4">
         {source && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Source</span>
+            <span className="text-muted-foreground text-sm">Source</span>
             <Badge variant="outline">{source}</Badge>
           </div>
         )}
@@ -28,22 +28,18 @@ export function SignalData({ source, payload }: SignalDataProps) {
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm"
         >
-          {isExpanded ? (
-            <ChevronDown className="size-4" />
-          ) : (
-            <ChevronRight className="size-4" />
-          )}
+          {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
           {isExpanded ? 'Hide' : 'Show'} raw payload
         </button>
 
         {isExpanded && (
-          <pre className="overflow-x-auto rounded-md bg-muted p-4 text-xs text-foreground/80">
+          <pre className="bg-muted text-foreground/80 overflow-x-auto rounded-md p-4 text-xs">
             {JSON.stringify(payload, null, 2)}
           </pre>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

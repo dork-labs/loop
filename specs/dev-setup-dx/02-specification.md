@@ -54,14 +54,14 @@ The goal is a setup flow where `cp .env.example .env` requires zero editing and 
 
 ## 5. Technical Dependencies
 
-| Dependency | Version | Purpose |
-|---|---|---|
-| `pg` | `^8.x` | Standard PostgreSQL client for local dev (devDependency) |
-| `@types/pg` | `^8.x` | TypeScript types for pg (devDependency) |
-| `zod` | v4 (api, web), v3 (app) | Already installed — env validation |
-| `drizzle-orm/node-postgres` | (bundled with drizzle-orm) | Drizzle adapter for standard pg driver |
-| Docker / Docker Compose | v2+ | Local PostgreSQL container |
-| PostgreSQL | 16-alpine | Database image |
+| Dependency                  | Version                    | Purpose                                                  |
+| --------------------------- | -------------------------- | -------------------------------------------------------- |
+| `pg`                        | `^8.x`                     | Standard PostgreSQL client for local dev (devDependency) |
+| `@types/pg`                 | `^8.x`                     | TypeScript types for pg (devDependency)                  |
+| `zod`                       | v4 (api, web), v3 (app)    | Already installed — env validation                       |
+| `drizzle-orm/node-postgres` | (bundled with drizzle-orm) | Drizzle adapter for standard pg driver                   |
+| Docker / Docker Compose     | v2+                        | Local PostgreSQL container                               |
+| PostgreSQL                  | 16-alpine                  | Database image                                           |
 
 ## 6. Detailed Design
 
@@ -80,11 +80,11 @@ services:
       POSTGRES_PASSWORD: loop
       POSTGRES_DB: loop
     ports:
-      - "54320:5432"
+      - '54320:5432'
     volumes:
       - loop_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loop -d loop"]
+      test: ['CMD-SHELL', 'pg_isready -U loop -d loop']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -111,39 +111,39 @@ The critical change: use `NODE_ENV` to gate between the Neon HTTP driver (produc
 **Current code:**
 
 ```typescript
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-import * as schema from './schema'
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema';
 
-const sql = neon(process.env.DATABASE_URL!)
-export const db = drizzle(sql, { schema })
-export type Database = typeof db
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql, { schema });
+export type Database = typeof db;
 ```
 
 **New code:**
 
 ```typescript
-import * as schema from './schema'
-import { env } from '../env'
+import * as schema from './schema';
+import { env } from '../env';
 
-type NeonHttpDatabase = import('drizzle-orm/neon-http').NeonHttpDatabase<typeof schema>
-type NodePgDatabase = import('drizzle-orm/node-postgres').NodePgDatabase<typeof schema>
+type NeonHttpDatabase = import('drizzle-orm/neon-http').NeonHttpDatabase<typeof schema>;
+type NodePgDatabase = import('drizzle-orm/node-postgres').NodePgDatabase<typeof schema>;
 
-export type Database = NeonHttpDatabase | NodePgDatabase
+export type Database = NeonHttpDatabase | NodePgDatabase;
 
-let db: Database
+let db: Database;
 
 if (env.NODE_ENV === 'production') {
-  const { neon } = await import('@neondatabase/serverless')
-  const { drizzle } = await import('drizzle-orm/neon-http')
-  db = drizzle(neon(env.DATABASE_URL), { schema })
+  const { neon } = await import('@neondatabase/serverless');
+  const { drizzle } = await import('drizzle-orm/neon-http');
+  db = drizzle(neon(env.DATABASE_URL), { schema });
 } else {
-  const { Pool } = await import('pg')
-  const { drizzle } = await import('drizzle-orm/node-postgres')
-  db = drizzle(new Pool({ connectionString: env.DATABASE_URL }), { schema })
+  const { Pool } = await import('pg');
+  const { drizzle } = await import('drizzle-orm/node-postgres');
+  db = drizzle(new Pool({ connectionString: env.DATABASE_URL }), { schema });
 }
 
-export { db }
+export { db };
 ```
 
 **Key design decisions:**
@@ -159,27 +159,27 @@ export { db }
 Apply the same conditional pattern:
 
 ```typescript
-import 'dotenv/config'
-import { env } from '../env'
+import 'dotenv/config';
+import { env } from '../env';
 
 if (env.NODE_ENV === 'production') {
-  const { neon } = await import('@neondatabase/serverless')
-  const { drizzle } = await import('drizzle-orm/neon-http')
-  const { migrate } = await import('drizzle-orm/neon-http/migrator')
-  const db = drizzle(neon(env.DATABASE_URL))
-  await migrate(db, { migrationsFolder: './drizzle/migrations' })
+  const { neon } = await import('@neondatabase/serverless');
+  const { drizzle } = await import('drizzle-orm/neon-http');
+  const { migrate } = await import('drizzle-orm/neon-http/migrator');
+  const db = drizzle(neon(env.DATABASE_URL));
+  await migrate(db, { migrationsFolder: './drizzle/migrations' });
 } else {
-  const { Pool } = await import('pg')
-  const { drizzle } = await import('drizzle-orm/node-postgres')
-  const { migrate } = await import('drizzle-orm/node-postgres/migrator')
-  const pool = new Pool({ connectionString: env.DATABASE_URL })
-  const db = drizzle(pool)
-  await migrate(db, { migrationsFolder: './drizzle/migrations' })
-  await pool.end()
+  const { Pool } = await import('pg');
+  const { drizzle } = await import('drizzle-orm/node-postgres');
+  const { migrate } = await import('drizzle-orm/node-postgres/migrator');
+  const pool = new Pool({ connectionString: env.DATABASE_URL });
+  const db = drizzle(pool);
+  await migrate(db, { migrationsFolder: './drizzle/migrations' });
+  await pool.end();
 }
 
-console.log('Migrations complete')
-process.exit(0)
+console.log('Migrations complete');
+process.exit(0);
 ```
 
 **`drizzle.config.ts`:** No changes needed. Drizzle Kit uses its own internal postgres connection that works with standard `postgresql://` URLs from both Neon and local Docker.
@@ -191,7 +191,7 @@ Create one `env.ts` per app that validates and exports a typed env object. All a
 #### `apps/api/src/env.ts` (Zod v4)
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   DATABASE_URL: z.string().url(),
@@ -202,46 +202,44 @@ const schema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_CLIENT_SECRET: z.string().optional(),
   POSTHOG_WEBHOOK_SECRET: z.string().optional(),
-})
+});
 
-const result = schema.safeParse(process.env)
+const result = schema.safeParse(process.env);
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
-  result.error.issues.forEach((i) =>
-    console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
-  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n')
-  process.exit(1)
+  console.error('\n  Missing or invalid environment variables:\n');
+  result.error.issues.forEach((i) => console.error(`  - ${i.path.join('.')}: ${i.message}`));
+  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n');
+  process.exit(1);
 }
 
-export const env = result.data
-export type Env = z.infer<typeof schema>
+export const env = result.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 #### `apps/app/src/env.ts` (Zod v3)
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   VITE_API_URL: z.string().url().default('http://localhost:4242'),
   VITE_LOOP_API_KEY: z.string().min(1),
-})
+});
 
-const result = schema.safeParse(import.meta.env)
+const result = schema.safeParse(import.meta.env);
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
+  console.error('\n  Missing or invalid environment variables:\n');
   result.error.issues.forEach((i: z.ZodIssue) =>
     console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
-  console.error('\n  Copy apps/app/.env.example to apps/app/.env\n')
-  throw new Error('Invalid environment variables')
+  );
+  console.error('\n  Copy apps/app/.env.example to apps/app/.env\n');
+  throw new Error('Invalid environment variables');
 }
 
-export const env = result.data
-export type Env = z.infer<typeof schema>
+export const env = result.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 Note: Vite apps use `import.meta.env` not `process.env`. Using `throw` instead of `process.exit` since this runs in the browser build pipeline.
@@ -249,27 +247,25 @@ Note: Vite apps use `import.meta.env` not `process.env`. Using `throw` instead o
 #### `apps/web/src/env.ts` (Zod v4)
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-})
+});
 
-const result = schema.safeParse(process.env)
+const result = schema.safeParse(process.env);
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
-  result.error.issues.forEach((i) =>
-    console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
-  console.error('\n  Copy apps/web/.env.example to apps/web/.env\n')
-  process.exit(1)
+  console.error('\n  Missing or invalid environment variables:\n');
+  result.error.issues.forEach((i) => console.error(`  - ${i.path.join('.')}: ${i.message}`));
+  console.error('\n  Copy apps/web/.env.example to apps/web/.env\n');
+  process.exit(1);
 }
 
-export const env = result.data
-export type Env = z.infer<typeof schema>
+export const env = result.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 All PostHog vars are optional — the web app works without analytics.
@@ -278,17 +274,17 @@ All PostHog vars are optional — the web app works without analytics.
 
 Replace all raw `process.env` / `import.meta.env` access with typed `env` imports:
 
-| File | Current | New |
-|---|---|---|
-| `apps/api/src/index.ts` | `process.env.PORT`, `process.env.NODE_ENV` | `env.PORT`, `env.NODE_ENV` |
-| `apps/api/src/middleware/auth.ts` | `process.env.LOOP_API_KEY` | `env.LOOP_API_KEY` |
-| `apps/api/src/middleware/webhooks.ts` | `process.env.GITHUB_WEBHOOK_SECRET`, etc. | `env.GITHUB_WEBHOOK_SECRET`, etc. |
-| `apps/api/src/lib/prompt-engine.ts` | `process.env.LOOP_URL`, `process.env.LOOP_API_KEY` | `env.LOOP_URL`, `env.LOOP_API_KEY` |
-| `apps/api/src/db/index.ts` | `process.env.DATABASE_URL!` | `env.DATABASE_URL` |
-| `apps/api/src/db/migrate.ts` | `process.env.DATABASE_URL!` | `env.DATABASE_URL` |
-| `apps/app/src/lib/api-client.ts` | `import.meta.env.VITE_API_URL`, `import.meta.env.VITE_LOOP_API_KEY` | `env.VITE_API_URL`, `env.VITE_LOOP_API_KEY` |
-| `apps/web/src/lib/posthog-server.ts` | `process.env.NEXT_PUBLIC_POSTHOG_KEY!` | `env.NEXT_PUBLIC_POSTHOG_KEY` (with optional guard) |
-| `apps/web/instrumentation-client.ts` | `process.env.NEXT_PUBLIC_POSTHOG_KEY!` | `env.NEXT_PUBLIC_POSTHOG_KEY` (with optional guard) |
+| File                                  | Current                                                             | New                                                 |
+| ------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| `apps/api/src/index.ts`               | `process.env.PORT`, `process.env.NODE_ENV`                          | `env.PORT`, `env.NODE_ENV`                          |
+| `apps/api/src/middleware/auth.ts`     | `process.env.LOOP_API_KEY`                                          | `env.LOOP_API_KEY`                                  |
+| `apps/api/src/middleware/webhooks.ts` | `process.env.GITHUB_WEBHOOK_SECRET`, etc.                           | `env.GITHUB_WEBHOOK_SECRET`, etc.                   |
+| `apps/api/src/lib/prompt-engine.ts`   | `process.env.LOOP_URL`, `process.env.LOOP_API_KEY`                  | `env.LOOP_URL`, `env.LOOP_API_KEY`                  |
+| `apps/api/src/db/index.ts`            | `process.env.DATABASE_URL!`                                         | `env.DATABASE_URL`                                  |
+| `apps/api/src/db/migrate.ts`          | `process.env.DATABASE_URL!`                                         | `env.DATABASE_URL`                                  |
+| `apps/app/src/lib/api-client.ts`      | `import.meta.env.VITE_API_URL`, `import.meta.env.VITE_LOOP_API_KEY` | `env.VITE_API_URL`, `env.VITE_LOOP_API_KEY`         |
+| `apps/web/src/lib/posthog-server.ts`  | `process.env.NEXT_PUBLIC_POSTHOG_KEY!`                              | `env.NEXT_PUBLIC_POSTHOG_KEY` (with optional guard) |
+| `apps/web/instrumentation-client.ts`  | `process.env.NEXT_PUBLIC_POSTHOG_KEY!`                              | `env.NEXT_PUBLIC_POSTHOG_KEY` (with optional guard) |
 
 **Important:** For webhook middleware, the optional secrets (`GITHUB_WEBHOOK_SECRET`, etc.) are validated at runtime — the middleware already throws 500 if the secret is not configured. The `env.ts` marks them as `z.string().optional()` so the app can start without them, but the middleware enforces presence when the webhook route is actually hit.
 
@@ -470,8 +466,8 @@ Instead of a cryptic runtime error, contributors see:
 
 ```typescript
 // env.test.ts — test the schema, not the module side effect
-import { describe, it, expect } from 'vitest'
-import { z } from 'zod'
+import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 
 // Re-declare the schema (or export it separately from env.ts)
 const apiEnvSchema = z.object({
@@ -483,57 +479,57 @@ const apiEnvSchema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_CLIENT_SECRET: z.string().optional(),
   POSTHOG_WEBHOOK_SECRET: z.string().optional(),
-})
+});
 
 describe('API env schema', () => {
   it('accepts valid config with all required fields', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(true)
-  })
+    });
+    expect(result.success).toBe(true);
+  });
 
   it('rejects missing DATABASE_URL', () => {
     const result = apiEnvSchema.safeParse({
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(false)
-  })
+    });
+    expect(result.success).toBe(false);
+  });
 
   it('rejects invalid DATABASE_URL format', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'not-a-url',
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(false)
-  })
+    });
+    expect(result.success).toBe(false);
+  });
 
   it('applies defaults for optional fields', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(true)
+    });
+    expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.NODE_ENV).toBe('development')
-      expect(result.data.PORT).toBe(4242)
-      expect(result.data.LOOP_URL).toBe('http://localhost:4242')
+      expect(result.data.NODE_ENV).toBe('development');
+      expect(result.data.PORT).toBe(4242);
+      expect(result.data.LOOP_URL).toBe('http://localhost:4242');
     }
-  })
+  });
 
   it('coerces PORT from string to number', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
       PORT: '3000',
-    })
-    expect(result.success).toBe(true)
+    });
+    expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.PORT).toBe(3000)
+      expect(result.data.PORT).toBe(3000);
     }
-  })
-})
+  });
+});
 ```
 
 ## 9. Performance Considerations
@@ -555,13 +551,13 @@ describe('API env schema', () => {
 
 Files that need creation or updates:
 
-| File | Action | Description |
-|---|---|---|
-| `CLAUDE.md` | Update | Add `dx`, `dx:down`, `dx:reset`, `setup` to Commands section |
-| `docs/getting-started/installation.mdx` | Update | Add Docker prerequisite, `npm run setup` flow |
-| `docs/getting-started/quickstart.mdx` | Update | Add `npm run dx` step to quick-start |
-| `docs/self-hosting/index.mdx` | Update | Update env var reference with defaults |
-| `docs/contributing/setup.mdx` | Update | Full developer setup guide with Docker flow |
+| File                                    | Action | Description                                                  |
+| --------------------------------------- | ------ | ------------------------------------------------------------ |
+| `CLAUDE.md`                             | Update | Add `dx`, `dx:down`, `dx:reset`, `setup` to Commands section |
+| `docs/getting-started/installation.mdx` | Update | Add Docker prerequisite, `npm run setup` flow                |
+| `docs/getting-started/quickstart.mdx`   | Update | Add `npm run dx` step to quick-start                         |
+| `docs/self-hosting/index.mdx`           | Update | Update env var reference with defaults                       |
+| `docs/contributing/setup.mdx`           | Update | Full developer setup guide with Docker flow                  |
 
 ## 12. Implementation Phases
 
@@ -620,11 +616,11 @@ None — all clarifications resolved during ideation:
 
 ## 14. Related ADRs
 
-| ADR | Title | Relevance |
-|---|---|---|
-| 0003 | Use Neon PostgreSQL as the database provider | The Neon driver incompatibility is the reason for the conditional driver swap |
-| 0004 | Use Drizzle ORM for database access | Drizzle's adapter pattern enables the driver swap |
-| 0007 | Use PGLite for test database instead of Docker | Tests are unaffected — PGlite path is independent |
+| ADR  | Title                                          | Relevance                                                                     |
+| ---- | ---------------------------------------------- | ----------------------------------------------------------------------------- |
+| 0003 | Use Neon PostgreSQL as the database provider   | The Neon driver incompatibility is the reason for the conditional driver swap |
+| 0004 | Use Drizzle ORM for database access            | Drizzle's adapter pattern enables the driver swap                             |
+| 0007 | Use PGLite for test database instead of Docker | Tests are unaffected — PGlite path is independent                             |
 
 ## 15. References
 

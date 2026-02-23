@@ -28,30 +28,30 @@ The client will be available at `http://localhost:5668` and the server at `http:
 
 This is a Turborepo monorepo with four apps and four shared packages:
 
-| Directory | Package | Description |
-|---|---|---|
-| `apps/client` | `@loop/client` | React 19 SPA (Vite 6, Tailwind 4, shadcn/ui) |
-| `apps/server` | `@loop/server` | Express API server |
-| `apps/obsidian-plugin` | `@loop/obsidian-plugin` | Obsidian sidebar plugin |
-| `apps/web` | `@loop/web` | Marketing site & docs (Next.js 16, Fumadocs) |
-| `packages/cli` | `dorkos` | Publishable npm CLI |
-| `packages/shared` | `@loop/shared` | Zod schemas, shared types |
-| `packages/typescript-config` | `@loop/typescript-config` | Shared tsconfig presets |
-| `packages/test-utils` | `@loop/test-utils` | Mock factories, test helpers |
+| Directory                    | Package                   | Description                                  |
+| ---------------------------- | ------------------------- | -------------------------------------------- |
+| `apps/client`                | `@loop/client`            | React 19 SPA (Vite 6, Tailwind 4, shadcn/ui) |
+| `apps/server`                | `@loop/server`            | Express API server                           |
+| `apps/obsidian-plugin`       | `@loop/obsidian-plugin`   | Obsidian sidebar plugin                      |
+| `apps/web`                   | `@loop/web`               | Marketing site & docs (Next.js 16, Fumadocs) |
+| `packages/cli`               | `dorkos`                  | Publishable npm CLI                          |
+| `packages/shared`            | `@loop/shared`            | Zod schemas, shared types                    |
+| `packages/typescript-config` | `@loop/typescript-config` | Shared tsconfig presets                      |
+| `packages/test-utils`        | `@loop/test-utils`        | Mock factories, test helpers                 |
 
 ## Development Commands
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start server + client dev servers |
-| `npm test` | Run all tests (Vitest) |
-| `npm test -- --run` | Single test run (no watch mode) |
-| `npm run build` | Build all packages |
-| `npm run typecheck` | Type-check all packages |
-| `npm run lint` | ESLint across all packages |
-| `npm run lint -- --fix` | Auto-fix ESLint issues |
-| `npm run format` | Prettier format all files |
-| `npm run format:check` | Check formatting without writing |
+| Command                 | Description                       |
+| ----------------------- | --------------------------------- |
+| `npm run dev`           | Start server + client dev servers |
+| `npm test`              | Run all tests (Vitest)            |
+| `npm test -- --run`     | Single test run (no watch mode)   |
+| `npm run build`         | Build all packages                |
+| `npm run typecheck`     | Type-check all packages           |
+| `npm run lint`          | ESLint across all packages        |
+| `npm run lint -- --fix` | Auto-fix ESLint issues            |
+| `npm run format`        | Prettier format all files         |
+| `npm run format:check`  | Check formatting without writing  |
 
 ### Filtering Commands
 

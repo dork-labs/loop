@@ -1,36 +1,36 @@
-import { useNavigate } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { X } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { X } from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Route } from '@/routes/_dashboard/issues/index'
-import { projectListOptions } from '@/lib/queries/projects'
-import { labelListOptions } from '@/lib/queries/labels'
-import type { IssueStatus, IssueType } from '@/types/issues'
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Route } from '@/routes/_dashboard/issues/index';
+import { projectListOptions } from '@/lib/queries/projects';
+import { labelListOptions } from '@/lib/queries/labels';
+import type { IssueStatus, IssueType } from '@/types/issues';
 
 const STATUS_OPTIONS: { value: IssueStatus; label: string }[] = [
-  { value: 'triage',      label: 'Triage' },
-  { value: 'backlog',     label: 'Backlog' },
-  { value: 'todo',        label: 'Todo' },
+  { value: 'triage', label: 'Triage' },
+  { value: 'backlog', label: 'Backlog' },
+  { value: 'todo', label: 'Todo' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'done',        label: 'Done' },
-  { value: 'canceled',    label: 'Canceled' },
-]
+  { value: 'done', label: 'Done' },
+  { value: 'canceled', label: 'Canceled' },
+];
 
 const TYPE_OPTIONS: { value: IssueType; label: string }[] = [
-  { value: 'signal',     label: 'Signal' },
+  { value: 'signal', label: 'Signal' },
   { value: 'hypothesis', label: 'Hypothesis' },
-  { value: 'plan',       label: 'Plan' },
-  { value: 'task',       label: 'Task' },
-  { value: 'monitor',    label: 'Monitor' },
-]
+  { value: 'plan', label: 'Plan' },
+  { value: 'task', label: 'Task' },
+  { value: 'monitor', label: 'Monitor' },
+];
 
 const PRIORITY_OPTIONS = [
   { value: '0', label: 'P0 — Critical' },
@@ -38,20 +38,18 @@ const PRIORITY_OPTIONS = [
   { value: '2', label: 'P2 — Medium' },
   { value: '3', label: 'P3 — Low' },
   { value: '4', label: 'P4 — Minimal' },
-]
+];
 
 /** Filter bar for the issue list — all filter state lives in URL search params. */
 export function IssueFilters() {
-  const navigate = useNavigate({ from: Route.fullPath })
-  const search = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath });
+  const search = Route.useSearch();
 
-  const { data: projectsData } = useQuery(projectListOptions())
-  const { data: labelsData } = useQuery(labelListOptions())
+  const { data: projectsData } = useQuery(projectListOptions());
+  const { data: labelsData } = useQuery(labelListOptions());
 
-  const FILTER_KEYS = ['status', 'type', 'priority', 'projectId', 'labelId'] as const
-  const activeFilterCount = FILTER_KEYS.filter(
-    (key) => search[key] !== undefined,
-  ).length
+  const FILTER_KEYS = ['status', 'type', 'priority', 'projectId', 'labelId'] as const;
+  const activeFilterCount = FILTER_KEYS.filter((key) => search[key] !== undefined).length;
 
   function setFilter(key: string, value: string | undefined) {
     void navigate({
@@ -60,13 +58,13 @@ export function IssueFilters() {
         [key]: value,
         page: 1,
       }),
-    })
+    });
   }
 
   function clearAllFilters() {
     void navigate({
       search: { page: 1, limit: search.limit },
-    })
+    });
   }
 
   return (
@@ -110,9 +108,7 @@ export function IssueFilters() {
       {/* Priority filter */}
       <Select
         value={search.priority !== undefined ? String(search.priority) : ''}
-        onValueChange={(v) =>
-          setFilter('priority', v === 'all' ? undefined : v)
-        }
+        onValueChange={(v) => setFilter('priority', v === 'all' ? undefined : v)}
       >
         <SelectTrigger size="sm" className="w-[140px]">
           <SelectValue placeholder="Priority" />
@@ -172,7 +168,7 @@ export function IssueFilters() {
           variant="ghost"
           size="sm"
           onClick={clearAllFilters}
-          className="h-8 gap-1 text-muted-foreground"
+          className="text-muted-foreground h-8 gap-1"
         >
           <X className="size-3" />
           Clear
@@ -182,5 +178,5 @@ export function IssueFilters() {
         </Button>
       )}
     </div>
-  )
+  );
 }

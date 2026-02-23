@@ -20,12 +20,12 @@ An optional `projectId` query parameter filters dispatch to a specific project.
 
 Loop uses a deterministic scoring formula to rank issues. Every unblocked `todo` issue is scored using four factors:
 
-| Factor | Calculation | Purpose |
-|--------|------------|---------|
-| **Priority weight** | Urgent=100, High=75, Medium=50, Low=25, None=10 | Respect explicit priority assignments |
-| **Type bonus** | Signal=50, Hypothesis=40, Plan=30, Task=20, Monitor=10 | Favor earlier loop stages to keep the pipeline moving |
-| **Goal alignment** | +20 if the issue's project has an active goal | Bias toward strategic work |
-| **Age bonus** | +1 per day in `todo` status | Prevent starvation of older issues |
+| Factor              | Calculation                                            | Purpose                                               |
+| ------------------- | ------------------------------------------------------ | ----------------------------------------------------- |
+| **Priority weight** | Urgent=100, High=75, Medium=50, Low=25, None=10        | Respect explicit priority assignments                 |
+| **Type bonus**      | Signal=50, Hypothesis=40, Plan=30, Task=20, Monitor=10 | Favor earlier loop stages to keep the pipeline moving |
+| **Goal alignment**  | +20 if the issue's project has an active goal          | Bias toward strategic work                            |
+| **Age bonus**       | +1 per day in `todo` status                            | Prevent starvation of older issues                    |
 
 The final score is the sum of all four factors. The issue with the highest total score is dispatched first. In the event of a tie, database ordering provides a consistent tiebreaker.
 

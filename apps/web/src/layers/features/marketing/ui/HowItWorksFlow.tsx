@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { motion } from 'motion/react'
-import { Zap, ClipboardList, FileText, Send, type LucideIcon } from 'lucide-react'
-import { REVEAL, STAGGER, VIEWPORT } from '../lib/motion-variants'
+import { motion } from 'motion/react';
+import { Zap, ClipboardList, FileText, Send, type LucideIcon } from 'lucide-react';
+import { REVEAL, STAGGER, VIEWPORT } from '../lib/motion-variants';
 
 interface FlowStep {
-  icon: LucideIcon
-  label: string
-  title: string
-  description: string
+  icon: LucideIcon;
+  label: string;
+  title: string;
+  description: string;
 }
 
 const FLOW_STEPS: FlowStep[] = [
@@ -40,22 +40,19 @@ const FLOW_STEPS: FlowStep[] = [
     description:
       'Prompts are dispatched to your AI agent of choice. Results are reviewed, merged, and the loop closes automatically.',
   },
-]
+];
 
 /** Horizontal arrow connector shown between steps on desktop. */
 function HorizontalConnector() {
   return (
-    <div className="hidden md:flex items-center flex-shrink-0 w-12" aria-hidden="true">
-      <div
-        className="w-full h-px"
-        style={{ background: 'rgba(139, 90, 43, 0.2)' }}
-      />
+    <div className="hidden w-12 flex-shrink-0 items-center md:flex" aria-hidden="true">
+      <div className="h-px w-full" style={{ background: 'rgba(139, 90, 43, 0.2)' }} />
       <svg
         width="8"
         height="8"
         viewBox="0 0 8 8"
         fill="none"
-        className="flex-shrink-0 -ml-px"
+        className="-ml-px flex-shrink-0"
         style={{ color: 'rgba(139, 90, 43, 0.35)' }}
       >
         <path
@@ -67,23 +64,20 @@ function HorizontalConnector() {
         />
       </svg>
     </div>
-  )
+  );
 }
 
 /** Vertical arrow connector shown between steps on mobile. */
 function VerticalConnector() {
   return (
-    <div className="flex md:hidden flex-col items-center h-10" aria-hidden="true">
-      <div
-        className="flex-1 w-px"
-        style={{ background: 'rgba(139, 90, 43, 0.2)' }}
-      />
+    <div className="flex h-10 flex-col items-center md:hidden" aria-hidden="true">
+      <div className="w-px flex-1" style={{ background: 'rgba(139, 90, 43, 0.2)' }} />
       <svg
         width="8"
         height="8"
         viewBox="0 0 8 8"
         fill="none"
-        className="flex-shrink-0 -mt-px"
+        className="-mt-px flex-shrink-0"
         style={{ color: 'rgba(139, 90, 43, 0.35)' }}
       >
         <path
@@ -95,28 +89,24 @@ function VerticalConnector() {
         />
       </svg>
     </div>
-  )
+  );
 }
 
 interface StepCardProps {
-  step: FlowStep
-  index: number
+  step: FlowStep;
+  index: number;
 }
 
 /** Individual step card with icon, label, title, and description. */
 function StepCard({ step, index }: StepCardProps) {
-  const Icon = step.icon
+  const Icon = step.icon;
 
   return (
-    <motion.div
-      variants={REVEAL}
-      className="flex flex-col gap-4 md:flex-1"
-      style={{ minWidth: 0 }}
-    >
+    <motion.div variants={REVEAL} className="flex flex-col gap-4 md:flex-1" style={{ minWidth: 0 }}>
       {/* Icon container */}
       <div className="flex items-center gap-3">
         <div
-          className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg"
           style={{
             background: index === 0 ? 'rgba(232, 93, 4, 0.1)' : 'rgba(139, 90, 43, 0.08)',
             border: '1px solid rgba(139, 90, 43, 0.15)',
@@ -129,7 +119,7 @@ function StepCard({ step, index }: StepCardProps) {
           />
         </div>
         <span
-          className="font-mono text-2xs tracking-[0.15em] uppercase"
+          className="text-2xs font-mono tracking-[0.15em] uppercase"
           style={{ color: '#7A756A' }}
         >
           {step.label}
@@ -138,17 +128,13 @@ function StepCard({ step, index }: StepCardProps) {
 
       {/* Text content */}
       <div>
-        <h3
-          className="text-charcoal font-semibold text-base mb-2 tracking-[-0.02em]"
-        >
+        <h3 className="text-charcoal mb-2 text-base font-semibold tracking-[-0.02em]">
           {step.title}
         </h3>
-        <p className="text-warm-gray font-light leading-[1.7] text-sm">
-          {step.description}
-        </p>
+        <p className="text-warm-gray text-sm leading-[1.7] font-light">{step.description}</p>
       </div>
     </motion.div>
-  )
+  );
 }
 
 /**
@@ -159,9 +145,9 @@ function StepCard({ step, index }: StepCardProps) {
  */
 export function HowItWorksFlow() {
   return (
-    <section id="how-it-works" className="py-24 px-8 bg-cream-primary">
+    <section id="how-it-works" className="bg-cream-primary px-8 py-24">
       <motion.div
-        className="max-w-5xl mx-auto"
+        className="mx-auto max-w-5xl"
         initial="hidden"
         whileInView="visible"
         viewport={VIEWPORT}
@@ -170,7 +156,7 @@ export function HowItWorksFlow() {
         {/* Section label */}
         <motion.p
           variants={REVEAL}
-          className="font-mono text-2xs tracking-[0.2em] uppercase text-brand-orange text-center mb-16"
+          className="text-2xs text-brand-orange mb-16 text-center font-mono tracking-[0.2em] uppercase"
         >
           The Loop
         </motion.p>
@@ -178,7 +164,7 @@ export function HowItWorksFlow() {
         {/* Section headline */}
         <motion.h2
           variants={REVEAL}
-          className="text-charcoal text-center font-bold tracking-[-0.03em] mb-4"
+          className="text-charcoal mb-4 text-center font-bold tracking-[-0.03em]"
           style={{ fontSize: 'clamp(24px, 3.5vw, 40px)' }}
         >
           From raw signal to closed loop
@@ -186,18 +172,18 @@ export function HowItWorksFlow() {
 
         <motion.p
           variants={REVEAL}
-          className="text-warm-gray font-light leading-[1.75] text-center max-w-xl mx-auto mb-20"
+          className="text-warm-gray mx-auto mb-20 max-w-xl text-center leading-[1.75] font-light"
           style={{ fontSize: 'clamp(14px, 1.25vw, 16px)' }}
         >
           Four automated steps turn noise into resolved issues — no manual triage required.
         </motion.p>
 
         {/* Flow steps — horizontal on desktop, vertical on mobile */}
-        <div className="flex flex-col md:flex-row md:items-start gap-0">
+        <div className="flex flex-col gap-0 md:flex-row md:items-start">
           {FLOW_STEPS.map((step, index) => (
             <div
               key={step.label}
-              className="flex flex-col md:flex-row md:items-start md:flex-1 min-w-0"
+              className="flex min-w-0 flex-col md:flex-1 md:flex-row md:items-start"
             >
               <StepCard step={step} index={index} />
               {index < FLOW_STEPS.length - 1 && (
@@ -211,5 +197,5 @@ export function HowItWorksFlow() {
         </div>
       </motion.div>
     </section>
-  )
+  );
 }

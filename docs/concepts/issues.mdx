@@ -25,14 +25,14 @@ Each issue type represents a stage in the feedback loop:
 
 Every issue moves through a status progression:
 
-| Status | Meaning |
-|--------|---------|
-| `triage` | Newly created, awaiting initial review (default for signals) |
-| `backlog` | Accepted but not yet prioritized for work |
-| `todo` | Ready for dispatch -- only `todo` issues are eligible for `GET /api/dispatch/next` |
-| `in_progress` | Claimed by an agent and currently being worked on |
-| `done` | Completed successfully |
-| `canceled` | Declined, abandoned, or invalidated |
+| Status        | Meaning                                                                            |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `triage`      | Newly created, awaiting initial review (default for signals)                       |
+| `backlog`     | Accepted but not yet prioritized for work                                          |
+| `todo`        | Ready for dispatch -- only `todo` issues are eligible for `GET /api/dispatch/next` |
+| `in_progress` | Claimed by an agent and currently being worked on                                  |
+| `done`        | Completed successfully                                                             |
+| `canceled`    | Declined, abandoned, or invalidated                                                |
 
 The dispatch endpoint only selects issues with `todo` status. When an issue is claimed, its status is atomically set to `in_progress` to prevent double-dispatch. Agents report completion by updating the status to `done` or `canceled` via `PATCH /api/issues/:id`.
 
@@ -40,13 +40,13 @@ The dispatch endpoint only selects issues with `todo` status. When an issue is c
 
 Issues carry an integer priority from 0 to 4:
 
-| Value | Label | Score Weight |
-|-------|-------|-------------|
-| 1 | Urgent | 100 |
-| 2 | High | 75 |
-| 3 | Medium | 50 |
-| 4 | Low | 25 |
-| 0 | None | 10 |
+| Value | Label  | Score Weight |
+| ----- | ------ | ------------ |
+| 1     | Urgent | 100          |
+| 2     | High   | 75           |
+| 3     | Medium | 50           |
+| 4     | Low    | 25           |
+| 0     | None   | 10           |
 
 Priority is one of four factors used by the dispatch scoring algorithm. The others are goal alignment, issue age, and issue type. See [Dispatch](/docs/concepts/dispatch) for the full scoring formula.
 
@@ -68,12 +68,12 @@ All children are siblings under a common parent. The loop chain (signal to hypot
 
 Issues can be linked to each other through four relation types:
 
-| Type | Meaning |
-|------|---------|
-| `blocks` | This issue must complete before the target can be dispatched |
-| `blocked_by` | This issue cannot be dispatched until the source completes |
-| `related` | Informational link providing context |
-| `duplicate` | This issue duplicates the target |
+| Type         | Meaning                                                      |
+| ------------ | ------------------------------------------------------------ |
+| `blocks`     | This issue must complete before the target can be dispatched |
+| `blocked_by` | This issue cannot be dispatched until the source completes   |
+| `related`    | Informational link providing context                         |
+| `duplicate`  | This issue duplicates the target                             |
 
 The `blocks` and `blocked_by` relations are critical for dispatch. The dispatch endpoint excludes any issue where an unresolved `blocked_by` relation points to an issue that is not yet `done` or `canceled`. This is how execution ordering works without a workflow engine.
 

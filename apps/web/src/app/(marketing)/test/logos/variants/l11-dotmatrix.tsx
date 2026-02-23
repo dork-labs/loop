@@ -114,8 +114,7 @@ const CHAR_ORIGINS: number[] = GLYPHS.map((_, i) => {
 });
 
 /** Total width used by all glyphs + gaps (used for the panel border). */
-const PANEL_W =
-  CHAR_ORIGINS[CHAR_ORIGINS.length - 1]! + CHAR_GRID_W - LEFT + LEFT;
+const PANEL_W = CHAR_ORIGINS[CHAR_ORIGINS.length - 1]! + CHAR_GRID_W - LEFT + LEFT;
 
 // ---------------------------------------------------------------------------
 // Render helpers
@@ -141,7 +140,7 @@ function renderInactiveDots(xOrigin: number): React.ReactNode[] {
           ry={RX}
           fill="#000"
           fillOpacity={0.08}
-        />,
+        />
       );
     }
   }
@@ -154,10 +153,7 @@ function renderInactiveDots(xOrigin: number): React.ReactNode[] {
  * @param glyph   - 7×5 bitmap where 1 = lit dot
  * @param xOrigin - Left edge of the character's dot grid
  */
-function renderActiveDots(
-  glyph: number[][],
-  xOrigin: number,
-): React.ReactNode[] {
+function renderActiveDots(glyph: number[][], xOrigin: number): React.ReactNode[] {
   const dots: React.ReactNode[] = [];
   glyph.forEach((row, rowIdx) => {
     row.forEach((on, colIdx) => {
@@ -172,7 +168,7 @@ function renderActiveDots(
           rx={RX}
           ry={RX}
           fill="#000"
-        />,
+        />
       );
     });
   });

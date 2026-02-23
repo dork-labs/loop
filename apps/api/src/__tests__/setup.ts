@@ -1,36 +1,36 @@
-import { PGlite } from '@electric-sql/pglite'
-import { drizzle } from 'drizzle-orm/pglite'
-import { migrate } from 'drizzle-orm/pglite/migrator'
-import { Hono } from 'hono'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { afterEach, beforeEach } from 'vitest'
-import * as schema from '../db/schema'
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
+import { migrate } from 'drizzle-orm/pglite/migrator';
+import { Hono } from 'hono';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach } from 'vitest';
+import * as schema from '../db/schema';
 
 // Set the API key env var so auth middleware passes in all tests.
 // This mirrors the LOOP_API_KEY secret used in production.
-process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'loop_test-api-key'
+process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'loop_test-api-key';
 
-import type { AppEnv } from '../types'
+import type { AppEnv } from '../types';
 
 /**
  * Drizzle database instance type used throughout the API.
  * Typed against the full schema for relational query support.
  */
-export type DbType = ReturnType<typeof drizzle<typeof schema>>
+export type DbType = ReturnType<typeof drizzle<typeof schema>>;
 
 /** @deprecated Use `AppEnv` from `../types` directly. Kept for test compatibility. */
-export type TestAppEnv = AppEnv
+export type TestAppEnv = AppEnv;
 
 /** Shared database variable reset before each test by `withTestDb`. */
-let db: DbType
+let db: DbType;
 
 /**
  * Returns the current test database instance.
  * Must be called within a test — initialised by `beforeEach` in `withTestDb`.
  */
 export function getTestDb(): DbType {
-  return db
+  return db;
 }
 
 /**
@@ -40,17 +40,17 @@ export function getTestDb(): DbType {
  * @returns A Drizzle `PgliteDatabase` instance backed by in-memory PGlite.
  */
 async function createIsolatedDb(): Promise<DbType> {
-  const client = new PGlite()
-  const instance = drizzle(client, { schema })
+  const client = new PGlite();
+  const instance = drizzle(client, { schema });
 
   // Apply all pending migrations so the schema matches production.
   // Run `npm run db:generate` to regenerate migrations after schema changes.
   // Resolve relative to this file so the path works regardless of cwd.
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
-  const migrationsFolder = path.resolve(__dirname, '../../drizzle/migrations')
-  await migrate(instance, { migrationsFolder })
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const migrationsFolder = path.resolve(__dirname, '../../drizzle/migrations');
+  await migrate(instance, { migrationsFolder });
 
-  return instance
+  return instance;
 }
 
 /**
@@ -82,17 +82,17 @@ async function createIsolatedDb(): Promise<DbType> {
  * ```
  */
 export function createTestApp(testDb?: DbType): Hono<TestAppEnv> {
-  const instance = testDb ?? db
-  const app = new Hono<TestAppEnv>()
+  const instance = testDb ?? db;
+  const app = new Hono<TestAppEnv>();
 
   // Inject the test database into every request context so handlers that call
   // `c.get('db')` receive the in-memory PGlite instance instead of the real pool.
   app.use('*', async (c, next) => {
-    c.set('db', instance)
-    await next()
-  })
+    c.set('db', instance);
+    await next();
+  });
 
-  return app
+  return app;
 }
 
 /**
@@ -112,12 +112,12 @@ export function createTestApp(testDb?: DbType): Hono<TestAppEnv> {
 export function withTestDb(): void {
   beforeEach(async () => {
     // A fresh PGlite instance per test ensures complete isolation.
-    db = await createIsolatedDb()
-  })
+    db = await createIsolatedDb();
+  });
 
   // PGlite in-memory databases are automatically garbage-collected; no teardown
   // is required. The afterEach is reserved for future cleanup hooks.
   afterEach(() => {
     // no-op — GC handles in-memory cleanup
-  })
+  });
 }

@@ -2,8 +2,7 @@ export const queryKeys = {
   issues: {
     all: ['issues'] as const,
     lists: () => [...queryKeys.issues.all, 'list'] as const,
-    list: (filters: Record<string, unknown>) =>
-      [...queryKeys.issues.lists(), filters] as const,
+    list: (filters: Record<string, unknown>) => [...queryKeys.issues.lists(), filters] as const,
     details: () => [...queryKeys.issues.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.issues.details(), id] as const,
   },
@@ -31,4 +30,4 @@ export const queryKeys = {
     activity: ['dashboard', 'activity'] as const,
     prompts: ['dashboard', 'prompts'] as const,
   },
-} as const
+} as const;

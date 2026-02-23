@@ -9,51 +9,58 @@ import {
   index,
   uniqueIndex,
   primaryKey,
-} from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
-import { timestamps, softDelete, cuid2Id } from './_helpers'
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { timestamps, softDelete, cuid2Id } from './_helpers';
 
 // ─── Enum value arrays (for Zod reuse) ───────────────────────────────────────
 
-export const issueTypeValues = ['signal', 'hypothesis', 'plan', 'task', 'monitor'] as const
-export const issueStatusValues = ['triage', 'backlog', 'todo', 'in_progress', 'done', 'canceled'] as const
-export const relationTypeValues = ['blocks', 'blocked_by', 'related', 'duplicate'] as const
-export const authorTypeValues = ['human', 'agent'] as const
+export const issueTypeValues = ['signal', 'hypothesis', 'plan', 'task', 'monitor'] as const;
+export const issueStatusValues = [
+  'triage',
+  'backlog',
+  'todo',
+  'in_progress',
+  'done',
+  'canceled',
+] as const;
+export const relationTypeValues = ['blocks', 'blocked_by', 'related', 'duplicate'] as const;
+export const authorTypeValues = ['human', 'agent'] as const;
 
 // ─── Postgres enums ───────────────────────────────────────────────────────────
 
-export const issueTypeEnum = pgEnum('issue_type', issueTypeValues)
-export const issueStatusEnum = pgEnum('issue_status', issueStatusValues)
-export const relationTypeEnum = pgEnum('relation_type', relationTypeValues)
-export const authorTypeEnum = pgEnum('author_type', authorTypeValues)
+export const issueTypeEnum = pgEnum('issue_type', issueTypeValues);
+export const issueStatusEnum = pgEnum('issue_status', issueStatusValues);
+export const relationTypeEnum = pgEnum('relation_type', relationTypeValues);
+export const authorTypeEnum = pgEnum('author_type', authorTypeValues);
 
 // ─── JSONB types ──────────────────────────────────────────────────────────────
 
-export type SignalPayload = Record<string, unknown>
+export type SignalPayload = Record<string, unknown>;
 
 export type HypothesisData = {
-  statement: string
-  confidence: number
-  evidence: string[]
-  validationCriteria: string
-  prediction?: string
-}
+  statement: string;
+  confidence: number;
+  evidence: string[];
+  validationCriteria: string;
+  prediction?: string;
+};
 
 export type CommitRef = {
-  sha: string
-  message: string
-  url?: string
-  author?: string
-  timestamp?: string
-}
+  sha: string;
+  message: string;
+  url?: string;
+  author?: string;
+  timestamp?: string;
+};
 
 export type PullRequestRef = {
-  number: number
-  title: string
-  url?: string
-  state?: string
-  mergedAt?: string
-}
+  number: number;
+  title: string;
+  url?: string;
+  state?: string;
+  mergedAt?: string;
+};
 
 // ─── Issues table ─────────────────────────────────────────────────────────────
 
@@ -86,8 +93,8 @@ export const issues = pgTable(
     index('idx_issues_type').on(table.type),
     index('idx_issues_status').on(table.status),
     uniqueIndex('idx_issues_number').on(table.number),
-  ],
-)
+  ]
+);
 
 // ─── Labels table ─────────────────────────────────────────────────────────────
 
@@ -95,11 +102,9 @@ export const labels = pgTable('labels', {
   ...cuid2Id,
   name: text('name').notNull().unique(),
   color: text('color').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-})
+});
 
 // ─── IssueLabels join table ───────────────────────────────────────────────────
 
@@ -109,8 +114,8 @@ export const issueLabels = pgTable(
     issueId: text('issue_id').notNull(),
     labelId: text('label_id').notNull(),
   },
-  (table) => [primaryKey({ columns: [table.issueId, table.labelId] })],
-)
+  (table) => [primaryKey({ columns: [table.issueId, table.labelId] })]
+);
 
 // ─── IssueRelations table ─────────────────────────────────────────────────────
 
@@ -121,15 +126,13 @@ export const issueRelations = pgTable(
     type: relationTypeEnum('type').notNull(),
     issueId: text('issue_id').notNull(),
     relatedIssueId: text('related_issue_id').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
   },
   (table) => [
     index('idx_issue_relations_issue_id').on(table.issueId),
     index('idx_issue_relations_related_issue_id').on(table.relatedIssueId),
-  ],
-)
+  ]
+);
 
 // ─── Comments table ───────────────────────────────────────────────────────────
 
@@ -142,12 +145,10 @@ export const comments = pgTable(
     authorName: text('author_name').notNull(),
     authorType: authorTypeEnum('author_type').notNull(),
     parentId: text('parent_id'),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
   },
-  (table) => [index('idx_comments_issue_id').on(table.issueId)],
-)
+  (table) => [index('idx_comments_issue_id').on(table.issueId)]
+);
 
 // ─── Relations definitions ────────────────────────────────────────────────────
 
@@ -162,11 +163,11 @@ export const issuesRelations = relations(issues, ({ one, many }) => ({
   issueRelations: many(issueRelations, { relationName: 'issue_relations' }),
   relatedIssueRelations: many(issueRelations, { relationName: 'related_issue_relations' }),
   comments: many(comments),
-}))
+}));
 
 export const labelsRelations = relations(labels, ({ many }) => ({
   issueLabels: many(issueLabels),
-}))
+}));
 
 export const issueLabelsRelations = relations(issueLabels, ({ one }) => ({
   issue: one(issues, {
@@ -177,7 +178,7 @@ export const issueLabelsRelations = relations(issueLabels, ({ one }) => ({
     fields: [issueLabels.labelId],
     references: [labels.id],
   }),
-}))
+}));
 
 export const issueRelationsRelations = relations(issueRelations, ({ one }) => ({
   issue: one(issues, {
@@ -190,7 +191,7 @@ export const issueRelationsRelations = relations(issueRelations, ({ one }) => ({
     references: [issues.id],
     relationName: 'related_issue_relations',
   }),
-}))
+}));
 
 export const commentsRelations = relations(comments, ({ one }) => ({
   issue: one(issues, {
@@ -202,4 +203,4 @@ export const commentsRelations = relations(comments, ({ one }) => ({
     references: [comments.id],
     relationName: 'comment_thread',
   }),
-}))
+}));

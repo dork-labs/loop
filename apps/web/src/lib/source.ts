@@ -1,5 +1,5 @@
-import { docs } from '@/.source'
-import { loader } from 'fumadocs-core/source'
+import { docs } from '@/.source';
+import { loader } from 'fumadocs-core/source';
 
 /**
  * Fumadocs source loader for documentation pages.
@@ -10,4 +10,4 @@ import { loader } from 'fumadocs-core/source'
 export const source = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
-})
+});

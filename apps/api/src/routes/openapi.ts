@@ -1,8 +1,8 @@
-import { Hono } from 'hono'
-import { generateOpenApiDocument } from '../lib/openapi-schemas'
+import { Hono } from 'hono';
+import { generateOpenApiDocument } from '../lib/openapi-schemas';
 
-export const openapiRoutes = new Hono()
+export const openapiRoutes = new Hono();
 
 openapiRoutes.get('/', (c) => {
-  return c.json(generateOpenApiDocument())
-})
+  return c.json(generateOpenApiDocument());
+});

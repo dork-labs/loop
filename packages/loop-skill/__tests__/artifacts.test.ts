@@ -85,9 +85,7 @@ describe('Content Consistency', () => {
   it('all artifacts use Bearer auth pattern', () => {
     for (const artifact of artifacts) {
       const content = readArtifact(artifact.path);
-      expect(content, `${artifact.name} missing Bearer auth`).toContain(
-        'Authorization: Bearer'
-      );
+      expect(content, `${artifact.name} missing Bearer auth`).toContain('Authorization: Bearer');
     }
   });
 });

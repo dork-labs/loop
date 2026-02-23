@@ -29,6 +29,7 @@ Vercel is the recommended deployment platform. The Hono API server auto-detects 
 ### Import the repository
 
 Go to [vercel.com/new](https://vercel.com/new) and import your Loop repository from GitHub.
+
 </Step>
 
 <Step>
@@ -37,11 +38,13 @@ Go to [vercel.com/new](https://vercel.com/new) and import your Loop repository f
 Set the **Root Directory** to `apps/api`. Vercel will detect it as a Node.js project.
 
 Set the **Build Command** to:
+
 ```
 npm run build
 ```
 
 Set the **Output Directory** to `dist`.
+
 </Step>
 
 <Step>
@@ -53,10 +56,11 @@ In the Vercel project settings, add the following environment variables:
 - `LOOP_API_KEY` -- A secure API key (see [Environment Variables](/docs/self-hosting/environment#loop_api_key) for generation instructions)
 
 Add webhook secrets only if you plan to use those integrations:
+
 - `GITHUB_WEBHOOK_SECRET`
 - `SENTRY_CLIENT_SECRET`
 - `POSTHOG_WEBHOOK_SECRET`
-</Step>
+  </Step>
 
 <Step>
 ### Run database migrations
@@ -66,12 +70,14 @@ After the first deployment, run migrations against your production database. You
 ```bash
 DATABASE_URL="your-production-connection-string" npm run db:migrate -w apps/api
 ```
+
 </Step>
 
 <Step>
 ### Deploy
 
 Click **Deploy**. Vercel will build the API and deploy it as serverless functions. The API will be available at your Vercel project URL (e.g., `https://loop-api.vercel.app`).
+
 </Step>
 </Steps>
 
@@ -84,11 +90,13 @@ Click **Deploy**. Vercel will build the API and deploy it as serverless function
 Import the same repository again as a new Vercel project. Set the **Root Directory** to `apps/app`.
 
 Set the **Build Command** to:
+
 ```
 npm run build
 ```
 
 Set the **Output Directory** to `dist`.
+
 </Step>
 
 <Step>
@@ -96,17 +104,19 @@ Set the **Output Directory** to `dist`.
 
 - `VITE_API_URL` -- The URL of your deployed API (e.g., `https://loop-api.vercel.app`)
 - `VITE_LOOP_API_KEY` -- The same API key you set as `LOOP_API_KEY` on the API server
-</Step>
+  </Step>
 
 <Step>
 ### Deploy
 
 Click **Deploy**. The dashboard will be available at your Vercel project URL (e.g., `https://loop-app.vercel.app`).
+
 </Step>
 </Steps>
 
 <Callout type="warn">
-The dashboard embeds the API key into the client-side bundle at build time. Only deploy the dashboard behind authentication or restrict access to trusted networks.
+  The dashboard embeds the API key into the client-side bundle at build time. Only deploy the
+  dashboard behind authentication or restrict access to trusted networks.
 </Callout>
 
 ## Manual Deployment
@@ -123,6 +133,7 @@ npm run build
 ```
 
 This produces:
+
 - `apps/api/dist/` -- Compiled API server
 - `apps/app/dist/` -- Static dashboard files
 
@@ -133,10 +144,11 @@ This produces:
 ### Provision PostgreSQL
 
 Set up a PostgreSQL 15+ instance. You can use:
+
 - [Neon](https://neon.tech) (serverless, free tier available)
 - Self-hosted PostgreSQL
 - Any managed PostgreSQL service (AWS RDS, Google Cloud SQL, etc.)
-</Step>
+  </Step>
 
 <Step>
 ### Configure the connection
@@ -146,6 +158,7 @@ Set the `DATABASE_URL` environment variable:
 ```bash
 export DATABASE_URL="postgresql://user:password@host:5432/loop"
 ```
+
 </Step>
 
 <Step>
@@ -158,6 +171,7 @@ npm run db:migrate -w apps/api
 ```
 
 This creates all required tables. Run this command again after pulling updates that include new migrations.
+
 </Step>
 </Steps>
 
@@ -176,7 +190,8 @@ node apps/api/dist/index.js
 The API server listens on port 4242 by default. Place it behind a reverse proxy (nginx, Caddy, etc.) for TLS termination and custom domains.
 
 <Callout type="info">
-In production, use a process manager like [PM2](https://pm2.keymetrics.io/) or systemd to keep the API running and restart it on failure.
+  In production, use a process manager like [PM2](https://pm2.keymetrics.io/) or systemd to keep the
+  API running and restart it on failure.
 </Callout>
 
 ### Serve the Dashboard
@@ -210,7 +225,8 @@ app.example.com {
 The `try_files` directive is required because the dashboard is a single-page application with client-side routing.
 
 <Callout type="info">
-Remember to set `VITE_API_URL` and `VITE_LOOP_API_KEY` before building the dashboard, since these values are embedded at build time.
+  Remember to set `VITE_API_URL` and `VITE_LOOP_API_KEY` before building the dashboard, since these
+  values are embedded at build time.
 </Callout>
 
 ### Health Check

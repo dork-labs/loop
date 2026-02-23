@@ -29,13 +29,13 @@ If the header is missing or the signature does not match, Loop responds with `40
 
 Loop derives severity from the Sentry error level and event count:
 
-| Condition | Severity |
-|---|---|
-| Level is `fatal` | `critical` |
+| Condition                         | Severity   |
+| --------------------------------- | ---------- |
+| Level is `fatal`                  | `critical` |
 | Level is `error` and count >= 100 | `critical` |
-| Level is `error` | `high` |
-| Level is `warning` | `medium` |
-| All other levels | `low` |
+| Level is `error`                  | `high`     |
+| Level is `warning`                | `medium`   |
+| All other levels                  | `low`      |
 
 ## What Gets Created
 
@@ -56,6 +56,7 @@ The signal's `sourceId` is set to the Sentry issue ID when available.
 In Sentry, go to **Settings > Developer Settings > Your Internal Integration** (or create a new one). The **Client Secret** is displayed on the integration's credentials page.
 
 Alternatively, for webhook-based integrations under **Settings > Integrations > Webhooks**, Sentry provides a signing secret.
+
 </Step>
 
 <Step>
@@ -68,6 +69,7 @@ SENTRY_CLIENT_SECRET=your_sentry_client_secret_here
 ```
 
 This variable must be available to the Loop API process at runtime.
+
 </Step>
 
 <Step>
@@ -80,12 +82,13 @@ This variable must be available to the Loop API process at runtime.
    ```
 3. Under **Webhooks**, enable the event types you want to receive (e.g., `issue`, `error`, `event_alert`).
 4. Save the integration.
-</Step>
+   </Step>
 
 <Step>
 ### Verify the connection
 
 Trigger a test alert in Sentry or wait for a real error to occur. Check your Loop instance for a new signal with source `sentry`. Verify the issue was created with the correct severity based on the error level and event count.
+
 </Step>
 
 </Steps>

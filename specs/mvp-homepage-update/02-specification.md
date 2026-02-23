@@ -58,18 +58,19 @@ Additionally, ~15 marketing components exist in the codebase that describe this 
 
 ## 8. Technical Dependencies
 
-| Library | Version | Purpose |
-|---------|---------|---------|
-| Next.js | 16.x | Framework (static generation, routing, Image optimization) |
-| Motion | 12.x | Animation library (`motion/react` — formerly Framer Motion) |
-| Tailwind CSS | 4.x | Styling via utility classes + design tokens in `globals.css` |
-| React | 19.x | UI framework |
-| Lucide React | latest | Icon library (already installed) |
-| PostHog | latest | Analytics (existing, no changes needed) |
+| Library      | Version | Purpose                                                      |
+| ------------ | ------- | ------------------------------------------------------------ |
+| Next.js      | 16.x    | Framework (static generation, routing, Image optimization)   |
+| Motion       | 12.x    | Animation library (`motion/react` — formerly Framer Motion)  |
+| Tailwind CSS | 4.x     | Styling via utility classes + design tokens in `globals.css` |
+| React        | 19.x    | UI framework                                                 |
+| Lucide React | latest  | Icon library (already installed)                             |
+| PostHog      | latest  | Analytics (existing, no changes needed)                      |
 
 No new dependencies are required. All libraries are already in `apps/web/package.json`.
 
 **Key Motion APIs used:**
+
 - `whileInView` with `viewport={{ once: true, amount: 0.2 }}` for scroll-triggered entrance animations
 - `variants` with `REVEAL`, `STAGGER`, `SCALE_IN`, `DRAW_PATH` from `motion-variants.ts`
 - `useReducedMotion` hook for accessibility
@@ -111,6 +112,7 @@ apps/web/src/
 **Files to delete** (20 files — wrong product vision, unused):
 
 UI components:
+
 - `HonestySection.tsx`, `ProblemSection.tsx`, `NotSection.tsx`
 - `SystemArchitecture.tsx`, `HowItWorksSection.tsx`, `Hero.tsx`
 - `ActivityFeedHero.tsx`, `ProjectCard.tsx`, `ProjectsGrid.tsx`
@@ -118,6 +120,7 @@ UI components:
 - `AboutSection.tsx`, `PulseAnimation.tsx`, `CredibilityBar.tsx`
 
 Data/types:
+
 - `lib/projects.ts`, `lib/philosophy.ts`, `lib/modules.ts`
 - `lib/use-cases.ts`, `lib/types.ts`
 
@@ -140,7 +143,7 @@ export default function HomePage() {
       <MarketingFooter email={siteConfig.contactEmail} socialLinks={socialLinks} />
       <MarketingNav links={navLinks} />
     </>
-  )
+  );
 }
 ```
 
@@ -151,6 +154,7 @@ export default function HomePage() {
 **Layout:** Split-panel — text/CTAs on left (55%), animated feedback loop SVG diagram on right (45%). Uses `grid grid-cols-1 lg:grid-cols-[55%_1fr]` matching the existing `ActivityFeedHero` grid pattern.
 
 **Content:**
+
 - **Eyebrow:** `"Open source"` — `font-mono text-2xs tracking-[0.2em] uppercase text-brand-orange`
 - **Headline:** `"Close the feedback loop on AI-powered development."` — `font-bold text-charcoal tracking-[-0.04em]` with `clamp(32px, 5.5vw, 64px)`
 - **Subhead:** `"Loop collects signals from your stack — errors, metrics, user feedback — organizes them into prioritized issues, and tells your agents exactly what to fix next."` — `text-warm-gray font-light leading-[1.75]`
@@ -170,6 +174,7 @@ Signal → Issue → Prompt → Dispatch
 ```
 
 Technical implementation:
+
 - SVG `viewBox="0 0 400 320"` with 5 nodes arranged in a rounded rectangle flow
 - Nodes: `Signal` (top-left), `Issue` (top-right), `Prompt` (right), `Dispatch` (bottom-right), `Outcome` (bottom-left)
 - Each node: circle with `SCALE_IN` variant + text label
@@ -189,6 +194,7 @@ Technical implementation:
 **Layout:** Full-width strip with centered content. Background: `bg-cream-secondary`.
 
 **Content:**
+
 - **Eyebrow:** `"Built-in integrations"` — centered, mono font
 - **Logo row:** 3 integration logos (PostHog, GitHub, Sentry) displayed horizontally with adequate spacing
 - **Description:** `"Ingest signals from the tools your team already uses."` — centered subtext
@@ -203,16 +209,17 @@ Technical implementation:
 
 **Content — 4 steps:**
 
-| Step | Icon | Label | Title | Description |
-|------|------|-------|-------|-------------|
-| 1 | Lightning bolt | Signal | Collect Signals | Errors from Sentry, metrics from PostHog, events from GitHub arrive as typed signals |
-| 2 | List/clipboard | Issue | Organize Work | Signals become triaged issues with type, priority, and project assignment |
-| 3 | File/template | Prompt | Hydrate Prompts | The best-matching template is selected and filled with full system context |
-| 4 | Play/send | Dispatch | Dispatch to Agents | The highest-priority unblocked issue is claimed and dispatched with its hydrated prompt |
+| Step | Icon           | Label    | Title              | Description                                                                             |
+| ---- | -------------- | -------- | ------------------ | --------------------------------------------------------------------------------------- |
+| 1    | Lightning bolt | Signal   | Collect Signals    | Errors from Sentry, metrics from PostHog, events from GitHub arrive as typed signals    |
+| 2    | List/clipboard | Issue    | Organize Work      | Signals become triaged issues with type, priority, and project assignment               |
+| 3    | File/template  | Prompt   | Hydrate Prompts    | The best-matching template is selected and filled with full system context              |
+| 4    | Play/send      | Dispatch | Dispatch to Agents | The highest-priority unblocked issue is claimed and dispatched with its hydrated prompt |
 
 **Visual connectors:** On desktop, horizontal arrows or lines connecting the 4 steps. On mobile, vertical flow with connecting lines.
 
 **Animation:**
+
 - Container: `whileInView` + `STAGGER`
 - Each step: `REVEAL` variant
 - Optional: `DRAW_PATH` on connecting lines
@@ -223,12 +230,12 @@ Technical implementation:
 
 **Content — 4 pillars:**
 
-| Pillar | Label | Title | Description |
-|--------|-------|-------|-------------|
-| 1 | Data Layer | Signal Ingestion & Issue Management | PostgreSQL-backed data layer with 10 entity types. Ingest signals from PostHog, GitHub, and Sentry. Full CRUD API with filtering, pagination, and hierarchy. |
-| 2 | Prompt Engine | Template Selection & Hydration | Conditions-based template matching with Handlebars hydration. Injects full system context — issues, projects, goals, relations — into agent prompts. |
-| 3 | Dashboard | Real-Time Oversight | React dashboard with 5 views: Issues, Issue Detail, Activity Timeline, Goals, and Prompt Health. Monitor the autonomous loop in real time. |
-| 4 | CLI | Command-Line Control | 13 commands for issue management, signals, triage, dispatch, templates, and system status. JSON output for scripting. |
+| Pillar | Label         | Title                               | Description                                                                                                                                                  |
+| ------ | ------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1      | Data Layer    | Signal Ingestion & Issue Management | PostgreSQL-backed data layer with 10 entity types. Ingest signals from PostHog, GitHub, and Sentry. Full CRUD API with filtering, pagination, and hierarchy. |
+| 2      | Prompt Engine | Template Selection & Hydration      | Conditions-based template matching with Handlebars hydration. Injects full system context — issues, projects, goals, relations — into agent prompts.         |
+| 3      | Dashboard     | Real-Time Oversight                 | React dashboard with 5 views: Issues, Issue Detail, Activity Timeline, Goals, and Prompt Health. Monitor the autonomous loop in real time.                   |
+| 4      | CLI           | Command-Line Control                | 13 commands for issue management, signals, triage, dispatch, templates, and system status. JSON output for scripting.                                        |
 
 **Card style:** Reuse existing card patterns — `bg-cream-white rounded-lg p-6 border border-[var(--border-warm)]` with optional hover lift.
 
@@ -239,6 +246,7 @@ Technical implementation:
 **Layout:** Centered content with a code block. Background: `bg-cream-tertiary`.
 
 **Content:**
+
 - **Eyebrow:** `"Get started"` — mono font, brand-orange
 - **Headline:** `"Up and running in 60 seconds."` — charcoal, medium weight
 - **Code block:** Terminal-style panel with:
@@ -270,10 +278,11 @@ export const siteConfig = {
   npm: 'https://www.npmjs.com/package/looped',
   ogImage: '/og-image.png',
   disableCookieBanner: true,
-} as const
+} as const;
 ```
 
 Changes:
+
 - `description` updated to reflect actual product
 - `npm` URL updated from `loop` to `looped` (actual package name)
 
@@ -284,6 +293,7 @@ Change `v0.2.0 · System Online` to `v0.1.0 · System Online` in `MarketingFoote
 #### MarketingNav Anchor Links
 
 Update nav links to match new sections:
+
 ```typescript
 const navLinks = [
   { label: 'how it works', href: '#how-it-works' },
@@ -291,12 +301,13 @@ const navLinks = [
   { label: 'get started', href: '#get-started' },
   { label: 'contact', href: '#contact' },
   { label: 'docs', href: '/docs' },
-]
+];
 ```
 
 ### 9.6 Barrel Export Updates
 
 Update `apps/web/src/layers/features/marketing/index.ts` to:
+
 - Remove all deleted component exports (15 UI components, 4 data modules, 2 type exports)
 - Add new component exports: `IntegrationsBar`, `HowItWorksFlow`, `QuickStartSection`
 - Keep existing: `ContactSection`, `MarketingNav`, `MarketingHeader`, `MarketingFooter`, `LoopHero`, `LoopValueProps`
@@ -356,13 +367,13 @@ This is a static marketing page with no business logic. Testing focuses on:
 
 ## 12. Performance Considerations
 
-| Metric | Target | Strategy |
-|--------|--------|----------|
-| LCP | < 2.5s | Hero h1 renders immediately (no opacity:0 animation). Static generation. |
-| CLS | < 0.1 | Fixed heights on animated panels. Explicit `width`/`height` on all images. |
-| FID | < 100ms | No event handlers on initial render. Animations are passive. |
-| JS bundle | < 150KB gzipped above-fold | Code-split sections below fold. Motion is already tree-shaken. |
-| Image size | < 50KB per logo | Use optimized SVGs for integration logos. `next/image` for raster images. |
+| Metric     | Target                     | Strategy                                                                   |
+| ---------- | -------------------------- | -------------------------------------------------------------------------- |
+| LCP        | < 2.5s                     | Hero h1 renders immediately (no opacity:0 animation). Static generation.   |
+| CLS        | < 0.1                      | Fixed heights on animated panels. Explicit `width`/`height` on all images. |
+| FID        | < 100ms                    | No event handlers on initial render. Animations are passive.               |
+| JS bundle  | < 150KB gzipped above-fold | Code-split sections below fold. Motion is already tree-shaken.             |
+| Image size | < 50KB per logo            | Use optimized SVGs for integration logos. `next/image` for raster images.  |
 
 **Static generation:** The homepage has zero dynamic data. It should produce a single static HTML file at build time. No `getServerSideProps`, no `fetch` calls, no API dependencies.
 
@@ -434,6 +445,6 @@ None — all decisions have been made during the ideation clarification phase.
 
 ## 19. Changelog
 
-| Date | Change | Author |
-|------|--------|--------|
+| Date       | Change        | Author      |
+| ---------- | ------------- | ----------- |
 | 2026-02-20 | Initial draft | Claude Code |

@@ -47,22 +47,22 @@ t3-env now supports any Standard Schema v1 compliant library (Zod ≥3.24 or v4,
 **How it works:**
 
 ```typescript
-import { createEnv } from "@t3-oss/env-core"
-import { z } from "zod"
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
     LOOP_API_KEY: z.string().min(1),
   },
-  clientPrefix: "VITE_",
+  clientPrefix: 'VITE_',
   client: {
     VITE_API_URL: z.string().url(),
   },
   // For Node.js apps:
   runtimeEnv: process.env,
   // For Vite apps: runtimeEnv: import.meta.env (but only at runtime, not during build)
-})
+});
 ```
 
 **Monorepo support via `extends`:**
@@ -70,17 +70,17 @@ export const env = createEnv({
 ```typescript
 // packages/shared-env/env.ts
 export const sharedEnv = createEnv({
-  server: { NODE_ENV: z.enum(["development", "test", "production"]) },
+  server: { NODE_ENV: z.enum(['development', 'test', 'production']) },
   runtimeEnv: process.env,
-})
+});
 
 // apps/api/env.ts
-import { sharedEnv } from "@loop/shared-env/env"
+import { sharedEnv } from '@loop/shared-env/env';
 export const env = createEnv({
   server: { DATABASE_URL: z.string().url() },
   runtimeEnv: process.env,
   extends: [sharedEnv],
-})
+});
 ```
 
 **Vite caveat:** For a Vite SPA (apps/app), the recommended `runtimeEnv` is `import.meta.env`. This works at runtime. But the client/server enforcement only prevents server-only vars from being accessed in client code via TypeScript — it does not add runtime overhead. The Vite preset (`@t3-oss/env-core/presets-valibot` or similar) handles the `VITE_` prefix automatically.
@@ -88,14 +88,14 @@ export const env = createEnv({
 ```typescript
 // For apps/app (Vite):
 export const env = createEnv({
-  clientPrefix: "VITE_",
+  clientPrefix: 'VITE_',
   client: {
     VITE_API_URL: z.string().url().optional(),
     VITE_LOOP_API_KEY: z.string().min(1),
   },
   runtimeEnv: import.meta.env,
   // No server vars — this is a pure SPA
-})
+});
 ```
 
 **Known pain point:** GitHub issue #177 ("Support both process.env and import.meta.env") and issue #228 ("Using shared variables with no clientPrefix") show that mixing both env sources in a monorepo shared config is awkward. Each app effectively needs its own env file even with `extends`.
@@ -110,57 +110,59 @@ export const env = createEnv({
 
 ```typescript
 // apps/api/src/env.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 const schema = z.object({
   DATABASE_URL: z.string().url(),
   LOOP_API_KEY: z.string().min(1),
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(4242),
   // Webhook secrets — optional, validated when present
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_CLIENT_SECRET: z.string().optional(),
   POSTHOG_WEBHOOK_SECRET: z.string().optional(),
-})
+});
 
-const parsed = schema.safeParse(process.env)
+const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
-  console.error("Invalid environment variables:")
-  console.error(parsed.error.flatten().fieldErrors)
-  process.exit(1)
+  console.error('Invalid environment variables:');
+  console.error(parsed.error.flatten().fieldErrors);
+  process.exit(1);
 }
 
-export const env = parsed.data
-export type Env = z.infer<typeof schema>
+export const env = parsed.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 ```typescript
 // apps/app/src/env.ts
-import { z } from "zod"
+import { z } from 'zod';
 
 const schema = z.object({
-  VITE_API_URL: z.string().url().default("http://localhost:4242"),
+  VITE_API_URL: z.string().url().default('http://localhost:4242'),
   VITE_LOOP_API_KEY: z.string().min(1),
-})
+});
 
-const parsed = schema.safeParse(import.meta.env)
+const parsed = schema.safeParse(import.meta.env);
 if (!parsed.success) {
-  console.error("Missing required environment variables:", parsed.error.flatten().fieldErrors)
-  throw new Error("Invalid environment configuration")
+  console.error('Missing required environment variables:', parsed.error.flatten().fieldErrors);
+  throw new Error('Invalid environment configuration');
 }
 
-export const env = parsed.data
-export type Env = z.infer<typeof schema>
+export const env = parsed.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 **Coercion note:** Zod's `z.coerce.number()` calls `Number()` on the value before validating, which correctly handles string env vars. For booleans, use a transform: `z.string().transform(v => v === "true")` since `z.coerce.boolean()` is too permissive (treats any non-empty string as `true`).
 
 **What you lose vs. t3-env:**
+
 - No automatic enforcement that server vars don't leak to client (enforced by convention instead)
 - No `extends` composability (shared vars require manual duplication or a shared schema object)
 - No warning if a var is defined in schema but missing from `runtimeEnv` during Vite bundling (the `runtimeEnvStrict` feature of t3-env)
 
 **What you gain:**
+
 - Zero additional dependencies
 - Works identically across Node.js (`process.env`) and Vite (`import.meta.env`) with one-line change
 - No ESM-only restrictions or module resolution complexity
@@ -171,16 +173,17 @@ export type Env = z.infer<typeof schema>
 ### envalid
 
 ```typescript
-import { cleanEnv, str, url, port } from "envalid"
+import { cleanEnv, str, url, port } from 'envalid';
 
 export const env = cleanEnv(process.env, {
   DATABASE_URL: url(),
   LOOP_API_KEY: str(),
   PORT: port({ default: 4242 }),
-})
+});
 ```
 
 **Pros:**
+
 - Built-in validators for common types including `port()`, `email()`, `host()`
 - Clean, readable DSL
 - Immutable output (Proxy-wrapped)
@@ -188,6 +191,7 @@ export const env = cleanEnv(process.env, {
 - Exits process cleanly on validation failure with human-readable error
 
 **Cons:**
+
 - Node.js only — no `import.meta.env` support
 - Own validator DSL (not Zod/Valibot) — redundant in a project already using Zod
 - No client/server separation concept
@@ -201,22 +205,24 @@ export const env = cleanEnv(process.env, {
 ### znv
 
 ```typescript
-import { parseEnv, z, port } from "znv"
+import { parseEnv, z, port } from 'znv';
 
 export const env = parseEnv(process.env, {
   DATABASE_URL: z.string().url(),
   PORT: port().default(4242),
   DEBUG: z.boolean().default(false), // correctly coerces "false" -> false
-})
+});
 ```
 
 **Pros:**
+
 - Zero additional dependencies (re-exports Zod's `z`)
 - Correct boolean coercion (fixes Zod's `coerce.boolean` footgun)
 - Nice `port()` helper
 - Aggregates all errors rather than throwing on the first
 
 **Cons:**
+
 - 387 GitHub stars — very low adoption
 - Pre-v1.0, explicitly unstable API
 - No Vite/`import.meta.env` support built in
@@ -238,13 +244,13 @@ export const env = parseEnv(process.env, {
 
 ## Community Adoption Data (February 2026)
 
-| Library | Weekly Downloads | GitHub Stars | Latest Version | Status |
-|---|---|---|---|---|
-| `@t3-oss/env-core` | ~497,000 | ~5,000+ | 0.13.10 | Active |
-| `envalid` | ~447,000 | ~1,500 | 8.1.1 | Active |
-| `zod` (direct) | ~25M+ | ~35,000+ | 3.x / 4.x | Active |
-| `znv` | Low (<5k est.) | 387 | 0.5.0 | Low activity |
-| `env-valibot` | Negligible | <100 | Pre-release | Experimental |
+| Library            | Weekly Downloads | GitHub Stars | Latest Version | Status       |
+| ------------------ | ---------------- | ------------ | -------------- | ------------ |
+| `@t3-oss/env-core` | ~497,000         | ~5,000+      | 0.13.10        | Active       |
+| `envalid`          | ~447,000         | ~1,500       | 8.1.1          | Active       |
+| `zod` (direct)     | ~25M+            | ~35,000+     | 3.x / 4.x      | Active       |
+| `znv`              | Low (<5k est.)   | 387          | 0.5.0          | Low activity |
+| `env-valibot`      | Negligible       | <100         | Pre-release    | Experimental |
 
 Note: Zod used directly is the most common approach in raw numbers since Zod has 25M+ weekly downloads and most teams use it for env validation without a wrapper library.
 
@@ -252,14 +258,14 @@ Note: Zod used directly is the most common approach in raw numbers since Zod has
 
 ## Bundle Size Analysis
 
-| Library | Minified+Gzipped | Notes |
-|---|---|---|
-| Zod v3 | ~12.1KB | Already in all three apps |
-| Zod v4 | ~8KB (est.) | Smaller than v3, already in API |
-| Valibot v1 | ~1.4KB | Best for bundle-sensitive environments |
-| envalid | ~4KB | Own validators, no Zod |
-| @t3-oss/env-core | ~2KB (excl. validator) | Thin wrapper, validator cost separate |
-| znv | ~1KB (excl. Zod) | Zod still required |
+| Library          | Minified+Gzipped       | Notes                                  |
+| ---------------- | ---------------------- | -------------------------------------- |
+| Zod v3           | ~12.1KB                | Already in all three apps              |
+| Zod v4           | ~8KB (est.)            | Smaller than v3, already in API        |
+| Valibot v1       | ~1.4KB                 | Best for bundle-sensitive environments |
+| envalid          | ~4KB                   | Own validators, no Zod                 |
+| @t3-oss/env-core | ~2KB (excl. validator) | Thin wrapper, validator cost separate  |
+| znv              | ~1KB (excl. Zod)       | Zod still required                     |
 
 For the Vite SPA, bundle size matters at the margins. Since Zod is already included as a direct `apps/app` dependency, any env validation that uses Zod adds zero marginal bundle cost.
 
@@ -286,7 +292,7 @@ For the Vite SPA, bundle size matters at the margins. Since Zod is already inclu
 **apps/api/src/env.ts** (new file):
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   DATABASE_URL: z.string().url(),
@@ -296,83 +302,84 @@ const schema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_CLIENT_SECRET: z.string().optional(),
   POSTHOG_WEBHOOK_SECRET: z.string().optional(),
-})
+});
 
-const result = schema.safeParse(process.env)
+const result = schema.safeParse(process.env);
 
 if (!result.success) {
-  console.error('Invalid environment variables:')
+  console.error('Invalid environment variables:');
   for (const [key, errors] of Object.entries(result.error.flatten().fieldErrors)) {
-    console.error(`  ${key}: ${errors?.join(', ')}`)
+    console.error(`  ${key}: ${errors?.join(', ')}`);
   }
-  process.exit(1)
+  process.exit(1);
 }
 
 /** Validated, type-safe environment variables for the API server. */
-export const env = result.data
-export type Env = z.infer<typeof schema>
+export const env = result.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 **apps/app/src/env.ts** (new file):
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   VITE_API_URL: z.string().url().default('http://localhost:4242'),
   VITE_LOOP_API_KEY: z.string().min(1),
-})
+});
 
-const result = schema.safeParse(import.meta.env)
+const result = schema.safeParse(import.meta.env);
 
 if (!result.success) {
   throw new Error(
     `Missing required environment variables:\n${JSON.stringify(result.error.flatten().fieldErrors, null, 2)}`
-  )
+  );
 }
 
 /** Validated, type-safe environment variables for the React dashboard. */
-export const env = result.data
-export type Env = z.infer<typeof schema>
+export const env = result.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 **apps/web/src/env.ts** (new file — Next.js):
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   // Server-only
   DATABASE_URL: z.string().url().optional(), // if web needs DB access
   // Public (NEXT_PUBLIC_*)
   NEXT_PUBLIC_API_URL: z.string().url().default('https://api.looped.me'),
-})
+});
 
-const result = schema.safeParse(process.env)
+const result = schema.safeParse(process.env);
 
 if (!result.success) {
   throw new Error(
     `Invalid environment variables: ${JSON.stringify(result.error.flatten().fieldErrors)}`
-  )
+  );
 }
 
 /** Validated, type-safe environment variables for the marketing site. */
-export const env = result.data
-export type Env = z.infer<typeof schema>
+export const env = result.data;
+export type Env = z.infer<typeof schema>;
 ```
 
 **Usage in the API:**
 
 ```typescript
 // Instead of process.env.DATABASE_URL throughout the codebase
-import { env } from './env'
+import { env } from './env';
 
-const db = drizzle(neon(env.DATABASE_URL))
+const db = drizzle(neon(env.DATABASE_URL));
 ```
 
 ### When to Reconsider t3-env
 
 Switch to `@t3-oss/env-core` if:
+
 - The monorepo grows to 5+ apps sharing significant env var overlap
 - A client-facing app (not the current admin SPA) needs hard enforcement that secrets don't leak to the browser bundle
 - A shared `packages/` env config would save meaningful maintenance effort

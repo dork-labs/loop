@@ -27,9 +27,12 @@ Loop uses [Handlebars](https://handlebarsjs.com/) with `noEscape: true` (plain t
 Use double curly braces to insert values:
 
 ```handlebars
-Issue #{{issue.number}}: {{issue.title}}
-Type: {{issue.type}}
-Priority: {{issue.priority}}
+Issue #{{issue.number}}:
+{{issue.title}}
+Type:
+{{issue.type}}
+Priority:
+{{issue.priority}}
 ```
 
 ### Conditionals
@@ -38,12 +41,13 @@ Use `{{#if}}` blocks to include content only when a value is present:
 
 ```handlebars
 {{#if issue.description}}
-## Description
-{{issue.description}}
+  ## Description
+  {{issue.description}}
 {{/if}}
 
 {{#if goal}}
-Align your work with the project goal: {{goal.title}}
+  Align your work with the project goal:
+  {{goal.title}}
 {{/if}}
 ```
 
@@ -53,11 +57,14 @@ Use `{{#each}}` to loop over arrays:
 
 ```handlebars
 {{#if labels.length}}
-Labels: {{#each labels}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}
+  Labels:
+  {{#each labels}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/if}}
 
 {{#each children}}
-- #{{this.number}} [{{this.status}}]: {{this.title}}
+  - #{{this.number}}
+  [{{this.status}}]:
+  {{this.title}}
 {{/each}}
 ```
 
@@ -69,21 +76,21 @@ When a template is hydrated, the following context object is passed to Handlebar
 
 The claimed issue, with all columns from the `issues` table:
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `issue.id` | `string` | CUID2 identifier |
-| `issue.number` | `number` | Sequential issue number |
-| `issue.title` | `string` | Issue title |
-| `issue.description` | `string \| null` | Markdown description |
-| `issue.type` | `string` | `signal`, `hypothesis`, `plan`, `task`, or `monitor` |
-| `issue.status` | `string` | Current status (will be `in_progress` at dispatch) |
-| `issue.priority` | `number` | `0` (none) to `4` (low), `1` = urgent |
-| `issue.parentId` | `string \| null` | Parent issue ID |
-| `issue.projectId` | `string \| null` | Owning project ID |
-| `issue.signalSource` | `string \| null` | Origin of the signal (`github`, `sentry`, `posthog`) |
-| `issue.signalPayload` | `object \| null` | Raw signal data (JSON) |
-| `issue.hypothesis` | `object \| null` | Hypothesis data with `statement`, `confidence`, `validationCriteria` |
-| `issue.agentSummary` | `string \| null` | Summary from a previous agent session |
+| Variable              | Type             | Description                                                          |
+| --------------------- | ---------------- | -------------------------------------------------------------------- |
+| `issue.id`            | `string`         | CUID2 identifier                                                     |
+| `issue.number`        | `number`         | Sequential issue number                                              |
+| `issue.title`         | `string`         | Issue title                                                          |
+| `issue.description`   | `string \| null` | Markdown description                                                 |
+| `issue.type`          | `string`         | `signal`, `hypothesis`, `plan`, `task`, or `monitor`                 |
+| `issue.status`        | `string`         | Current status (will be `in_progress` at dispatch)                   |
+| `issue.priority`      | `number`         | `0` (none) to `4` (low), `1` = urgent                                |
+| `issue.parentId`      | `string \| null` | Parent issue ID                                                      |
+| `issue.projectId`     | `string \| null` | Owning project ID                                                    |
+| `issue.signalSource`  | `string \| null` | Origin of the signal (`github`, `sentry`, `posthog`)                 |
+| `issue.signalPayload` | `object \| null` | Raw signal data (JSON)                                               |
+| `issue.hypothesis`    | `object \| null` | Hypothesis data with `statement`, `confidence`, `validationCriteria` |
+| `issue.agentSummary`  | `string \| null` | Summary from a previous agent session                                |
 
 ### `parent`
 
@@ -101,22 +108,22 @@ Array of child issues (direct sub-issues). Empty when the issue is a leaf node.
 
 The owning project record, or null:
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `project.name` | `string` | Project name |
+| Variable              | Type             | Description         |
+| --------------------- | ---------------- | ------------------- |
+| `project.name`        | `string`         | Project name        |
 | `project.description` | `string \| null` | Project description |
 
 ### `goal`
 
 The active goal for the project, or null:
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `goal.title` | `string` | Goal title |
-| `goal.currentValue` | `number` | Current metric value |
-| `goal.targetValue` | `number` | Target metric value |
-| `goal.unit` | `string` | Unit of measurement |
-| `goal.status` | `string` | `active`, `completed`, or `paused` |
+| Variable            | Type     | Description                        |
+| ------------------- | -------- | ---------------------------------- |
+| `goal.title`        | `string` | Goal title                         |
+| `goal.currentValue` | `number` | Current metric value               |
+| `goal.targetValue`  | `number` | Target metric value                |
+| `goal.unit`         | `string` | Unit of measurement                |
+| `goal.status`       | `string` | `active`, `completed`, or `paused` |
 
 ### `labels`
 
@@ -138,11 +145,11 @@ The API base URL and bearer token, for use in API call examples within the promp
 
 Template metadata for the current render:
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `meta.templateId` | `string` | Template CUID2 |
-| `meta.templateSlug` | `string` | Template slug |
-| `meta.versionId` | `string` | Active version CUID2 |
+| Variable             | Type     | Description             |
+| -------------------- | -------- | ----------------------- |
+| `meta.templateId`    | `string` | Template CUID2          |
+| `meta.templateSlug`  | `string` | Template slug           |
+| `meta.versionId`     | `string` | Active version CUID2    |
 | `meta.versionNumber` | `number` | Version sequence number |
 
 ## Helpers
@@ -155,10 +162,9 @@ Renders any value as pretty-printed JSON. Useful for JSONB fields like `signalPa
 
 ````handlebars
 {{#if issue.signalPayload}}
-## Signal Payload
-```
-{{json issue.signalPayload}}
-```
+  ## Signal Payload ```
+  {{json issue.signalPayload}}
+  ```
 {{/if}}
 ````
 
@@ -222,14 +228,14 @@ Conditions control which issues a template matches. They are stored as JSON on t
 
 ### Available condition fields
 
-| Field | Type | Match logic |
-|-------|------|-------------|
-| `type` | `string` | Exact match on issue type |
-| `signalSource` | `string` | Exact match on signal source |
-| `labels` | `string[]` | All specified labels must be present on the issue |
-| `projectId` | `string` | Exact match on project ID |
-| `hasFailedSessions` | `boolean` | Whether sibling issues have failed agent sessions |
-| `hypothesisConfidence` | `number` | Issue confidence must be >= this value (0-1) |
+| Field                  | Type       | Match logic                                       |
+| ---------------------- | ---------- | ------------------------------------------------- |
+| `type`                 | `string`   | Exact match on issue type                         |
+| `signalSource`         | `string`   | Exact match on signal source                      |
+| `labels`               | `string[]` | All specified labels must be present on the issue |
+| `projectId`            | `string`   | Exact match on project ID                         |
+| `hasFailedSessions`    | `boolean`  | Whether sibling issues have failed agent sessions |
+| `hypothesisConfidence` | `number`   | Issue confidence must be >= this value (0-1)      |
 
 ### Selection algorithm
 
@@ -330,7 +336,8 @@ Templates support multiple versions. Only the **promoted** version is used durin
 - **List versions** — `GET /api/templates/:id/versions` to see all versions and their usage counts
 
 <Callout type="info">
-Promoting a new version takes effect immediately. The next dispatch call will use the newly promoted version. Old versions are preserved for audit and rollback.
+  Promoting a new version takes effect immediately. The next dispatch call will use the newly
+  promoted version. Old versions are preserved for audit and rollback.
 </Callout>
 
 ## Review scoring

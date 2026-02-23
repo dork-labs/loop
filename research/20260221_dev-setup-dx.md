@@ -29,6 +29,7 @@ Check `NODE_ENV` or a `LOCAL_DB` flag, and import `drizzle-orm/node-postgres` wi
 **Recommendation:** Option B (conditional driver swap) is cleaner for a project this size. The Neon proxy adds a third container and DNS tricks (`localtest.me`) that create friction. A slim `if (process.env.NODE_ENV !== 'production')` branch in `db/index.ts` is straightforward, testable, and eliminates the proxy dependency entirely.
 
 **Key docker-compose.dev.yml patterns:**
+
 - Use `postgres:16-alpine` (pinned version, never `latest`)
 - Named volume (`loop_postgres_data`) so data persists across `docker compose down` restarts
 - `pg_isready` healthcheck so dependent services wait for readiness
@@ -65,6 +66,7 @@ Use `safeParse` + explicit `process.exit(1)` over `parse`. The reason: `parse` t
 The current `.env.example` files have placeholder values that require editing (`your-api-key-here`, `postgresql://user:pass@host/dbname`). The goal is zero-edit for local dev after `cp .env.example .env`.
 
 **Safe to pre-fill with real working values:**
+
 - `DATABASE_URL=postgresql://loop:loop@localhost:5432/loop` (matches docker-compose defaults)
 - `LOOP_API_KEY=loop-dev-api-key-insecure` (clearly non-production, fixed for local convenience)
 - `VITE_API_URL=http://localhost:4242` (already pre-filled — keep it)
@@ -72,10 +74,12 @@ The current `.env.example` files have placeholder values that require editing (`
 - `NODE_ENV=development` (optional, Hono/Node default)
 
 **What to mark clearly as production-only:**
+
 - Webhook secrets (`GITHUB_WEBHOOK_SECRET`, `SENTRY_CLIENT_SECRET`, `POSTHOG_WEBHOOK_SECRET`)
 - Use the comment convention: `# PRODUCTION ONLY — not needed for local dev`
 
 **What to never pre-fill:**
+
 - Real credentials of any kind
 - Private keys that look like real keys (e.g., a real-looking JWT secret)
 - Service API keys that could be scraped from GitHub
@@ -87,6 +91,7 @@ The current `.env.example` files have placeholder values that require editing (`
 ### 4. Setup Script (`scripts/setup.sh`)
 
 **What a good setup.sh covers (in order):**
+
 1. Node version check (compare against `.node-version` or `engines` in `package.json`)
 2. Docker availability check (`docker info` or `docker compose version`)
 3. `.env` file copying for each app (idempotent — skip if file already exists)
@@ -97,6 +102,7 @@ The current `.env.example` files have placeholder values that require editing (`
 8. Print next steps
 
 **Idempotency requirements:**
+
 - `.env` copy: `[ -f apps/api/.env ] || cp apps/api/.env.example apps/api/.env`
 - Docker compose: `docker compose up -d` is already idempotent
 - Migrations: Drizzle migrations track applied migrations — re-running is safe
@@ -114,10 +120,10 @@ Add `"dx": "docker compose -f docker-compose.dev.yml up -d"` to root `package.js
 This is the most project-specific complexity in the entire feature. The current `apps/api/src/db/index.ts`:
 
 ```typescript
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-const sql = neon(process.env.DATABASE_URL!)
-export const db = drizzle(sql, { schema })
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql, { schema });
 ```
 
 `neon()` from `@neondatabase/serverless` speaks an HTTP-over-WebSocket protocol to Neon's edge servers. It does not speak standard `libpq` TCP. Therefore, `DATABASE_URL=postgresql://loop:loop@localhost:5432/loop` will **not work** with the current code — the Neon client will try to connect to `localhost` using the Neon wire protocol and fail.
@@ -125,20 +131,20 @@ export const db = drizzle(sql, { schema })
 **Recommended db/index.ts pattern:**
 
 ```typescript
-import * as schema from './schema'
+import * as schema from './schema';
 
 function createDb() {
-  const url = process.env.DATABASE_URL!
+  const url = process.env.DATABASE_URL!;
   // In local dev, use the standard pg driver so we can connect to Docker postgres.
   // In production (Vercel/Neon), use the serverless HTTP driver.
   if (process.env.NODE_ENV !== 'production') {
-    const { drizzle } = await import('drizzle-orm/node-postgres')
-    const { Pool } = await import('pg')
-    return drizzle(new Pool({ connectionString: url }), { schema })
+    const { drizzle } = await import('drizzle-orm/node-postgres');
+    const { Pool } = await import('pg');
+    return drizzle(new Pool({ connectionString: url }), { schema });
   }
-  const { neon } = await import('@neondatabase/serverless')
-  const { drizzle } = await import('drizzle-orm/neon-http')
-  return drizzle(neon(url), { schema })
+  const { neon } = await import('@neondatabase/serverless');
+  const { drizzle } = await import('drizzle-orm/neon-http');
+  return drizzle(neon(url), { schema });
 }
 ```
 
@@ -147,21 +153,21 @@ Since the module is ESM (`"type": "module"` in `apps/api/package.json`), dynamic
 ```typescript
 // Synchronous version using static imports gated on NODE_ENV
 // This requires adding 'pg' as a dev dependency in apps/api
-import * as schema from './schema'
+import * as schema from './schema';
 
-let db: Database
+let db: Database;
 
 if (process.env.NODE_ENV === 'production') {
-  const { neon } = await import('@neondatabase/serverless')
-  const { drizzle } = await import('drizzle-orm/neon-http')
-  db = drizzle(neon(process.env.DATABASE_URL!), { schema })
+  const { neon } = await import('@neondatabase/serverless');
+  const { drizzle } = await import('drizzle-orm/neon-http');
+  db = drizzle(neon(process.env.DATABASE_URL!), { schema });
 } else {
-  const { Pool } = await import('pg')
-  const { drizzle } = await import('drizzle-orm/node-postgres')
-  db = drizzle(new Pool({ connectionString: process.env.DATABASE_URL! }), { schema })
+  const { Pool } = await import('pg');
+  const { drizzle } = await import('drizzle-orm/node-postgres');
+  db = drizzle(new Pool({ connectionString: process.env.DATABASE_URL! }), { schema });
 }
 
-export { db }
+export { db };
 ```
 
 Top-level `await` is valid in ESM modules with Node.js 14.8+. This approach adds `pg` as a dev dependency (not production), which is clean.
@@ -174,7 +180,7 @@ Add `timowilhelm/local-neon-http-proxy` to docker-compose.dev.yml. The proxy lis
 **API (`apps/api/src/env.ts`) — Node.js / Hono:**
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -184,21 +190,21 @@ const schema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_CLIENT_SECRET: z.string().optional(),
   POSTHOG_WEBHOOK_SECRET: z.string().optional(),
-})
+});
 
-const result = schema.safeParse(process.env)
+const result = schema.safeParse(process.env);
 
 if (!result.success) {
-  const errors = result.error.flatten().fieldErrors
+  const errors = result.error.flatten().fieldErrors;
   const messages = Object.entries(errors)
     .map(([key, msgs]) => `  ${key}: ${msgs?.join(', ')}`)
-    .join('\n')
-  console.error(`\nInvalid environment variables:\n${messages}\n`)
-  process.exit(1)
+    .join('\n');
+  console.error(`\nInvalid environment variables:\n${messages}\n`);
+  process.exit(1);
 }
 
-export const env = result.data
-export type Env = typeof result.data
+export const env = result.data;
+export type Env = typeof result.data;
 ```
 
 Import at the top of `src/index.ts` (or wherever the server bootstraps) before any other imports that touch `process.env`.
@@ -206,62 +212,63 @@ Import at the top of `src/index.ts` (or wherever the server bootstraps) before a
 **App (`apps/app/src/env.ts`) — Vite / React:**
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 // Vite exposes env vars on import.meta.env; only VITE_-prefixed vars are available.
 const schema = z.object({
   VITE_API_URL: z.string().url().default('http://localhost:4242'),
   VITE_LOOP_API_KEY: z.string().min(1),
-})
+});
 
-const result = schema.safeParse(import.meta.env)
+const result = schema.safeParse(import.meta.env);
 
 if (!result.success) {
-  const errors = result.error.flatten().fieldErrors
+  const errors = result.error.flatten().fieldErrors;
   const messages = Object.entries(errors)
     .map(([key, msgs]) => `  ${key}: ${msgs?.join(', ')}`)
-    .join('\n')
+    .join('\n');
   // In browser context, throw rather than process.exit
-  throw new Error(`Invalid environment variables:\n${messages}`)
+  throw new Error(`Invalid environment variables:\n${messages}`);
 }
 
-export const env = result.data
-export type Env = typeof result.data
+export const env = result.data;
+export type Env = typeof result.data;
 ```
 
 **Web (`apps/web/src/env.ts`) — Next.js 16:**
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
   // NEXT_PUBLIC_ vars are available client-side; others are server-only
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().default('https://us.i.posthog.com'),
-})
+});
 
 // Explicitly reference each var — Next.js static analysis requires this
 const result = schema.safeParse({
   NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
   NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-})
+});
 
 if (!result.success) {
-  const errors = result.error.flatten().fieldErrors
+  const errors = result.error.flatten().fieldErrors;
   const messages = Object.entries(errors)
     .map(([key, msgs]) => `  ${key}: ${msgs?.join(', ')}`)
-    .join('\n')
-  console.error(`\nInvalid environment variables:\n${messages}\n`)
+    .join('\n');
+  console.error(`\nInvalid environment variables:\n${messages}\n`);
   // In Next.js, throwing crashes the build — which is exactly what we want
-  throw new Error('Invalid environment variables')
+  throw new Error('Invalid environment variables');
 }
 
-export const env = result.data
+export const env = result.data;
 ```
 
 Import in `next.config.ts`:
+
 ```typescript
-import './src/env'  // validates at build time
+import './src/env'; // validates at build time
 ```
 
 **Important Zod 4 note:** `apps/api` and `apps/web` have `zod: "^4.x"` while `apps/app` has `zod: "^3.x"`. The API shape is identical for this use case but verify version before copying patterns. `z.string().min(1)` and `z.enum()` work identically in both versions.
@@ -335,11 +342,11 @@ services:
       POSTGRES_PASSWORD: loop
       POSTGRES_DB: loop
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - loop_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loop -d loop"]
+      test: ['CMD-SHELL', 'pg_isready -U loop -d loop']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -351,6 +358,7 @@ volumes:
 ```
 
 Port notes:
+
 - `5432:5432` is the default. If developers commonly have a local postgres, use `54320:5432` and update `DATABASE_URL` default to match. Since Loop's target audience is likely developers who do not run a local postgres (Neon is the "intended" path), `5432:5432` is fine.
 
 ### Setup Script (`scripts/setup.sh`)
@@ -437,6 +445,7 @@ echo ""
 ```
 
 **Idempotency properties:**
+
 - `.env` copy: `[ -f ]` guard prevents overwrite
 - `npm install`: npm is idempotent by design
 - `docker compose up -d`: idempotent — skips already-running containers
@@ -466,28 +475,28 @@ Add to `"scripts"` in root `package.json`:
 
 ### Docker Compose: Neon Proxy vs Conditional Driver
 
-| Factor | Neon Local Proxy | Conditional Driver Swap |
-|--------|-----------------|------------------------|
-| Code changes to `db/index.ts` | None | ~15 lines |
-| Extra containers | 1 (proxy) | 0 |
-| Works offline | No (`localtest.me` DNS) | Yes |
-| Production code path exercised locally | Yes | No |
-| New dev dependencies | None | `pg`, `drizzle-orm/node-postgres` |
-| Complexity | Higher (two containers, DNS) | Lower |
-| Recommended for this project | No | **Yes** |
+| Factor                                 | Neon Local Proxy             | Conditional Driver Swap           |
+| -------------------------------------- | ---------------------------- | --------------------------------- |
+| Code changes to `db/index.ts`          | None                         | ~15 lines                         |
+| Extra containers                       | 1 (proxy)                    | 0                                 |
+| Works offline                          | No (`localtest.me` DNS)      | Yes                               |
+| Production code path exercised locally | Yes                          | No                                |
+| New dev dependencies                   | None                         | `pg`, `drizzle-orm/node-postgres` |
+| Complexity                             | Higher (two containers, DNS) | Lower                             |
+| Recommended for this project           | No                           | **Yes**                           |
 
 ### Env Validation: Raw Zod vs t3-env
 
-| Factor | Raw Zod `safeParse` | t3-env |
-|--------|--------------------|----|
-| New dependencies | 0 | 2 (`@t3-oss/env-core` + framework pkg) |
-| Lines of code | ~30 per app | ~20 per app |
-| Server/client var enforcement | Manual (naming convention) | Automatic + type error |
-| `VITE_` prefix enforcement | Manual | Automatic |
-| `NEXT_PUBLIC_` prefix enforcement | Manual | Automatic |
-| Build-time validation in Next.js | Manual (`import` in next.config) | Built-in |
-| Transparent / no magic | Yes | No (wrapper abstraction) |
-| Recommended for this project | **Yes** | Not needed at this scale |
+| Factor                            | Raw Zod `safeParse`              | t3-env                                 |
+| --------------------------------- | -------------------------------- | -------------------------------------- |
+| New dependencies                  | 0                                | 2 (`@t3-oss/env-core` + framework pkg) |
+| Lines of code                     | ~30 per app                      | ~20 per app                            |
+| Server/client var enforcement     | Manual (naming convention)       | Automatic + type error                 |
+| `VITE_` prefix enforcement        | Manual                           | Automatic                              |
+| `NEXT_PUBLIC_` prefix enforcement | Manual                           | Automatic                              |
+| Build-time validation in Next.js  | Manual (`import` in next.config) | Built-in                               |
+| Transparent / no magic            | Yes                              | No (wrapper abstraction)               |
+| Recommended for this project      | **Yes**                          | Not needed at this scale               |
 
 ---
 

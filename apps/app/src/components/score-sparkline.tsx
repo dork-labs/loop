@@ -1,16 +1,16 @@
-import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import type { PromptVersion } from '@/types/prompts'
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import type { PromptVersion } from '@/types/prompts';
 
 interface ScoreSparklineProps {
-  versions: PromptVersion[]
+  versions: PromptVersion[];
 }
 
 /** Returns a CSS color string based on the latest score value (green/amber/red). */
 function resolveScoreColor(score: number): string {
-  if (score >= 3.5) return 'hsl(var(--chart-2))' // green
-  if (score >= 2.5) return 'hsl(var(--chart-3))' // amber
-  return 'hsl(340 75% 55%)' // red
+  if (score >= 3.5) return 'hsl(var(--chart-2))'; // green
+  if (score >= 2.5) return 'hsl(var(--chart-3))'; // amber
+  return 'hsl(340 75% 55%)'; // red
 }
 
 /**
@@ -26,10 +26,10 @@ export function ScoreSparkline({ versions }: ScoreSparklineProps) {
     .map((v) => ({
       version: `v${v.version}`,
       score: v.reviewScore ?? 0,
-    }))
+    }));
 
-  const latestScore = data[data.length - 1]?.score ?? 0
-  const fillColor = resolveScoreColor(latestScore)
+  const latestScore = data[data.length - 1]?.score ?? 0;
+  const fillColor = resolveScoreColor(latestScore);
 
   return (
     <ChartContainer
@@ -50,5 +50,5 @@ export function ScoreSparkline({ versions }: ScoreSparklineProps) {
         />
       </AreaChart>
     </ChartContainer>
-  )
+  );
 }

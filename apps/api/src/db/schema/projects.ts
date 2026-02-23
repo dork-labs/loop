@@ -1,7 +1,7 @@
-import { text, doublePrecision, pgEnum } from 'drizzle-orm/pg-core'
-import { pgTable } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
-import { cuid2Id, timestamps, softDelete } from './_helpers'
+import { text, doublePrecision, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { cuid2Id, timestamps, softDelete } from './_helpers';
 
 export const projectStatusValues = [
   'backlog',
@@ -10,14 +10,14 @@ export const projectStatusValues = [
   'paused',
   'completed',
   'canceled',
-] as const
-export const projectStatusEnum = pgEnum('project_status', projectStatusValues)
+] as const;
+export const projectStatusEnum = pgEnum('project_status', projectStatusValues);
 
-export const projectHealthValues = ['on_track', 'at_risk', 'off_track'] as const
-export const projectHealthEnum = pgEnum('project_health', projectHealthValues)
+export const projectHealthValues = ['on_track', 'at_risk', 'off_track'] as const;
+export const projectHealthEnum = pgEnum('project_health', projectHealthValues);
 
-export const goalStatusValues = ['active', 'achieved', 'abandoned'] as const
-export const goalStatusEnum = pgEnum('goal_status', goalStatusValues)
+export const goalStatusValues = ['active', 'achieved', 'abandoned'] as const;
+export const goalStatusEnum = pgEnum('goal_status', goalStatusValues);
 
 /** Goals table — tracks measurable outcomes linked to projects. */
 export const goals = pgTable('goals', {
@@ -34,7 +34,7 @@ export const goals = pgTable('goals', {
   projectId: text('project_id'),
   ...timestamps,
   ...softDelete,
-})
+});
 
 /** Projects table — top-level containers for issues and work. */
 export const projects = pgTable('projects', {
@@ -46,13 +46,13 @@ export const projects = pgTable('projects', {
   goalId: text('goal_id').references(() => goals.id),
   ...timestamps,
   ...softDelete,
-})
+});
 
 /** Relations for project ↔ goal (bidirectional). */
 export const projectsRelations = relations(projects, ({ one }) => ({
   goal: one(goals, { fields: [projects.goalId], references: [goals.id] }),
-}))
+}));
 
 export const goalsRelations = relations(goals, ({ one }) => ({
   project: one(projects, { fields: [goals.projectId], references: [projects.id] }),
-}))
+}));

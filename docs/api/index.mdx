@@ -3,8 +3,8 @@ title: API Reference
 description: Complete REST API reference for the Loop autonomous improvement engine. Manage issues, signals, templates, dispatch, and more.
 ---
 
-import { Cards, Card } from 'fumadocs-ui/components/card'
-import { Callout } from 'fumadocs-ui/components/callout'
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
 
 # API Reference
 
@@ -12,9 +12,9 @@ The Loop API is a REST API that exposes every capability of the engine — inges
 
 ## Base URL
 
-| Environment | URL |
-|-------------|-----|
-| Production | `https://api.looped.me` |
+| Environment       | URL                     |
+| ----------------- | ----------------------- |
+| Production        | `https://api.looped.me` |
 | Local development | `http://localhost:4242` |
 
 ## Authentication
@@ -29,7 +29,8 @@ curl -H "Authorization: Bearer <LOOP_API_KEY>" \
 Webhook endpoints (`/api/signals/github`, `/api/signals/sentry`, `/api/signals/posthog`) use provider-specific signature verification instead of Bearer tokens.
 
 <Callout title="Full authentication guide" type="info">
-See [Authentication](/docs/getting-started/authentication) for setup instructions, webhook signature verification, and key rotation.
+  See [Authentication](/docs/getting-started/authentication) for setup instructions, webhook
+  signature verification, and key rotation.
 </Callout>
 
 ## Response Format
@@ -38,7 +39,7 @@ See [Authentication](/docs/getting-started/authentication) for setup instruction
 
 ```json
 {
-  "data": [{ "id": "...", "..." : "..." }],
+  "data": [{ "id": "...", "...": "..." }],
   "total": 42
 }
 ```
@@ -47,7 +48,7 @@ See [Authentication](/docs/getting-started/authentication) for setup instruction
 
 ```json
 {
-  "data": { "id": "...", "..." : "..." }
+  "data": { "id": "...", "...": "..." }
 }
 ```
 
@@ -55,10 +56,10 @@ See [Authentication](/docs/getting-started/authentication) for setup instruction
 
 List endpoints accept `page` and `limit` query parameters:
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `page` | `1` | Page number (1-indexed) |
-| `limit` | `20` | Items per page |
+| Parameter | Default | Description             |
+| --------- | ------- | ----------------------- |
+| `page`    | `1`     | Page number (1-indexed) |
+| `limit`   | `20`    | Items per page          |
 
 ## Error Format
 

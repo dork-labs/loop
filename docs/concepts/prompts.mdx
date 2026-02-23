@@ -17,14 +17,14 @@ Templates are identified by slug (such as `signal-triage` or `posthog-metric-tri
 
 Each template carries a `conditions` object that defines when it should be selected. The available condition fields are:
 
-| Field | Type | Matches When |
-|-------|------|-------------|
-| `type` | string | Issue type equals the specified value |
-| `signalSource` | string | Signal source matches (for signal-type issues) |
-| `labels` | string[] | Issue has all specified labels |
-| `projectId` | string | Issue belongs to the specified project |
-| `hasFailedSessions` | boolean | Issue or its siblings have previous failed agent sessions |
-| `hypothesisConfidence` | number | Hypothesis confidence meets or exceeds the threshold |
+| Field                  | Type     | Matches When                                              |
+| ---------------------- | -------- | --------------------------------------------------------- |
+| `type`                 | string   | Issue type equals the specified value                     |
+| `signalSource`         | string   | Signal source matches (for signal-type issues)            |
+| `labels`               | string[] | Issue has all specified labels                            |
+| `projectId`            | string   | Issue belongs to the specified project                    |
+| `hasFailedSessions`    | boolean  | Issue or its siblings have previous failed agent sessions |
+| `hypothesisConfidence` | number   | Hypothesis confidence meets or exceeds the threshold      |
 
 All conditions use AND logic: every condition specified must match. An empty conditions object `{}` matches all issues.
 

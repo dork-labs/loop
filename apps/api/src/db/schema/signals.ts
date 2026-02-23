@@ -1,10 +1,10 @@
-import { text, jsonb, index, pgEnum } from 'drizzle-orm/pg-core'
-import { pgTable } from 'drizzle-orm/pg-core'
-import { timestamp } from 'drizzle-orm/pg-core'
-import { cuid2Id } from './_helpers'
+import { text, jsonb, index, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable } from 'drizzle-orm/pg-core';
+import { timestamp } from 'drizzle-orm/pg-core';
+import { cuid2Id } from './_helpers';
 
-export const signalSeverityValues = ['low', 'medium', 'high', 'critical'] as const
-export const signalSeverityEnum = pgEnum('signal_severity', signalSeverityValues)
+export const signalSeverityValues = ['low', 'medium', 'high', 'critical'] as const;
+export const signalSeverityEnum = pgEnum('signal_severity', signalSeverityValues);
 
 /** Signals table — raw inbound data from external providers (PostHog, GitHub, Sentry, etc.). */
 export const signals = pgTable(
@@ -23,5 +23,5 @@ export const signals = pgTable(
     index('idx_signals_issue_id').on(table.issueId),
     index('idx_signals_source').on(table.source),
     index('idx_signals_payload_gin').using('gin', table.payload),
-  ],
-)
+  ]
+);

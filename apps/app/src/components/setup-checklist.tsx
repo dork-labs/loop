@@ -1,63 +1,63 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Link } from '@tanstack/react-router'
-import { Check, Copy, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { SetupCodeSnippet } from '@/components/setup-code-snippet'
-import { env } from '@/env'
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from '@tanstack/react-router';
+import { Check, Copy, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { SetupCodeSnippet } from '@/components/setup-code-snippet';
+import { env } from '@/env';
 
 interface SetupChecklistProps {
-  onComplete: () => void
-  issueCount: number
-  firstIssueId?: string
+  onComplete: () => void;
+  issueCount: number;
+  firstIssueId?: string;
 }
 
 /** FTUE setup checklist guiding users through their first API connection. */
 export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupChecklistProps) {
-  const [copiedSteps, setCopiedSteps] = useState<Record<number, boolean>>({})
-  const [showKey, setShowKey] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const celebrationFired = useRef(false)
+  const [copiedSteps, setCopiedSteps] = useState<Record<number, boolean>>({});
+  const [showKey, setShowKey] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const celebrationFired = useRef(false);
 
-  const apiUrl = env.VITE_API_URL
-  const apiKey = env.VITE_LOOP_API_KEY
+  const apiUrl = env.VITE_API_URL;
+  const apiKey = env.VITE_LOOP_API_KEY;
 
-  const maskedKey = `${apiKey.slice(0, 5)}${'•'.repeat(Math.max(apiKey.length - 5, 8))}`
+  const maskedKey = `${apiKey.slice(0, 5)}${'•'.repeat(Math.max(apiKey.length - 5, 8))}`;
 
   const handleCopy = useCallback(async (step: number, text: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopiedSteps((prev) => ({ ...prev, [step]: true }))
-    setTimeout(() => setCopiedSteps((prev) => ({ ...prev, [step]: false })), 2000)
-  }, [])
+    await navigator.clipboard.writeText(text);
+    setCopiedSteps((prev) => ({ ...prev, [step]: true }));
+    setTimeout(() => setCopiedSteps((prev) => ({ ...prev, [step]: false })), 2000);
+  }, []);
 
   // Celebration trigger when first issue arrives
   useEffect(() => {
-    if (issueCount === 0 || celebrationFired.current) return
-    celebrationFired.current = true
+    if (issueCount === 0 || celebrationFired.current) return;
+    celebrationFired.current = true;
 
     const fireCelebration = async () => {
-      const confetti = (await import('canvas-confetti')).default
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })
-      setShowSuccess(true)
-      onComplete()
-    }
+      const confetti = (await import('canvas-confetti')).default;
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      setShowSuccess(true);
+      onComplete();
+    };
 
     if (document.visibilityState === 'visible') {
-      void fireCelebration()
+      void fireCelebration();
     } else {
       const handler = () => {
         if (document.visibilityState === 'visible') {
-          document.removeEventListener('visibilitychange', handler)
-          void fireCelebration()
+          document.removeEventListener('visibilitychange', handler);
+          void fireCelebration();
         }
-      }
-      document.addEventListener('visibilitychange', handler)
-      return () => document.removeEventListener('visibilitychange', handler)
+      };
+      document.addEventListener('visibilitychange', handler);
+      return () => document.removeEventListener('visibilitychange', handler);
     }
-  }, [issueCount, onComplete])
+  }, [issueCount, onComplete]);
 
   if (showSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card py-20 text-center">
+      <div className="border-border bg-card flex flex-col items-center justify-center gap-4 rounded-lg border py-20 text-center">
         <div className="flex size-16 items-center justify-center rounded-full bg-green-500/10">
           <Check className="size-8 text-green-500" />
         </div>
@@ -73,48 +73,40 @@ export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupCh
           </Button>
         )}
       </div>
-    )
+    );
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
+    <div className="border-border bg-card rounded-lg border p-6">
       <div className="mb-6">
         <h2 className="text-xl font-bold">Connect your AI agent</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Follow these steps to send your first issue to Loop
         </p>
       </div>
       <div className="space-y-6">
         {/* Step 1: API Endpoint */}
-        <SetupStep
-          number={1}
-          title="API Endpoint"
-          completed={copiedSteps[1] ?? false}
-        >
+        <SetupStep number={1} title="API Endpoint" completed={copiedSteps[1] ?? false}>
           <div className="flex items-center gap-2">
-            <code className="rounded bg-muted px-2 py-1 text-sm">{apiUrl}</code>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void handleCopy(1, apiUrl)}
-            >
+            <code className="bg-muted rounded px-2 py-1 text-sm">{apiUrl}</code>
+            <Button variant="ghost" size="sm" onClick={() => void handleCopy(1, apiUrl)}>
               {copiedSteps[1] ? (
-                <><Check className="mr-1 size-3.5 text-green-500" /> Copied!</>
+                <>
+                  <Check className="mr-1 size-3.5 text-green-500" /> Copied!
+                </>
               ) : (
-                <><Copy className="mr-1 size-3.5" /> Copy</>
+                <>
+                  <Copy className="mr-1 size-3.5" /> Copy
+                </>
               )}
             </Button>
           </div>
         </SetupStep>
 
         {/* Step 2: API Key */}
-        <SetupStep
-          number={2}
-          title="API Key"
-          completed={copiedSteps[2] ?? false}
-        >
+        <SetupStep number={2} title="API Key" completed={copiedSteps[2] ?? false}>
           <div className="flex items-center gap-2">
-            <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
+            <code className="bg-muted rounded px-2 py-1 font-mono text-sm">
               {showKey ? apiKey : maskedKey}
             </code>
             <Button
@@ -125,26 +117,22 @@ export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupCh
             >
               {showKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void handleCopy(2, apiKey)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => void handleCopy(2, apiKey)}>
               {copiedSteps[2] ? (
-                <><Check className="mr-1 size-3.5 text-green-500" /> Copied!</>
+                <>
+                  <Check className="mr-1 size-3.5 text-green-500" /> Copied!
+                </>
               ) : (
-                <><Copy className="mr-1 size-3.5" /> Copy</>
+                <>
+                  <Copy className="mr-1 size-3.5" /> Copy
+                </>
               )}
             </Button>
           </div>
         </SetupStep>
 
         {/* Step 3: Code Snippet */}
-        <SetupStep
-          number={3}
-          title="Send your first issue"
-          completed={copiedSteps[3] ?? false}
-        >
+        <SetupStep number={3} title="Send your first issue" completed={copiedSteps[3] ?? false}>
           <SetupCodeSnippet
             apiUrl={apiUrl}
             apiKey={apiKey}
@@ -153,28 +141,24 @@ export function SetupChecklist({ onComplete, issueCount, firstIssueId }: SetupCh
         </SetupStep>
 
         {/* Step 4: Listening */}
-        <SetupStep
-          number={4}
-          title="Listening for your first issue..."
-          completed={false}
-        >
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <SetupStep number={4} title="Listening for your first issue..." completed={false}>
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Loader2 className="size-4 animate-spin" />
             <span>Polling every 3 seconds...</span>
           </div>
         </SetupStep>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Sub-component ─────────────────────────────────────────────────────────────
 
 interface SetupStepProps {
-  number: number
-  title: string
-  completed: boolean
-  children: React.ReactNode
+  number: number;
+  title: string;
+  completed: boolean;
+  children: React.ReactNode;
 }
 
 function SetupStep({ number, title, completed, children }: SetupStepProps) {
@@ -192,11 +176,9 @@ function SetupStep({ number, title, completed, children }: SetupStepProps) {
         </div>
       </div>
       <div className="flex-1 space-y-2 pb-2">
-        <p className={`text-sm font-medium ${completed ? 'text-muted-foreground' : ''}`}>
-          {title}
-        </p>
+        <p className={`text-sm font-medium ${completed ? 'text-muted-foreground' : ''}`}>{title}</p>
         {children}
       </div>
     </div>
-  )
+  );
 }

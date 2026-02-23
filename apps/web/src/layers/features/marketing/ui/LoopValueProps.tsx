@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { motion } from 'motion/react'
-import { REVEAL, STAGGER, VIEWPORT } from '../lib/motion-variants'
+import { motion } from 'motion/react';
+import { REVEAL, STAGGER, VIEWPORT } from '../lib/motion-variants';
 
 interface ValueProp {
-  label: string
-  title: string
-  description: string
+  label: string;
+  title: string;
+  description: string;
 }
 
 const VALUE_PROPS: ValueProp[] = [
@@ -34,7 +34,7 @@ const VALUE_PROPS: ValueProp[] = [
     description:
       '13 commands for issue management, signals, triage, dispatch, templates, and system status. JSON output for scripting.',
   },
-]
+];
 
 /**
  * Value proposition section -- four product pillars of the Loop engine.
@@ -44,9 +44,9 @@ const VALUE_PROPS: ValueProp[] = [
  */
 export function LoopValueProps() {
   return (
-    <section id="features" className="py-24 px-8 bg-cream-secondary">
+    <section id="features" className="bg-cream-secondary px-8 py-24">
       <motion.div
-        className="max-w-6xl mx-auto"
+        className="mx-auto max-w-6xl"
         initial="hidden"
         whileInView="visible"
         viewport={VIEWPORT}
@@ -54,31 +54,29 @@ export function LoopValueProps() {
       >
         <motion.p
           variants={REVEAL}
-          className="font-mono text-2xs tracking-[0.2em] uppercase text-brand-orange text-center mb-16"
+          className="text-2xs text-brand-orange mb-16 text-center font-mono tracking-[0.2em] uppercase"
         >
           What you get
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {VALUE_PROPS.map((prop) => (
             <motion.div
               key={prop.label}
               variants={REVEAL}
-              className="bg-cream-white rounded-lg p-6 border border-[var(--border-warm)]"
+              className="bg-cream-white rounded-lg border border-[var(--border-warm)] p-6"
             >
-              <span className="font-mono text-2xs tracking-[0.15em] uppercase block mb-3 text-warm-gray">
+              <span className="text-2xs text-warm-gray mb-3 block font-mono tracking-[0.15em] uppercase">
                 {prop.label}
               </span>
-              <h3 className="text-charcoal font-semibold text-lg mb-3 tracking-[-0.02em]">
+              <h3 className="text-charcoal mb-3 text-lg font-semibold tracking-[-0.02em]">
                 {prop.title}
               </h3>
-              <p className="text-warm-gray font-light leading-[1.7] text-sm">
-                {prop.description}
-              </p>
+              <p className="text-warm-gray text-sm leading-[1.7] font-light">{prop.description}</p>
             </motion.div>
           ))}
         </div>
       </motion.div>
     </section>
-  )
+  );
 }

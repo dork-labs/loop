@@ -69,6 +69,7 @@ npx add-mcp https://mcp.sentry.dev/mcp
 Anthropic developed a packaged format (MCPB, formerly DXT) that installs like a browser extension — single-click in Claude Desktop. Emerging but not yet widely used by major tools.
 
 **The `claude mcp add` command** in Claude Code supports:
+
 - `--transport http` for remote HTTP/Streamable HTTP servers
 - `--transport sse` for legacy SSE (deprecated)
 - `--transport stdio` for local process-based servers
@@ -84,28 +85,28 @@ Anthropic developed a packaged format (MCPB, formerly DXT) that installs like a 
 
 **Linear (22 tools)**
 
-| Category | Tools |
-|----------|-------|
-| Issues | `list_issues`, `get_issue`, `create_issue`, `update_issue`, `list_my_issues`, `get_issue_git_branch_name` |
-| Status/Labels | `list_issue_statuses`, `get_issue_status`, `list_issue_labels` |
-| Comments | `list_comments`, `create_comment` |
-| Projects | `list_projects`, `get_project`, `create_project`, `update_project` |
-| Teams/Users | `list_teams`, `get_team`, `list_users`, `get_user` |
-| Documents | `list_documents`, `get_document` |
-| Reference | `search_documentation` |
+| Category      | Tools                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| Issues        | `list_issues`, `get_issue`, `create_issue`, `update_issue`, `list_my_issues`, `get_issue_git_branch_name` |
+| Status/Labels | `list_issue_statuses`, `get_issue_status`, `list_issue_labels`                                            |
+| Comments      | `list_comments`, `create_comment`                                                                         |
+| Projects      | `list_projects`, `get_project`, `create_project`, `update_project`                                        |
+| Teams/Users   | `list_teams`, `get_team`, `list_users`, `get_user`                                                        |
+| Documents     | `list_documents`, `get_document`                                                                          |
+| Reference     | `search_documentation`                                                                                    |
 
 **Atlassian/Jira (25 tools)**
 
-| Category | Tools |
-|----------|-------|
-| Jira Issues | `getJiraIssue`, `createJiraIssue`, `editJiraIssue`, `getTransitionsForJiraIssue`, `transitionJiraIssue` |
-| Jira Search | `searchJiraIssuesUsingJql`, `lookupJiraAccountId`, `getVisibleJiraProjects`, `getJiraProjectIssueTypesMetadata` |
-| Jira Comments | `addCommentToJiraIssue`, `getJiraIssueRemoteIssueLinks` |
-| Confluence Pages | `getConfluencePage`, `createConfluencePage`, `updateConfluencePage`, `getConfluencePageAncestors`, `getConfluencePageDescendants` |
-| Confluence Spaces | `getConfluenceSpaces`, `getPagesInConfluenceSpace` |
+| Category            | Tools                                                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Jira Issues         | `getJiraIssue`, `createJiraIssue`, `editJiraIssue`, `getTransitionsForJiraIssue`, `transitionJiraIssue`                                |
+| Jira Search         | `searchJiraIssuesUsingJql`, `lookupJiraAccountId`, `getVisibleJiraProjects`, `getJiraProjectIssueTypesMetadata`                        |
+| Jira Comments       | `addCommentToJiraIssue`, `getJiraIssueRemoteIssueLinks`                                                                                |
+| Confluence Pages    | `getConfluencePage`, `createConfluencePage`, `updateConfluencePage`, `getConfluencePageAncestors`, `getConfluencePageDescendants`      |
+| Confluence Spaces   | `getConfluenceSpaces`, `getPagesInConfluenceSpace`                                                                                     |
 | Confluence Comments | `getConfluencePageFooterComments`, `getConfluencePageInlineComments`, `createConfluenceFooterComment`, `createConfluenceInlineComment` |
-| Confluence Search | `searchConfluenceUsingCql` |
-| Auth/Admin | `atlassianUserInfo`, `getAccessibleAtlassianResources` |
+| Confluence Search   | `searchConfluenceUsingCql`                                                                                                             |
+| Auth/Admin          | `atlassianUserInfo`, `getAccessibleAtlassianResources`                                                                                 |
 
 **GitHub (51 tools — the most comprehensive reference)**
 
@@ -115,22 +116,23 @@ Full coverage of: issues, PRs, code review, branches, file operations, commits, 
 
 Based on what Linear, Jira, and GitHub expose, a Loop MCP server should cover at minimum:
 
-| Category | Recommended Tools |
-|----------|-------------------|
-| Issues | `list_issues`, `get_issue`, `create_issue`, `update_issue`, `delete_issue` |
-| Filtering | `list_issues` with filters: `status`, `type` (signal/triage/task/etc), `projectId`, `priority` |
-| Signals | `ingest_signal`, `list_signals` |
-| Projects | `list_projects`, `get_project`, `create_project` |
-| Labels | `list_labels` |
-| Comments | `list_comments`, `create_comment` |
-| Dispatch | `get_next_task` (Loop's core unique tool — returns the highest priority actionable issue with prompt) |
-| Dashboard | `get_dashboard_stats` |
+| Category  | Recommended Tools                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------------- |
+| Issues    | `list_issues`, `get_issue`, `create_issue`, `update_issue`, `delete_issue`                            |
+| Filtering | `list_issues` with filters: `status`, `type` (signal/triage/task/etc), `projectId`, `priority`        |
+| Signals   | `ingest_signal`, `list_signals`                                                                       |
+| Projects  | `list_projects`, `get_project`, `create_project`                                                      |
+| Labels    | `list_labels`                                                                                         |
+| Comments  | `list_comments`, `create_comment`                                                                     |
+| Dispatch  | `get_next_task` (Loop's core unique tool — returns the highest priority actionable issue with prompt) |
+| Dashboard | `get_dashboard_stats`                                                                                 |
 
 The `get_next_task` tool is what differentiates Loop from a generic issue tracker's MCP server. It's the "what should I work on next?" endpoint that makes Loop an autonomous dispatch engine, not just a database.
 
 ### 4. MCP vs REST API — When to Use Which
 
 **REST API is better when:**
+
 - The caller is a human-built integration (webhook receiver, CI/CD step, another service)
 - Deterministic, hardcoded workflows are needed — no LLM reasoning involved
 - Performance-critical paths where the overhead of MCP tool discovery is unacceptable
@@ -138,6 +140,7 @@ The `get_next_task` tool is what differentiates Loop from a generic issue tracke
 - You're ingesting signals programmatically (Loop's signal ingestion from PostHog, Sentry, GitHub webhooks)
 
 **MCP is better when:**
+
 - An AI agent needs to discover and compose operations autonomously
 - The user wants to interact with Loop in natural language from Claude Code, Cursor, etc.
 - You want agents to be able to say "create an issue for this bug" without pre-programmed API calls
@@ -194,6 +197,7 @@ Every developer on the team gets Loop connected to their Claude Code automatical
 **Server composition and orchestration:** The next frontier is MCP servers that call other MCP servers — agent-to-agent routing. Still emerging but Anthropic's roadmap hints at this direction.
 
 **Limitations that remain:**
+
 - Security: A 2025 scan of ~2,000 public MCP servers found nearly all lacked authentication. The community is still learning security best practices.
 - Context overload: Still a concern for users who connect too many MCP servers (>8 in practice). Tool Search mitigates this but doesn't eliminate it.
 - Prompt injection via MCP responses: A real attack vector — malicious data returned by an MCP tool can hijack the agent. Remote servers that fetch untrusted content are highest risk.
@@ -218,11 +222,13 @@ For OAuth: after step 2, the user runs `/mcp` inside Claude Code, which opens a 
 Following the "outcomes over operations" principle, Loop's MCP tools should be designed around what an agent actually does, not around the REST API structure:
 
 **Bad (direct REST mapping):**
+
 - `GET /api/issues` → `list_issues`
 - `POST /api/issues` → `create_issue`
 - `GET /api/dashboard/stats` → `get_dashboard_stats`
 
 **Good (agent-intent-oriented):**
+
 - `get_next_task()` — Returns the highest-priority unblocked issue with full prompt/instructions. This is Loop's core value, exposed as a single tool.
 - `report_task_complete(issue_id, outcome, notes)` — Agent reports back. Loop updates the issue and creates next steps.
 - `ingest_signal(source, data)` — Ingest a signal and get back the created triage issue.
@@ -236,6 +242,7 @@ This maps to agent workflows: "pick up work → do work → report back → pick
 ### The Dual-Surface Strategy (REST + MCP)
 
 **REST API serves:**
+
 - The Loop CLI (`looped` CLI will call the REST API directly)
 - Webhook integrations (PostHog, GitHub, Sentry all POST to REST endpoints)
 - The Loop dashboard (the React app calls the REST API)
@@ -243,6 +250,7 @@ This maps to agent workflows: "pick up work → do work → report back → pick
 - Programmatic automation scripts in CI/CD
 
 **MCP server serves:**
+
 - Claude Code users who want to ask Loop questions in natural language
 - Agent platforms that use MCP natively (Cursor, Windsurf, Amp, Factory)
 - "What's my next task?" dispatch for DorkOS's Pulse scheduler
@@ -251,11 +259,13 @@ This maps to agent workflows: "pick up work → do work → report back → pick
 The MCP server is a thin layer on top of the REST API. All business logic lives in the API. The MCP server translates agent intent into REST calls and formats responses for LLM consumption.
 
 **Implementation pattern used by Linear, Sentry, GitHub:**
+
 ```
 Agent → MCP Server (Loop) → REST API (Loop) → Database
 ```
 
 The MCP server is essentially a façade that:
+
 1. Defines tool schemas with LLM-friendly descriptions
 2. Validates inputs against Zod schemas
 3. Calls the REST API (or directly the database layer)
@@ -267,6 +277,7 @@ The MCP server is essentially a façade that:
 ## Sources & Evidence
 
 ### Protocol & Ecosystem
+
 - "MCP launched November 2024, has 97M+ monthly SDK downloads" — [One Year of MCP: November 2025 Spec Release](http://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/)
 - "Donated to the Linux Foundation AAIF in December 2025" — [Anthropic MCP Donation Announcement](https://www.anthropic.com/news/donating-the-model-context-protocol-and-establishing-of-the-agentic-ai-foundation)
 - "OpenAI officially adopted MCP in March 2025" — [Model Context Protocol - Wikipedia](https://en.wikipedia.org/wiki/Model_Context_Protocol)
@@ -277,6 +288,7 @@ The MCP server is essentially a façade that:
 - 8,610+ servers indexed: [PulseMCP Server Directory](https://www.pulsemcp.com/servers)
 
 ### Tool Inventories
+
 - Linear MCP docs: [Linear MCP Server — Docs](https://linear.app/docs/mcp)
 - Linear MCP changelog: [Linear MCP Changelog](https://linear.app/changelog/2025-05-01-mcp)
 - Linear 22 tools: [Linear MCP Server | OpenTools](https://opentools.com/registry/linear-remote)
@@ -288,22 +300,26 @@ The MCP server is essentially a façade that:
 - Supabase MCP docs: [Model Context Protocol | Supabase](https://supabase.com/docs/guides/getting-started/mcp)
 
 ### Installation & Distribution
+
 - Claude Code MCP docs: [Connect Claude Code to tools via MCP](https://code.claude.com/docs/en/mcp)
 - Distribution guide: [Distribute your MCP server | Speakeasy](https://www.speakeasy.com/mcp/distributing-mcp-servers)
 - MCP Registry publishing: [Quickstart: Publish an MCP Server](https://modelcontextprotocol.io/registry/quickstart)
 
 ### MCP vs REST API Analysis
+
 - "REST APIs are for developers, MCP is for AI agents" — [MCP vs APIs: When to Use Which | Tinybird](https://www.tinybird.co/blog/mcp-vs-apis-when-to-use-which-for-ai-agent-development)
 - "Stop converting REST APIs to MCP" — [jlowin.dev](https://www.jlowin.dev/blog/stop-converting-rest-apis-to-mcp)
 - MCP design best practices: [MCP is Not the Problem, It's your Server | philschmid.de](https://www.philschmid.de/mcp-best-practices)
 - From REST API to MCP: [Stainless MCP Portal](https://www.stainless.com/mcp/from-rest-api-to-mcp-server)
 
 ### Limitations & Problems
+
 - Context overload (81,986 tokens before first message): [MCP and Context Overload | EclipseSource](https://eclipsesource.com/blogs/2026/01/22/mcp-context-overload/)
 - "Too many tools" problem: [Model Context Protocol and the 'too many tools' problem | demiliani.com](https://demiliani.com/2025/09/04/model-context-protocol-and-the-too-many-tools-problem/)
 - Tool Search accuracy improvement (49% → 74%): [MCP Roadmap | modelcontextprotocol.io](https://modelcontextprotocol.io/development/roadmap)
 
 ### Transport
+
 - STDIO vs Streamable HTTP: [MCP Transport Mechanisms | AWS Builder](https://builder.aws.com/content/35A0IphCeLvYzly9Sw40G1dVNzc/mcp-transport-mechanisms-stdio-vs-streamable-http)
 - SSE deprecation: [Why MCP Deprecated SSE | fka.dev](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/)
 
@@ -314,12 +330,14 @@ The MCP server is essentially a façade that:
 ### Priority 1: Remote HTTP MCP Server (Streamable HTTP + OAuth)
 
 Host at `https://app.looped.me/mcp`. This is the pattern all major tools (Linear, Sentry, Atlassian, GitHub) have converged on. It provides:
+
 - Zero-install experience for users
 - OAuth authentication with revocation and audit logs
 - Instant updates when Loop ships new tools
 - Central visibility into which agents are calling which tools
 
 **Installation would be:**
+
 ```bash
 claude mcp add --transport http loop https://app.looped.me/mcp
 > /mcp   # triggers OAuth login

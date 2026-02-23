@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { z } from 'zod';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-import type { ApiClient } from '../types.js'
-import { handleToolCall } from './error-handler.js'
+import type { ApiClient } from '../types.js';
+import { handleToolCall } from './error-handler.js';
 
 /**
  * Register the `loop_create_issue` tool on the MCP server.
@@ -10,10 +10,7 @@ import { handleToolCall } from './error-handler.js'
  * @param server - The MCP server to register the tool on
  * @param client - Authenticated API client for Loop
  */
-export function registerCreateIssue(
-  server: McpServer,
-  client: ApiClient,
-): void {
+export function registerCreateIssue(server: McpServer, client: ApiClient): void {
   // @ts-expect-error TS2589 — MCP SDK server.tool() overload inference with complex Zod schemas
   server.tool(
     'loop_create_issue',
@@ -31,15 +28,9 @@ export function registerCreateIssue(
         .max(4)
         .optional()
         .describe('0=none, 1=urgent, 2=high, 3=medium, 4=low (default: 0)'),
-      projectId: z
-        .string()
-        .optional()
-        .describe('Project to assign the issue to'),
+      projectId: z.string().optional().describe('Project to assign the issue to'),
       description: z.string().optional(),
-      parentId: z
-        .string()
-        .optional()
-        .describe('Parent issue ID for hierarchy'),
+      parentId: z.string().optional().describe('Parent issue ID for hierarchy'),
     },
     {
       readOnlyHint: false,
@@ -60,15 +51,15 @@ export function registerCreateIssue(
           })
           .json<{
             data: {
-              id: string
-              number: number
-              title: string
-              type: string
-              status: string
-              priority: number
-            }
-          }>()
-        const issue = res.data
+              id: string;
+              number: number;
+              title: string;
+              type: string;
+              status: string;
+              priority: number;
+            };
+          }>();
+        const issue = res.data;
 
         return {
           content: [
@@ -84,12 +75,12 @@ export function registerCreateIssue(
                   priority: issue.priority,
                 },
                 null,
-                2,
+                2
               ),
             },
           ],
-        }
-      })
-    },
-  )
+        };
+      });
+    }
+  );
 }

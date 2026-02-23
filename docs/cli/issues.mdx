@@ -17,14 +17,14 @@ looped list [options]
 
 ### Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--status <status>` | Filter by status (`triage`, `todo`, `backlog`, `in_progress`, `done`, `canceled`) | all |
-| `--type <type>` | Filter by issue type (`signal`, `hypothesis`, `plan`, `task`, `monitor`) | all |
-| `--project <id>` | Filter by project ID | none |
-| `--priority <n>` | Filter by priority (0-4) | all |
-| `--limit <n>` | Results per page | `50` |
-| `--offset <n>` | Pagination offset | `0` |
+| Flag                | Description                                                                       | Default |
+| ------------------- | --------------------------------------------------------------------------------- | ------- |
+| `--status <status>` | Filter by status (`triage`, `todo`, `backlog`, `in_progress`, `done`, `canceled`) | all     |
+| `--type <type>`     | Filter by issue type (`signal`, `hypothesis`, `plan`, `task`, `monitor`)          | all     |
+| `--project <id>`    | Filter by project ID                                                              | none    |
+| `--priority <n>`    | Filter by priority (0-4)                                                          | all     |
+| `--limit <n>`       | Results per page                                                                  | `50`    |
+| `--offset <n>`      | Pagination offset                                                                 | `0`     |
 
 ### Examples
 
@@ -77,9 +77,9 @@ looped show <id>
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `id` | Issue ID (CUID2) |
+| Argument | Description      |
+| -------- | ---------------- |
+| `id`     | Issue ID (CUID2) |
 
 ### Example
 
@@ -125,19 +125,19 @@ looped create <title> [options]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `title` | Issue title (required) |
+| Argument | Description            |
+| -------- | ---------------------- |
+| `title`  | Issue title (required) |
 
 ### Options
 
-| Flag | Default (non-TTY) | Description |
-|------|-------------------|-------------|
-| `--type <type>` | `task` | Issue type (`signal`, `hypothesis`, `plan`, `task`, `monitor`) |
-| `--priority <n>` | `3` (medium) | Priority (0=none, 1=urgent, 2=high, 3=medium, 4=low) |
-| `--project <id>` | none | Project ID |
-| `--description <text>` | none | Issue description |
-| `--parent <id>` | none | Parent issue ID |
+| Flag                   | Default (non-TTY) | Description                                                    |
+| ---------------------- | ----------------- | -------------------------------------------------------------- |
+| `--type <type>`        | `task`            | Issue type (`signal`, `hypothesis`, `plan`, `task`, `monitor`) |
+| `--priority <n>`       | `3` (medium)      | Priority (0=none, 1=urgent, 2=high, 3=medium, 4=low)           |
+| `--project <id>`       | none              | Project ID                                                     |
+| `--description <text>` | none              | Issue description                                              |
+| `--parent <id>`        | none              | Parent issue ID                                                |
 
 ### Examples
 
@@ -181,10 +181,10 @@ looped comment <issueId> <body>
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
+| Argument  | Description      |
+| --------- | ---------------- |
 | `issueId` | Issue ID (CUID2) |
-| `body` | Comment text |
+| `body`    | Comment text     |
 
 ### Example
 

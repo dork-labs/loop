@@ -17,10 +17,10 @@ looped next [options]
 
 ### Options
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--project <id>` | none | Filter by project ID |
-| `--limit <n>` | `10` | Maximum items to show |
+| Flag             | Default | Description           |
+| ---------------- | ------- | --------------------- |
+| `--project <id>` | none    | Filter by project ID  |
+| `--limit <n>`    | `10`    | Maximum items to show |
 
 ### Examples
 
@@ -60,12 +60,12 @@ Showing 3 of 3 queued issues
 
 Each issue in the queue has a composite score made up of:
 
-| Component | Description |
-|-----------|-------------|
-| `pri` | Weight based on priority level (urgent=75, high=50, medium=25, low=10) |
-| `goal` | Bonus when the issue is linked to a project with an active goal |
-| `age` | Bonus that increases as the issue ages, preventing starvation |
-| `type` | Bonus based on issue type (plans and tasks score higher) |
+| Component | Description                                                            |
+| --------- | ---------------------------------------------------------------------- |
+| `pri`     | Weight based on priority level (urgent=75, high=50, medium=25, low=10) |
+| `goal`    | Bonus when the issue is linked to a project with an active goal        |
+| `age`     | Bonus that increases as the issue ages, preventing starvation          |
+| `type`    | Bonus based on issue type (plans and tasks score higher)               |
 
 ---
 
@@ -79,9 +79,9 @@ looped dispatch <id>
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `id` | Issue ID (CUID2) to claim |
+| Argument | Description               |
+| -------- | ------------------------- |
+| `id`     | Issue ID (CUID2) to claim |
 
 ### Example
 

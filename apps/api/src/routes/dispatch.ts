@@ -1,45 +1,41 @@
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { zValidator } from '@hono/zod-validator'
-import { eq, and, isNull, count, notInArray, sql } from 'drizzle-orm'
-import { issues, issueRelations, labels, issueLabels, goals } from '../db/schema'
-import { promptTemplates, promptVersions } from '../db/schema'
-import { scoreIssue } from '../lib/priority-scoring'
-import type { ScoringInput } from '../lib/priority-scoring'
-import {
-  selectTemplate,
-  buildHydrationContext,
-  hydrateTemplate,
-} from '../lib/prompt-engine'
-import type { IssueContext, TemplateCandidate } from '../lib/prompt-engine'
-import type { AppEnv } from '../types'
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
+import { eq, and, isNull, count, notInArray, sql } from 'drizzle-orm';
+import { issues, issueRelations, labels, issueLabels, goals } from '../db/schema';
+import { promptTemplates, promptVersions } from '../db/schema';
+import { scoreIssue } from '../lib/priority-scoring';
+import type { ScoringInput } from '../lib/priority-scoring';
+import { selectTemplate, buildHydrationContext, hydrateTemplate } from '../lib/prompt-engine';
+import type { IssueContext, TemplateCandidate } from '../lib/prompt-engine';
+import type { AppEnv } from '../types';
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
 const nextQuerySchema = z.object({
   projectId: z.string().optional(),
-})
+});
 
 const queueQuerySchema = z.object({
   projectId: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
-})
+});
 
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 /** Dispatch routes — atomic claim and queue preview for AI agent work. */
-export const dispatchRoutes = new Hono<AppEnv>()
+export const dispatchRoutes = new Hono<AppEnv>();
 
 /**
  * GET /next — Atomically claim the highest-priority unblocked todo issue.
  * Uses FOR UPDATE SKIP LOCKED to prevent concurrent agents from claiming the same issue.
  */
 dispatchRoutes.get('/next', zValidator('query', nextQuerySchema), async (c) => {
-  const db = c.get('db')
-  const { projectId } = c.req.valid('query')
+  const db = c.get('db');
+  const { projectId } = c.req.valid('query');
 
-  const projectFilter = projectId ? sql`AND i.project_id = ${projectId}` : sql``
+  const projectFilter = projectId ? sql`AND i.project_id = ${projectId}` : sql``;
 
   // Atomic claim: find highest-priority unblocked todo issue and set to in_progress
   const claimQuery = sql`
@@ -79,22 +75,22 @@ dispatchRoutes.get('/next', zValidator('query', nextQuerySchema), async (c) => {
     FROM unblocked
     WHERE issues.id = unblocked.id
     RETURNING issues.*
-  `
+  `;
 
-  const claimed = await db.execute(claimQuery) as { rows: Record<string, unknown>[] }
-  const rows = claimed.rows
+  const claimed = (await db.execute(claimQuery)) as { rows: Record<string, unknown>[] };
+  const rows = claimed.rows;
 
   if (rows.length === 0) {
-    return c.body(null, 204)
+    return c.body(null, 204);
   }
 
-  const raw = rows[0]
+  const raw = rows[0];
 
   // Map snake_case DB columns to the issue shape expected by prompt engine
-  const claimedIssue = mapRowToIssue(raw)
+  const claimedIssue = mapRowToIssue(raw);
 
   // Build IssueContext for template selection
-  const issueContext = await buildIssueContext(db, claimedIssue)
+  const issueContext = await buildIssueContext(db, claimedIssue);
 
   // Fetch all active templates and select the best match
   const allTemplates = await db
@@ -107,18 +103,18 @@ dispatchRoutes.get('/next', zValidator('query', nextQuerySchema), async (c) => {
       activeVersionId: promptTemplates.activeVersionId,
     })
     .from(promptTemplates)
-    .where(isNull(promptTemplates.deletedAt))
+    .where(isNull(promptTemplates.deletedAt));
 
   const candidates: TemplateCandidate[] = allTemplates.map((t) => ({
     ...t,
     conditions: (t.conditions ?? {}) as TemplateCandidate['conditions'],
-  }))
+  }));
 
-  let selected = selectTemplate(candidates, issueContext)
+  let selected = selectTemplate(candidates, issueContext);
 
   // Fallback: find a default template for this issue type
   if (!selected) {
-    selected = findDefaultTemplate(candidates, claimedIssue.type, issueContext)
+    selected = findDefaultTemplate(candidates, claimedIssue.type, issueContext);
   }
 
   if (!selected || !selected.activeVersionId) {
@@ -127,21 +123,21 @@ dispatchRoutes.get('/next', zValidator('query', nextQuerySchema), async (c) => {
       issue: summarizeIssue(claimedIssue),
       prompt: null,
       meta: null,
-    })
+    });
   }
 
   // Fetch the active version content
   const [version] = await db
     .select()
     .from(promptVersions)
-    .where(eq(promptVersions.id, selected.activeVersionId))
+    .where(eq(promptVersions.id, selected.activeVersionId));
 
   if (!version) {
     return c.json({
       issue: summarizeIssue(claimedIssue),
       prompt: null,
       meta: null,
-    })
+    });
   }
 
   // Build hydration context and render the prompt
@@ -149,16 +145,16 @@ dispatchRoutes.get('/next', zValidator('query', nextQuerySchema), async (c) => {
     db,
     claimedIssue as typeof issues.$inferSelect,
     { id: selected.id, slug: selected.slug },
-    { id: version.id, version: version.version },
-  )
+    { id: version.id, version: version.version }
+  );
 
-  const prompt = hydrateTemplate(version.id, version.content, hydrationCtx)
+  const prompt = hydrateTemplate(version.id, version.content, hydrationCtx);
 
   // Increment usage count on the version
   await db
     .update(promptVersions)
     .set({ usageCount: sql`${promptVersions.usageCount} + 1` })
-    .where(eq(promptVersions.id, version.id))
+    .where(eq(promptVersions.id, version.id));
 
   return c.json({
     issue: summarizeIssue(claimedIssue),
@@ -170,27 +166,24 @@ dispatchRoutes.get('/next', zValidator('query', nextQuerySchema), async (c) => {
       versionNumber: version.version,
       reviewUrl: 'POST /api/prompt-reviews',
     },
-  })
-})
+  });
+});
 
 /**
  * GET /queue — Preview the priority-ordered queue of unblocked todo issues.
  * Does not claim or modify any issues.
  */
 dispatchRoutes.get('/queue', zValidator('query', queueQuerySchema), async (c) => {
-  const db = c.get('db')
-  const { projectId, limit, offset } = c.req.valid('query')
+  const db = c.get('db');
+  const { projectId, limit, offset } = c.req.valid('query');
 
-  const conditions = [
-    eq(issues.status, 'todo'),
-    isNull(issues.deletedAt),
-  ]
+  const conditions = [eq(issues.status, 'todo'), isNull(issues.deletedAt)];
 
   if (projectId) {
-    conditions.push(eq(issues.projectId, projectId))
+    conditions.push(eq(issues.projectId, projectId));
   }
 
-  const whereClause = and(...conditions)
+  const whereClause = and(...conditions);
 
   // Fetch unblocked todo issues: exclude those with unresolved blocked_by relations
   const blockedIssueIds = db
@@ -201,37 +194,24 @@ dispatchRoutes.get('/queue', zValidator('query', queueQuerySchema), async (c) =>
       and(
         eq(issueRelations.type, 'blocked_by'),
         notInArray(issues.status, ['done', 'canceled']),
-        isNull(issues.deletedAt),
-      ),
-    )
+        isNull(issues.deletedAt)
+      )
+    );
 
-  const unblockedCondition = and(
-    whereClause,
-    sql`${issues.id} NOT IN (${blockedIssueIds})`,
-  )
+  const unblockedCondition = and(whereClause, sql`${issues.id} NOT IN (${blockedIssueIds})`);
 
   // Fetch all goal-aligned project IDs for scoring
   const activeGoalProjects = await db
     .select({ projectId: goals.projectId })
     .from(goals)
-    .where(eq(goals.status, 'active'))
+    .where(eq(goals.status, 'active'));
 
-  const activeGoalProjectIds = new Set(
-    activeGoalProjects.map((g) => g.projectId).filter(Boolean),
-  )
+  const activeGoalProjectIds = new Set(activeGoalProjects.map((g) => g.projectId).filter(Boolean));
 
   const [data, totalResult] = await Promise.all([
-    db
-      .select()
-      .from(issues)
-      .where(unblockedCondition)
-      .limit(limit)
-      .offset(offset),
-    db
-      .select({ count: count() })
-      .from(issues)
-      .where(unblockedCondition),
-  ])
+    db.select().from(issues).where(unblockedCondition).limit(limit).offset(offset),
+    db.select({ count: count() }).from(issues).where(unblockedCondition),
+  ]);
 
   // Score each issue and sort by score descending
   const scored = data
@@ -241,8 +221,8 @@ dispatchRoutes.get('/queue', zValidator('query', queueQuerySchema), async (c) =>
         type: issue.type,
         createdAt: issue.createdAt,
         hasActiveGoal: issue.projectId !== null && activeGoalProjectIds.has(issue.projectId),
-      }
-      const breakdown = scoreIssue(input)
+      };
+      const breakdown = scoreIssue(input);
       return {
         issue,
         score: breakdown.total,
@@ -252,12 +232,12 @@ dispatchRoutes.get('/queue', zValidator('query', queueQuerySchema), async (c) =>
           ageBonus: breakdown.ageBonus,
           typeBonus: breakdown.typeBonus,
         },
-      }
+      };
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score);
 
-  return c.json({ data: scored, total: totalResult[0].count })
-})
+  return c.json({ data: scored, total: totalResult[0].count });
+});
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -284,7 +264,7 @@ function mapRowToIssue(raw: Record<string, unknown>) {
     createdAt: new Date(raw.created_at as string),
     updatedAt: new Date(raw.updated_at as string),
     deletedAt: raw.deleted_at ? new Date(raw.deleted_at as string) : null,
-  }
+  };
 }
 
 /** Extract summary fields for the response payload. */
@@ -296,13 +276,13 @@ function summarizeIssue(issue: ReturnType<typeof mapRowToIssue>) {
     type: issue.type,
     priority: issue.priority,
     status: issue.status,
-  }
+  };
 }
 
 /** Build IssueContext from a claimed issue for template matching. */
 async function buildIssueContext(
   db: import('../types').AnyDb,
-  issue: ReturnType<typeof mapRowToIssue>,
+  issue: ReturnType<typeof mapRowToIssue>
 ): Promise<IssueContext> {
   const [labelRows, hasFailedSessionRows] = await Promise.all([
     db
@@ -320,13 +300,13 @@ async function buildIssueContext(
               eq(issues.parentId, issue.parentId),
               eq(issues.status, 'canceled'),
               isNull(issues.deletedAt),
-              sql`${issues.agentSummary} IS NOT NULL`,
-            ),
+              sql`${issues.agentSummary} IS NOT NULL`
+            )
           )
       : Promise.resolve([]),
-  ])
+  ]);
 
-  const hypothesisData = issue.hypothesis as { confidence?: number } | null
+  const hypothesisData = issue.hypothesis as { confidence?: number } | null;
 
   return {
     type: issue.type,
@@ -335,7 +315,7 @@ async function buildIssueContext(
     projectId: issue.projectId,
     hasFailedSessions: hasFailedSessionRows.length > 0,
     hypothesisConfidence: hypothesisData?.confidence ?? null,
-  }
+  };
 }
 
 /**
@@ -345,13 +325,13 @@ async function buildIssueContext(
 function findDefaultTemplate(
   candidates: TemplateCandidate[],
   issueType: string,
-  context: IssueContext,
+  context: IssueContext
 ): TemplateCandidate | null {
   const typeDefaults = candidates.filter(
     (t) =>
       t.activeVersionId !== null &&
       t.conditions.type === issueType &&
-      Object.keys(t.conditions).length === 1,
-  )
-  return selectTemplate(typeDefaults, context)
+      Object.keys(t.conditions).length === 1
+  );
+  return selectTemplate(typeDefaults, context);
 }

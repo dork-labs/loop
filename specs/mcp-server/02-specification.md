@@ -52,21 +52,21 @@ Without an MCP server, agents must be manually configured with REST API details,
 
 ## 5. Technical Dependencies
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
+| Dependency                  | Version | Purpose                                                    |
+| --------------------------- | ------- | ---------------------------------------------------------- |
 | `@modelcontextprotocol/sdk` | ^1.26.0 | MCP TypeScript SDK — server, transports, tool registration |
-| `@hono/mcp` | latest | Hono middleware for Streamable HTTP transport |
-| `ky` | ^1.14 | HTTP client for internal REST API calls |
-| `zod` | ^4.3 | Tool input/output schema validation |
-| `hono` | ^4 | Peer dependency for HTTP transport handler |
+| `@hono/mcp`                 | latest  | Hono middleware for Streamable HTTP transport              |
+| `ky`                        | ^1.14   | HTTP client for internal REST API calls                    |
+| `zod`                       | ^4.3    | Tool input/output schema validation                        |
+| `hono`                      | ^4      | Peer dependency for HTTP transport handler                 |
 
 **Dev dependencies:**
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| `tsup` | latest | Build/bundle for npm publishing |
-| `vitest` | ^3.2 | Unit testing |
-| `tsx` | latest | Local development |
+| Dependency | Version | Purpose                         |
+| ---------- | ------- | ------------------------------- |
+| `tsup`     | latest  | Build/bundle for npm publishing |
+| `vitest`   | ^3.2    | Unit testing                    |
+| `tsx`      | latest  | Local development               |
 
 ## 6. Detailed Design
 
@@ -104,29 +104,29 @@ packages/mcp/
 `src/index.ts` exports a single factory function:
 
 ```typescript
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { createApiClient } from './client.js'
-import { registerAllTools } from './tools/index.js'
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { createApiClient } from './client.js';
+import { registerAllTools } from './tools/index.js';
 
 export interface LoopMcpConfig {
-  apiKey: string
-  apiUrl?: string // default: 'http://localhost:5667'
+  apiKey: string;
+  apiUrl?: string; // default: 'http://localhost:5667'
 }
 
 export function createLoopMcpServer(config: LoopMcpConfig): McpServer {
   const server = new McpServer({
     name: 'loop-mcp',
     version: '0.1.0',
-  })
+  });
 
   const client = createApiClient({
     apiKey: config.apiKey,
     apiUrl: config.apiUrl ?? 'http://localhost:5667',
-  })
+  });
 
-  registerAllTools(server, client)
+  registerAllTools(server, client);
 
-  return server
+  return server;
 }
 ```
 
@@ -136,23 +136,25 @@ export function createLoopMcpServer(config: LoopMcpConfig): McpServer {
 
 ```typescript
 #!/usr/bin/env node
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { createLoopMcpServer } from './index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { createLoopMcpServer } from './index.js';
 
-const apiKey = process.env.LOOP_API_KEY
+const apiKey = process.env.LOOP_API_KEY;
 if (!apiKey) {
-  console.error('Missing LOOP_API_KEY environment variable.')
-  console.error('Generate one with: node -e "console.log(\'loop_\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))"')
-  process.exit(1)
+  console.error('Missing LOOP_API_KEY environment variable.');
+  console.error(
+    "Generate one with: node -e \"console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))\""
+  );
+  process.exit(1);
 }
 
 const server = createLoopMcpServer({
   apiKey,
   apiUrl: process.env.LOOP_API_URL,
-})
+});
 
-const transport = new StdioServerTransport()
-await server.connect(transport)
+const transport = new StdioServerTransport();
+await server.connect(transport);
 ```
 
 ### 6.4 HTTP Transport (Hono Handler)
@@ -160,42 +162,42 @@ await server.connect(transport)
 `src/http.ts` — mountable on the existing API server:
 
 ```typescript
-import { StreamableHTTPTransport } from '@hono/mcp'
-import { Hono } from 'hono'
-import { createLoopMcpServer } from './index.js'
+import { StreamableHTTPTransport } from '@hono/mcp';
+import { Hono } from 'hono';
+import { createLoopMcpServer } from './index.js';
 
 export interface HttpTransportConfig {
-  apiKey: string
-  apiUrl?: string
+  apiKey: string;
+  apiUrl?: string;
 }
 
 export function createMcpHandler(config: HttpTransportConfig) {
-  const app = new Hono()
-  const server = createLoopMcpServer(config)
-  const transport = new StreamableHTTPTransport()
+  const app = new Hono();
+  const server = createLoopMcpServer(config);
+  const transport = new StreamableHTTPTransport();
 
   app.all('/*', async (c) => {
     if (!server.isConnected()) {
-      await server.connect(transport)
+      await server.connect(transport);
     }
-    return transport.handleRequest(c)
-  })
+    return transport.handleRequest(c);
+  });
 
-  return app
+  return app;
 }
 ```
 
 **Mounting in `apps/api/src/app.ts`:**
 
 ```typescript
-import { createMcpHandler } from '../../packages/mcp/src/http.js'
+import { createMcpHandler } from '../../packages/mcp/src/http.js';
 
 // Mount after existing routes
 const mcpHandler = createMcpHandler({
   apiKey: env.LOOP_API_KEY,
   apiUrl: env.LOOP_URL,
-})
-app.route('/mcp', mcpHandler)
+});
+app.route('/mcp', mcpHandler);
 ```
 
 Note: The MCP HTTP endpoint at `/mcp` does NOT use the `apiKeyAuth` middleware from the API. Instead, auth is handled by the MCP server itself reading the `Authorization` header from incoming MCP requests and passing it through to the REST API via the internal ky client. The `/mcp` endpoint is public-facing — the REST API layer validates the Bearer token on each internal call.
@@ -205,11 +207,11 @@ Note: The MCP HTTP endpoint at `/mcp` does NOT use the `apiKeyAuth` middleware f
 `src/client.ts` — wraps ky for REST API calls (follows CLI pattern from `apps/cli/src/lib/api-client.ts`):
 
 ```typescript
-import ky, { type KyInstance } from 'ky'
+import ky, { type KyInstance } from 'ky';
 
 export interface ApiClientConfig {
-  apiKey: string
-  apiUrl: string
+  apiKey: string;
+  apiUrl: string;
 }
 
 export function createApiClient(config: ApiClientConfig): KyInstance {
@@ -222,7 +224,7 @@ export function createApiClient(config: ApiClientConfig): KyInstance {
       limit: 2,
       statusCodes: [429, 500, 503],
     },
-  })
+  });
 }
 ```
 
@@ -240,17 +242,17 @@ All 9 tools follow the "outcomes over operations" principle. Each tool:
 
 Each tool includes MCP annotations for client hints:
 
-| Tool | `readOnlyHint` | `destructiveHint` | `idempotentHint` |
-|------|---------------|-------------------|------------------|
-| `loop_get_next_task` | false | false | false |
-| `loop_complete_task` | false | false | true |
-| `loop_create_issue` | false | false | false |
-| `loop_update_issue` | false | false | true |
-| `loop_list_issues` | true | false | true |
-| `loop_get_issue` | true | false | true |
-| `loop_ingest_signal` | false | false | false |
-| `loop_create_comment` | false | false | false |
-| `loop_get_dashboard` | true | false | true |
+| Tool                  | `readOnlyHint` | `destructiveHint` | `idempotentHint` |
+| --------------------- | -------------- | ----------------- | ---------------- |
+| `loop_get_next_task`  | false          | false             | false            |
+| `loop_complete_task`  | false          | false             | true             |
+| `loop_create_issue`   | false          | false             | false            |
+| `loop_update_issue`   | false          | false             | true             |
+| `loop_list_issues`    | true           | false             | true             |
+| `loop_get_issue`      | true           | false             | true             |
+| `loop_ingest_signal`  | false          | false             | false            |
+| `loop_create_comment` | false          | false             | false            |
+| `loop_get_dashboard`  | true           | false             | true             |
 
 #### 6.6.1 loop_get_next_task
 
@@ -261,27 +263,32 @@ server.registerTool(
   'loop_get_next_task',
   {
     title: 'Get Next Task',
-    description: 'Get the highest-priority unblocked issue with dispatch instructions. Atomically claims the issue and transitions it to in_progress. Returns the issue details and a hydrated prompt with full context.',
+    description:
+      'Get the highest-priority unblocked issue with dispatch instructions. Atomically claims the issue and transitions it to in_progress. Returns the issue details and a hydrated prompt with full context.',
     inputSchema: z.object({
       projectId: z.string().optional().describe('Filter to a specific project'),
     }),
-    outputSchema: z.object({
-      issue: z.object({
-        id: z.string(),
-        number: z.number(),
-        title: z.string(),
-        type: z.string(),
-        priority: z.number(),
-        status: z.string(),
-      }),
-      prompt: z.string().nullable(),
-      meta: z.object({
-        templateSlug: z.string(),
-        templateId: z.string(),
-        versionId: z.string(),
-        versionNumber: z.number(),
-      }).nullable(),
-    }).nullable(),
+    outputSchema: z
+      .object({
+        issue: z.object({
+          id: z.string(),
+          number: z.number(),
+          title: z.string(),
+          type: z.string(),
+          priority: z.number(),
+          status: z.string(),
+        }),
+        prompt: z.string().nullable(),
+        meta: z
+          .object({
+            templateSlug: z.string(),
+            templateId: z.string(),
+            versionId: z.string(),
+            versionNumber: z.number(),
+          })
+          .nullable(),
+      })
+      .nullable(),
     annotations: { readOnlyHint: false, idempotentHint: false },
   },
   async ({ projectId }) => {
@@ -289,7 +296,7 @@ server.registerTool(
     // Return structuredContent + text fallback
     // Handle 204 (empty queue) → return null with message
   }
-)
+);
 ```
 
 **REST API mapping:** `GET /api/dispatch/next?projectId={projectId}`
@@ -304,17 +311,18 @@ Reports task completion. Sets status to `done`, adds an outcome comment, and ret
 z.object({
   issueId: z.string().describe('ID of the issue to complete'),
   outcome: z.string().describe('Summary of what was accomplished'),
-})
+});
 
 // outputSchema
 z.object({
   issue: z.object({ id: z.string(), number: z.number(), title: z.string(), status: z.string() }),
   comment: z.object({ id: z.string() }),
   unblockedIssues: z.array(z.object({ id: z.string(), number: z.number(), title: z.string() })),
-})
+});
 ```
 
 **Implementation steps:**
+
 1. `PATCH /api/issues/{issueId}` with `{ status: 'done' }`
 2. `POST /api/issues/{issueId}/comments` with `{ body: outcome, authorName: 'agent', authorType: 'agent' }`
 3. `GET /api/issues?status=todo` then filter for issues that were blocked by this one (check relations)
@@ -330,11 +338,17 @@ Creates a new issue with flat arguments.
 z.object({
   title: z.string().min(1).max(500).describe('Issue title'),
   type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']).default('task'),
-  priority: z.number().int().min(0).max(4).default(0).describe('0=none, 1=urgent, 2=high, 3=medium, 4=low'),
+  priority: z
+    .number()
+    .int()
+    .min(0)
+    .max(4)
+    .default(0)
+    .describe('0=none, 1=urgent, 2=high, 3=medium, 4=low'),
   projectId: z.string().optional().describe('Project to assign the issue to'),
   description: z.string().optional(),
   parentId: z.string().optional().describe('Parent issue ID for hierarchy'),
-})
+});
 
 // outputSchema
 z.object({
@@ -344,7 +358,7 @@ z.object({
   type: z.string(),
   status: z.string(),
   priority: z.number(),
-})
+});
 ```
 
 **REST API mapping:** `POST /api/issues`
@@ -362,7 +376,7 @@ z.object({
   type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']).optional(),
   title: z.string().min(1).max(500).optional(),
   description: z.string().optional(),
-})
+});
 
 // outputSchema
 z.object({
@@ -372,7 +386,7 @@ z.object({
   type: z.string(),
   status: z.string(),
   priority: z.number(),
-})
+});
 ```
 
 **REST API mapping:** `PATCH /api/issues/{issueId}`
@@ -389,21 +403,23 @@ z.object({
   projectId: z.string().optional(),
   limit: z.number().int().min(1).max(100).default(20),
   offset: z.number().int().min(0).default(0),
-})
+});
 
 // outputSchema
 z.object({
-  issues: z.array(z.object({
-    id: z.string(),
-    number: z.number(),
-    title: z.string(),
-    type: z.string(),
-    status: z.string(),
-    priority: z.number(),
-  })),
+  issues: z.array(
+    z.object({
+      id: z.string(),
+      number: z.number(),
+      title: z.string(),
+      type: z.string(),
+      status: z.string(),
+      priority: z.number(),
+    })
+  ),
   total: z.number(),
   hasMore: z.boolean(),
-})
+});
 ```
 
 **REST API mapping:** `GET /api/issues?status={status}&type={type}&projectId={projectId}&limit={limit}&offset={offset}`
@@ -417,7 +433,7 @@ Full issue detail with parent chain, labels, relations, and comments.
 // inputSchema
 z.object({
   issueId: z.string().describe('ID of the issue to retrieve'),
-})
+});
 
 // outputSchema
 z.object({
@@ -431,10 +447,16 @@ z.object({
   parent: z.object({ id: z.string(), number: z.number(), title: z.string() }).nullable(),
   labels: z.array(z.object({ id: z.string(), name: z.string() })),
   comments: z.array(z.object({ id: z.string(), body: z.string(), authorName: z.string() })),
-  relations: z.array(z.object({ id: z.string(), type: z.string(), relatedIssue: z.object({ id: z.string(), number: z.number(), title: z.string() }) })),
+  relations: z.array(
+    z.object({
+      id: z.string(),
+      type: z.string(),
+      relatedIssue: z.object({ id: z.string(), number: z.number(), title: z.string() }),
+    })
+  ),
   projectId: z.string().nullable(),
   createdAt: z.string(),
-})
+});
 ```
 
 **REST API mapping:** `GET /api/issues/{issueId}`
@@ -451,13 +473,13 @@ z.object({
   severity: z.enum(['critical', 'high', 'medium', 'low']).default('medium'),
   payload: z.record(z.unknown()).describe('Signal data as key-value pairs'),
   projectId: z.string().optional(),
-})
+});
 
 // outputSchema
 z.object({
   signal: z.object({ id: z.string(), source: z.string() }),
   issue: z.object({ id: z.string(), number: z.number(), title: z.string(), status: z.string() }),
-})
+});
 ```
 
 **REST API mapping:** `POST /api/signals`
@@ -471,7 +493,7 @@ Agent progress report on an issue.
 z.object({
   issueId: z.string().describe('ID of the issue to comment on'),
   body: z.string().min(1).describe('Comment text'),
-})
+});
 
 // outputSchema
 z.object({
@@ -479,7 +501,7 @@ z.object({
   body: z.string(),
   authorName: z.string(),
   createdAt: z.string(),
-})
+});
 ```
 
 **REST API mapping:** `POST /api/issues/{issueId}/comments` with `authorName: 'agent'` and `authorType: 'agent'`.
@@ -490,7 +512,7 @@ System health overview.
 
 ```typescript
 // inputSchema
-z.object({}) // No inputs
+z.object({}); // No inputs
 
 // outputSchema
 z.object({
@@ -509,7 +531,7 @@ z.object({
     activeCount: z.number(),
     completedLast24h: z.number(),
   }),
-})
+});
 ```
 
 **REST API mapping:** `GET /api/dashboard/stats`
@@ -521,35 +543,40 @@ All tool handlers follow this error pattern — never throw from handlers:
 ```typescript
 async function handleToolCall(fn: () => Promise<CallToolResult>): Promise<CallToolResult> {
   try {
-    return await fn()
+    return await fn();
   } catch (error) {
     if (error instanceof HTTPError) {
-      const status = error.response.status
-      const body = await error.response.json().catch(() => null)
-      const message = body?.message ?? error.message
+      const status = error.response.status;
+      const body = await error.response.json().catch(() => null);
+      const message = body?.message ?? error.message;
 
       if (status === 404) {
         return {
-          content: [{ type: 'text', text: `Not found: ${message}. Use loop_list_issues to find valid IDs.` }],
+          content: [
+            {
+              type: 'text',
+              text: `Not found: ${message}. Use loop_list_issues to find valid IDs.`,
+            },
+          ],
           isError: true,
-        }
+        };
       }
       if (status === 401) {
         return {
           content: [{ type: 'text', text: 'Authentication failed. Check your LOOP_API_KEY.' }],
           isError: true,
-        }
+        };
       }
       return {
         content: [{ type: 'text', text: `API error (${status}): ${message}` }],
         isError: true,
-      }
+      };
     }
 
     return {
       content: [{ type: 'text', text: `Unexpected error: ${String(error)}` }],
       isError: true,
-    }
+    };
   }
 }
 ```
@@ -564,7 +591,7 @@ Every tool returns both `structuredContent` (for typed parsing) and `content` te
 return {
   content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
   structuredContent: result,
-}
+};
 ```
 
 ### 6.9 Package Configuration
@@ -628,7 +655,7 @@ Note: `hono` is a peer dependency (optional) since it's only needed for the HTTP
 **`packages/mcp/tsup.config.ts`:**
 
 ```typescript
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts', 'src/stdio.ts', 'src/http.ts'],
@@ -637,11 +664,9 @@ export default defineConfig({
   clean: true,
   splitting: false,
   banner: {
-    js: (ctx) => ctx.options.entry?.includes('src/stdio.ts')
-      ? '#!/usr/bin/env node'
-      : '',
+    js: (ctx) => (ctx.options.entry?.includes('src/stdio.ts') ? '#!/usr/bin/env node' : ''),
   },
-})
+});
 ```
 
 ### 6.10 .mcp.json Template
@@ -666,10 +691,11 @@ For team-wide sharing via version control:
 ### 6.11 Files to Modify in Existing Codebase
 
 1. **`apps/api/src/app.ts`** — Add MCP HTTP transport mount at `/mcp`:
+
    ```typescript
-   import { createMcpHandler } from '../../packages/mcp/src/http.js'
-   const mcpHandler = createMcpHandler({ apiKey: env.LOOP_API_KEY, apiUrl: env.LOOP_URL })
-   app.route('/mcp', mcpHandler)
+   import { createMcpHandler } from '../../packages/mcp/src/http.js';
+   const mcpHandler = createMcpHandler({ apiKey: env.LOOP_API_KEY, apiUrl: env.LOOP_URL });
+   app.route('/mcp', mcpHandler);
    ```
 
 2. **`turbo.json`** — No changes needed. The `packages/mcp/` package inherits existing `build`, `dev`, `test`, `typecheck`, `lint` tasks from the root pipeline.
@@ -715,14 +741,14 @@ test('loop_get_next_task returns structured dispatch result', async () => {
   // Call tool handler
   // Assert structuredContent matches outputSchema
   // Assert text content is valid JSON
-})
+});
 
 // Purpose: Verify loop_get_next_task handles empty queue gracefully
 test('loop_get_next_task returns null when queue is empty', async () => {
   // Mock ky.get → 204 response
   // Assert structuredContent is null
   // Assert text says "No tasks available"
-})
+});
 
 // Purpose: Verify loop_complete_task performs all three operations
 test('loop_complete_task updates status, adds comment, and returns unblocked issues', async () => {
@@ -731,24 +757,25 @@ test('loop_complete_task updates status, adds comment, and returns unblocked iss
   // Mock GET /api/issues?status=todo → list with previously-blocked issues
   // Assert all three API calls were made
   // Assert response includes unblockedIssues
-})
+});
 
 // Purpose: Verify error responses include actionable suggestions
 test('tools return actionable errors for 404 responses', async () => {
   // Mock ky.get → 404
   // Assert isError: true
   // Assert text includes "Use loop_list_issues"
-})
+});
 
 // Purpose: Verify auth errors produce clear messages
 test('tools return clear message for 401 responses', async () => {
   // Mock ky → 401
   // Assert isError: true
   // Assert text includes "LOOP_API_KEY"
-})
+});
 ```
 
 Test every tool for:
+
 - Happy path with valid response transformation
 - Error handling (404, 401, 500, network errors)
 - Input validation (invalid types, missing required fields)
@@ -759,24 +786,24 @@ Test every tool for:
 ```typescript
 // Purpose: Verify createLoopMcpServer registers all 9 tools
 test('server registers all 9 tools', async () => {
-  const server = createLoopMcpServer({ apiKey: 'test-key' })
+  const server = createLoopMcpServer({ apiKey: 'test-key' });
   // Connect to in-memory transport
   // Call tools/list
   // Assert 9 tools with correct names and annotations
-})
+});
 
 // Purpose: Verify stdio entry point starts without error
 test('stdio transport connects successfully', async () => {
   // Spawn process with LOOP_API_KEY set
   // Verify it doesn't exit with error
-})
+});
 
 // Purpose: Verify stdio exits with clear error when LOOP_API_KEY missing
 test('stdio exits with error when LOOP_API_KEY missing', async () => {
   // Spawn process without env var
   // Assert exit code 1
   // Assert stderr includes generation command
-})
+});
 ```
 
 ### Mocking Strategy
@@ -860,16 +887,16 @@ Add remaining tools and HTTP transport:
 
 ## 13. Open Questions
 
-*All clarifications from ideation have been resolved. No remaining open questions.*
+_All clarifications from ideation have been resolved. No remaining open questions._
 
 ## 14. Related ADRs
 
-| # | Title | Relevance |
-|---|-------|-----------|
-| 1 | Use Hono over Express | MCP HTTP transport mounts on the same Hono server |
-| 9 | Use FOR UPDATE SKIP LOCKED for dispatch | `loop_get_next_task` wraps this atomic claim mechanism |
-| 8 | Use Handlebars for prompt hydration | Dispatch response includes Handlebars-rendered prompts |
-| 20 | Use raw Zod safeParse for env validation | MCP stdio entry validates `LOOP_API_KEY` at startup |
+| #   | Title                                    | Relevance                                              |
+| --- | ---------------------------------------- | ------------------------------------------------------ |
+| 1   | Use Hono over Express                    | MCP HTTP transport mounts on the same Hono server      |
+| 9   | Use FOR UPDATE SKIP LOCKED for dispatch  | `loop_get_next_task` wraps this atomic claim mechanism |
+| 8   | Use Handlebars for prompt hydration      | Dispatch response includes Handlebars-rendered prompts |
+| 20  | Use raw Zod safeParse for env validation | MCP stdio entry validates `LOOP_API_KEY` at startup    |
 
 ## 15. References
 

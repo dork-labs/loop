@@ -6,5 +6,5 @@ export function App() {
         <p className="mt-2 text-neutral-400">The Autonomous Improvement Engine</p>
       </div>
     </div>
-  )
+  );
 }

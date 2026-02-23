@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from 'next/image';
 
 /** Branded logo + wordmark for the docs navigation bar. */
 export function DocsNavTitle() {
@@ -18,9 +18,7 @@ export function DocsNavTitle() {
         height={20}
         className="hidden dark:block"
       />
-      <span className="font-mono text-xs tracking-[0.15em] uppercase font-medium">
-        Loop
-      </span>
+      <span className="font-mono text-xs font-medium tracking-[0.15em] uppercase">Loop</span>
     </span>
-  )
+  );
 }

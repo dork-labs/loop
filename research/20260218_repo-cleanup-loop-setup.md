@@ -16,7 +16,9 @@ Repurposing a Turborepo monorepo is a well-understood process involving surgical
 ## Key Findings
 
 ### 1. Turborepo Package Removal
+
 The process is simple but requires discipline:
+
 - Delete the package/app directory
 - Remove references from all `package.json` dependencies
 - Remove the package from `turbo.json` pipeline task overrides
@@ -24,6 +26,7 @@ The process is simple but requires discipline:
 - Turborepo has no special "remove" command — it infers workspace membership from the package manager lockfile
 
 ### 2. Hono is the Clear Winner Over Express for Vercel
+
 - Hono deploys with **zero configuration** on Vercel
 - Routes automatically become **Vercel Functions with Fluid Compute** enabled by default (since April 2025)
 - Express requires wrapping in serverless handlers and `vercel.json` rewrites
@@ -31,16 +34,20 @@ The process is simple but requires discipline:
 - Fluid Compute gives Hono Vercel deployments: 300s default max duration, in-function concurrency, bytecode caching, and cross-region failover
 
 ### 3. Vercel Serverless Has Hard Limitations for Stateful APIs
+
 - **WebSockets are not supported** on Vercel Functions (even with Fluid Compute)
 - **SSE connections** work but are limited to 300s (5 min) on Hobby, 800s (13 min) on Pro
 - Persistent DB connections require connection pooling (PgBouncer / Neon's serverless driver)
 - For SSE-heavy APIs (like DorkOS's current architecture), Vercel is viable on Pro tier but not ideal
 
 ### 4. Two Vercel Projects From One Monorepo
+
 Vercel natively supports multiple projects per repository. Each project gets its own Root Directory setting. The "skip unaffected projects" feature (powered by workspace dependency graph analysis) automatically avoids rebuilding unchanged apps.
 
 ### 5. Package Renaming Strategy
+
 There is no automated Turborepo/npm command for namespace renaming. The approach is:
+
 1. Update `name` field in each `package.json`
 2. Global find-and-replace `@dorkos/` → `@loop/` across all source files and config files
 3. Run `npm install` to regenerate the lockfile
@@ -62,10 +69,12 @@ There is no automated Turborepo/npm command for namespace renaming. The approach
 ```
 
 **What does NOT need manual cleanup**:
+
 - The root `package.json` `workspaces` array uses a glob (`apps/*`, `packages/*`) so individual entries don't need to be removed — Turborepo discovers packages automatically from directories
 - Turborepo caches are keyed by content hash; removing a package naturally removes its cache entries
 
 **What DOES need manual cleanup in turbo.json**:
+
 ```json
 // REMOVE app-specific pipeline overrides like:
 {
@@ -77,6 +86,7 @@ There is no automated Turborepo/npm command for namespace renaming. The approach
 ```
 
 **For the DorkOS → Loop migration**, the following should be removed:
+
 - `apps/obsidian-plugin` — DorkOS-specific
 - `apps/server` (the DorkOS Express server) — replace with Loop API
 - `apps/client` (the DorkOS React SPA) — replace with Loop app
@@ -84,6 +94,7 @@ There is no automated Turborepo/npm command for namespace renaming. The approach
 - `packages/test-utils` — can be kept or renamed
 
 **Keep and repurpose**:
+
 - `apps/web` (Next.js marketing site) — rename/rebrand for Loop
 - `apps/roadmap` — may be useful for Loop project management
 - `packages/shared` — repurpose for Loop's Zod schemas and shared types
@@ -98,21 +109,22 @@ There is no automated Turborepo/npm command for namespace renaming. The approach
 Vercel has first-class Hono support with official docs and zero-config detection:
 
 **How it works**:
+
 - Create `src/index.ts` (or `server.ts`, `app.ts`, etc.) that exports a Hono app as default export
 - Vercel auto-detects it and deploys all routes as Vercel Functions
 - Fluid Compute is enabled by default (as of April 23, 2025)
 
 ```typescript
 // apps/api/src/index.ts
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 
-const app = new Hono()
+const app = new Hono();
 
-app.use('*', cors())
-app.get('/health', (c) => c.json({ status: 'ok' }))
+app.use('*', cors());
+app.get('/health', (c) => c.json({ status: 'ok' }));
 
-export default app
+export default app;
 ```
 
 No `vercel.json` needed. No adapter needed. Just `export default app`.
@@ -129,6 +141,7 @@ No `vercel.json` needed. No adapter needed. Just `export default app`.
 | SSE streaming | Yes (native) | Yes (but adapter quirks) |
 
 **Express on Vercel (not recommended for new projects)**:
+
 - Requires wrapping in a serverless handler: `module.exports = app`
 - Needs `vercel.json` with routes configuration
 - Cold starts are slower due to larger bundle size
@@ -137,11 +150,13 @@ No `vercel.json` needed. No adapter needed. Just `export default app`.
 #### Critical Limitation: SSE and Persistent Connections
 
 The current DorkOS architecture relies heavily on SSE (Server-Sent Events) for streaming. On Vercel:
+
 - SSE is supported but connections time out at 300s (Hobby) / 800s (Pro)
 - WebSockets are **not supported** on any Vercel plan
 - Persistent DB connections require a pooler (Neon serverless, PgBouncer, etc.)
 
 **Recommendation for Loop**: If Loop requires long-lived SSE connections (e.g., streaming agent output to the browser), evaluate:
+
 1. **Vercel Pro** (800s limit) — viable for most agent runs
 2. **Railway** — no cold starts, persistent containers, true WebSocket support
 3. **Hybrid**: Host the Hono API on Railway/Render, keep Next.js marketing site on Vercel
@@ -151,11 +166,13 @@ For the MVP without long streaming sessions, **Vercel + Hono** is fine.
 #### Hono + Drizzle + PostgreSQL Setup
 
 Several production-ready starters exist:
+
 - [Hono-Postgres-Template](https://github.com/RajMazumder18110/Hono-Postgres-Template) — Hono + TypeScript + Drizzle + PostgreSQL
 - [hono-drizzle-sql](https://github.com/itsMinar/hono-drizzle-sql) — serverless Node.js version
 - [turbo-drizzle](https://github.com/htsh-tsyk/turbo-drizzle) — Turborepo + Drizzle (shadcn/ui preconfigured)
 
 **Recommended stack for apps/api**:
+
 ```
 Hono (framework)
 ├── @hono/node-server (local dev adapter)
@@ -169,11 +186,11 @@ For **Vercel Postgres (Neon)**: use `@neondatabase/serverless` with `ws` for Web
 
 ```typescript
 // apps/api/src/db/index.ts
-import { drizzle } from 'drizzle-orm/neon-http'
-import { neon } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!)
-export const db = drizzle(sql)
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql);
 ```
 
 ---
@@ -182,72 +199,84 @@ export const db = drizzle(sql)
 
 **Architecture**: One GitHub repo → two Vercel projects
 
-| Vercel Project | Root Directory | Domain |
-|---|---|---|
-| `loop-web` | `apps/web` | www.looped.me |
-| `loop-app` | `apps/app` (or `apps/api` + `apps/client`) | app.looped.me |
+| Vercel Project | Root Directory                             | Domain        |
+| -------------- | ------------------------------------------ | ------------- |
+| `loop-web`     | `apps/web`                                 | www.looped.me |
+| `loop-app`     | `apps/app` (or `apps/api` + `apps/client`) | app.looped.me |
 
 **Setup process**:
+
 1. In Vercel Dashboard → "Add New Project" → Import the same GitHub repo twice
 2. On first import: set Root Directory to `apps/web`, assign to `www.looped.me`
 3. On second import: set Root Directory to `apps/app`, assign to `app.looped.me`
 4. Each project gets independent env vars, build commands, and deployment history
 
 **Automatic "skip unaffected projects"** (Vercel native feature):
+
 - Vercel automatically detects which workspace packages changed
 - If you push a commit that only touches `apps/web`, the `loop-app` project is skipped
 - Requirements: npm/yarn/pnpm workspaces, unique `name` in each `package.json`, explicit `dependencies` declared between packages
 - This feature does NOT count against concurrent build slots (unlike turbo-ignore)
 
 **turbo-ignore (optional, more granular)**:
+
 ```
 # In each Vercel project's "Ignored Build Step" field:
 npx turbo-ignore --fallback=HEAD^1
 ```
+
 This uses Turborepo's dependency graph for smarter skip decisions. The `--fallback=HEAD^1` ensures the first commit on a new branch always deploys.
 
 **Turborepo build command in Vercel** (set in each project's Build Settings):
+
 ```bash
 # Vercel auto-infers this when Root Directory is set, but can be explicit:
 turbo build
 ```
+
 Vercel has global `turbo` available and auto-infers `--filter=<workspace>` from the Root Directory setting.
 
 **Related Projects** (preview URL linking):
 For preview deployments where `apps/app` needs to call a preview API URL, use `vercel.json` `relatedProjects`:
+
 ```json
 // apps/app/vercel.json
 {
   "relatedProjects": ["prj_<loop-api-project-id>"]
 }
 ```
+
 This makes the preview API URL available as `VERCEL_RELATED_PROJECTS` env var automatically.
 
 ---
 
-### Topic 4: Renaming @dorkos/* to @loop/*
+### Topic 4: Renaming @dorkos/_ to @loop/_
 
 There is no `turbo rename` or `npm rename` command. This is a manual process:
 
 **Step-by-step**:
 
 1. **Update package names** in each `package.json`:
+
 ```json
 // packages/shared/package.json
 {
-  "name": "@loop/shared"   // was: "@dorkos/shared"
+  "name": "@loop/shared" // was: "@dorkos/shared"
 }
 ```
 
 2. **Global find-and-replace** across all `.ts`, `.tsx`, `.json`, `.md` files:
+
 ```bash
 # Using ripgrep + sed (or use your editor's global find-replace):
 grep -r "@dorkos/" . --include="*.ts" --include="*.tsx" --include="*.json" -l
 # Then replace in each file
 ```
+
 Or use VSCode's global search-and-replace: `@dorkos/` → `@loop/`
 
 3. **Update tsconfig.json path aliases** in each app:
+
 ```json
 // apps/app/tsconfig.json
 {
@@ -260,12 +289,14 @@ Or use VSCode's global search-and-replace: `@dorkos/` → `@loop/`
 ```
 
 4. **Regenerate lockfile**:
+
 ```bash
 rm package-lock.json
 npm install
 ```
 
 5. **Key files to check** beyond source code:
+
 - `turbo.json` (if package names appear in pipeline task names like `"@dorkos/shared#build"`)
 - `.claude/` directory and agent configuration
 - `README.md`, `CLAUDE.md`, `docs/` directory
@@ -273,6 +304,7 @@ npm install
 - Any published npm package references
 
 **Naming convention decision**:
+
 - Option A: `@loop/shared`, `@loop/typescript-config` (scoped npm-style)
 - Option B: `@looped/shared` (matching domain `looped.me`)
 - Option C: Unscoped internal names like `shared`, `ui` (simpler, no scope needed for private monorepo packages)
@@ -299,12 +331,14 @@ Does Loop need:
 ```
 
 **For Loop MVP (assuming Vercel)**:
+
 - Framework: **Hono** (zero-config Vercel, TypeScript native, Fluid Compute)
 - Database: **Neon PostgreSQL** (serverless-compatible, Vercel Postgres integration)
 - ORM: **Drizzle** (as specified in the MVP brief)
 - Auth: **Better Auth** or **Clerk** (both have Hono middleware)
 
 **For Loop if long-running agent streaming is core**:
+
 - Host API on **Railway** (persistent containers, no cold starts, WebSocket support)
 - Keep Next.js marketing site on **Vercel** (still optimal for Next.js)
 - Configure CORS between `api.looped.me` (Railway) and `app.looped.me` (Vercel)

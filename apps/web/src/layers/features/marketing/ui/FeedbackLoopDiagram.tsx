@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { motion, useReducedMotion } from 'motion/react'
-import { SCALE_IN, DRAW_PATH, VIEWPORT } from '../lib/motion-variants'
+import { motion, useReducedMotion } from 'motion/react';
+import { SCALE_IN, DRAW_PATH, VIEWPORT } from '../lib/motion-variants';
 
 /**
  * SVG diagram of the Loop feedback cycle: 5 nodes arranged in a pentagon,
@@ -12,11 +12,9 @@ import { SCALE_IN, DRAW_PATH, VIEWPORT } from '../lib/motion-variants'
  * opacity statically.
  */
 export function FeedbackLoopDiagram() {
-  const reducedMotion = useReducedMotion()
+  const reducedMotion = useReducedMotion();
 
-  return (
-    <DiagramSvg reducedMotion={reducedMotion ?? false} />
-  )
+  return <DiagramSvg reducedMotion={reducedMotion ?? false} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -24,42 +22,62 @@ export function FeedbackLoopDiagram() {
 // ---------------------------------------------------------------------------
 
 /** Pentagon node positions (cx, cy) in a 400×400 viewBox, 5 nodes at 72° each. */
-const RADIUS = 140
-const CX = 200
-const CY = 195
+const RADIUS = 140;
+const CX = 200;
+const CY = 195;
 
 /** Start at the top (–90°) and go clockwise. */
 function pentagonPoint(index: number): { x: number; y: number } {
-  const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2
+  const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
   return {
     x: CX + RADIUS * Math.cos(angle),
     y: CY + RADIUS * Math.sin(angle),
-  }
+  };
 }
 
 interface Node {
-  label: string
-  sublabel: string
-  color: string
-  fill: string
+  label: string;
+  sublabel: string;
+  color: string;
+  fill: string;
 }
 
 const NODES: Node[] = [
-  { label: 'Signal',   sublabel: 'errors · metrics · events', color: '#E85D04', fill: 'rgba(232,93,4,0.12)' },
-  { label: 'Issue',    sublabel: 'triage · prioritize',       color: '#4A90A4', fill: 'rgba(74,144,164,0.12)' },
-  { label: 'Prompt',   sublabel: 'hydrate · template',        color: '#8B7BA4', fill: 'rgba(139,123,164,0.12)' },
-  { label: 'Dispatch', sublabel: 'score · send',              color: '#228B22', fill: 'rgba(34,139,34,0.12)' },
-  { label: 'Outcome',  sublabel: 'review · feedback',         color: '#7A756A', fill: 'rgba(122,117,106,0.12)' },
-]
+  {
+    label: 'Signal',
+    sublabel: 'errors · metrics · events',
+    color: '#E85D04',
+    fill: 'rgba(232,93,4,0.12)',
+  },
+  {
+    label: 'Issue',
+    sublabel: 'triage · prioritize',
+    color: '#4A90A4',
+    fill: 'rgba(74,144,164,0.12)',
+  },
+  {
+    label: 'Prompt',
+    sublabel: 'hydrate · template',
+    color: '#8B7BA4',
+    fill: 'rgba(139,123,164,0.12)',
+  },
+  { label: 'Dispatch', sublabel: 'score · send', color: '#228B22', fill: 'rgba(34,139,34,0.12)' },
+  {
+    label: 'Outcome',
+    sublabel: 'review · feedback',
+    color: '#7A756A',
+    fill: 'rgba(122,117,106,0.12)',
+  },
+];
 
 /** Build a cubic-bezier path string curving from point A to point B via the centre. */
 function curvePath(from: { x: number; y: number }, to: { x: number; y: number }): string {
   // Pull control points 30% toward the centre so arrows arc nicely.
-  const c1x = from.x + (CX - from.x) * 0.35
-  const c1y = from.y + (CY - from.y) * 0.35
-  const c2x = to.x + (CX - to.x) * 0.35
-  const c2y = to.y + (CY - to.y) * 0.35
-  return `M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`
+  const c1x = from.x + (CX - from.x) * 0.35;
+  const c1y = from.y + (CY - from.y) * 0.35;
+  const c2x = to.x + (CX - to.x) * 0.35;
+  const c2y = to.y + (CY - to.y) * 0.35;
+  return `M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -67,18 +85,18 @@ function curvePath(from: { x: number; y: number }, to: { x: number; y: number })
 // ---------------------------------------------------------------------------
 
 interface DiagramSvgProps {
-  reducedMotion: boolean
+  reducedMotion: boolean;
 }
 
 function DiagramSvg({ reducedMotion }: DiagramSvgProps) {
-  const points = NODES.map((_, i) => pentagonPoint(i))
+  const points = NODES.map((_, i) => pentagonPoint(i));
 
   // Connection paths: each node connects to the next (wrapping).
   const paths = NODES.map((_, i) => {
-    const from = points[i]
-    const to = points[(i + 1) % NODES.length]
-    return curvePath(from, to)
-  })
+    const from = points[i];
+    const to = points[(i + 1) % NODES.length];
+    return curvePath(from, to);
+  });
 
   return (
     <motion.svg
@@ -135,26 +153,20 @@ function DiagramSvg({ reducedMotion }: DiagramSvgProps) {
 
       {/* Nodes */}
       {NODES.map((node, i) => (
-        <DiagramNode
-          key={i}
-          node={node}
-          cx={points[i].x}
-          cy={points[i].y}
-          delay={i * 0.1}
-        />
+        <DiagramNode key={i} node={node} cx={points[i].x} cy={points[i].y} delay={i * 0.1} />
       ))}
     </motion.svg>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
 
 interface ConnectionPathProps {
-  d: string
-  color: string
-  markerId: string
-  reducedMotion: boolean
-  delay: number
+  d: string;
+  color: string;
+  markerId: string;
+  reducedMotion: boolean;
+  delay: number;
 }
 
 function ConnectionPath({ d, color, markerId, reducedMotion, delay }: ConnectionPathProps) {
@@ -168,7 +180,7 @@ function ConnectionPath({ d, color, markerId, reducedMotion, delay }: Connection
         strokeOpacity="0.35"
         markerEnd={`url(#${markerId})`}
       />
-    )
+    );
   }
 
   return (
@@ -182,16 +194,16 @@ function ConnectionPath({ d, color, markerId, reducedMotion, delay }: Connection
       variants={DRAW_PATH}
       transition={{ delay }}
     />
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
 
 interface ParticleDotProps {
-  d: string
-  color: string
-  duration: number
-  delay: number
+  d: string;
+  color: string;
+  duration: number;
+  delay: number;
 }
 
 /**
@@ -203,28 +215,23 @@ interface ParticleDotProps {
 function ParticleDot({ d, color, duration, delay }: ParticleDotProps) {
   return (
     <circle r="3.5" fill={color} opacity="0.8" className="architecture-particles">
-      <animateMotion
-        dur={`${duration}s`}
-        begin={`${delay}s`}
-        repeatCount="indefinite"
-        path={d}
-      />
+      <animateMotion dur={`${duration}s`} begin={`${delay}s`} repeatCount="indefinite" path={d} />
     </circle>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
 
 interface DiagramNodeProps {
-  node: Node
-  cx: number
-  cy: number
-  delay: number
+  node: Node;
+  cx: number;
+  cy: number;
+  delay: number;
 }
 
 function DiagramNode({ node, cx, cy, delay }: DiagramNodeProps) {
   // Node circle radius
-  const r = 38
+  const r = 38;
 
   return (
     <motion.g variants={SCALE_IN} transition={{ delay }}>
@@ -270,5 +277,5 @@ function DiagramNode({ node, cx, cy, delay }: DiagramNodeProps) {
         {node.sublabel}
       </text>
     </motion.g>
-  )
+  );
 }

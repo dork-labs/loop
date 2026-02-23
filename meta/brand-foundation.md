@@ -208,13 +208,13 @@ Use language like:
 
 ### Voice Examples
 
-| Don't say | Say |
-|---|---|
-| "Easy-to-use AI assistant" | "Autonomous agent operating system" |
-| "Get started in minutes!" | "Install. Configure. Run." |
-| "We help developers..." | "Built for developers who ship." |
-| "Powerful AI features" | "Agents that work while you sleep." |
-| "No cloud dependency" | "Intelligence from Anthropic. Everything else is yours." |
+| Don't say                  | Say                                                      |
+| -------------------------- | -------------------------------------------------------- |
+| "Easy-to-use AI assistant" | "Autonomous agent operating system"                      |
+| "Get started in minutes!"  | "Install. Configure. Run."                               |
+| "We help developers..."    | "Built for developers who ship."                         |
+| "Powerful AI features"     | "Agents that work while you sleep."                      |
+| "No cloud dependency"      | "Intelligence from Anthropic. Everything else is yours." |
 
 ---
 

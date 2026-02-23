@@ -99,10 +99,7 @@
       "compositePrimaryKeys": {
         "issue_labels_issue_id_label_id_pk": {
           "name": "issue_labels_issue_id_label_id_pk",
-          "columns": [
-            "issue_id",
-            "label_id"
-          ]
+          "columns": ["issue_id", "label_id"]
         }
       },
       "uniqueConstraints": {},
@@ -405,9 +402,7 @@
       "uniqueConstraints": {
         "issues_number_unique": {
           "name": "issues_number_unique",
-          "columns": [
-            "number"
-          ],
+          "columns": ["number"],
           "nullsNotDistinct": false
         }
       },
@@ -457,9 +452,7 @@
       "uniqueConstraints": {
         "labels_name_unique": {
           "name": "labels_name_unique",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "nullsNotDistinct": false
         }
       },
@@ -626,13 +619,9 @@
         "projects_goal_id_goals_id_fk": {
           "name": "projects_goal_id_goals_id_fk",
           "tableFrom": "projects",
-          "columnsFrom": [
-            "goal_id"
-          ],
+          "columnsFrom": ["goal_id"],
           "tableTo": "goals",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -834,13 +823,9 @@
         "prompt_reviews_version_id_prompt_versions_id_fk": {
           "name": "prompt_reviews_version_id_prompt_versions_id_fk",
           "tableFrom": "prompt_reviews",
-          "columnsFrom": [
-            "version_id"
-          ],
+          "columnsFrom": ["version_id"],
           "tableTo": "prompt_versions",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -945,9 +930,7 @@
       "uniqueConstraints": {
         "prompt_templates_slug_unique": {
           "name": "prompt_templates_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "nullsNotDistinct": false
         }
       },
@@ -1064,13 +1047,9 @@
         "prompt_versions_template_id_prompt_templates_id_fk": {
           "name": "prompt_versions_template_id_prompt_templates_id_fk",
           "tableFrom": "prompt_versions",
-          "columnsFrom": [
-            "template_id"
-          ],
+          "columnsFrom": ["template_id"],
           "tableTo": "prompt_templates",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1079,10 +1058,7 @@
       "uniqueConstraints": {
         "uq_prompt_versions_template_version": {
           "name": "uq_prompt_versions_template_version",
-          "columns": [
-            "template_id",
-            "version"
-          ],
+          "columns": ["template_id", "version"],
           "nullsNotDistinct": false
         }
       },
@@ -1095,92 +1071,47 @@
     "public.author_type": {
       "name": "author_type",
       "schema": "public",
-      "values": [
-        "human",
-        "agent"
-      ]
+      "values": ["human", "agent"]
     },
     "public.issue_status": {
       "name": "issue_status",
       "schema": "public",
-      "values": [
-        "triage",
-        "backlog",
-        "todo",
-        "in_progress",
-        "done",
-        "canceled"
-      ]
+      "values": ["triage", "backlog", "todo", "in_progress", "done", "canceled"]
     },
     "public.issue_type": {
       "name": "issue_type",
       "schema": "public",
-      "values": [
-        "signal",
-        "hypothesis",
-        "plan",
-        "task",
-        "monitor"
-      ]
+      "values": ["signal", "hypothesis", "plan", "task", "monitor"]
     },
     "public.relation_type": {
       "name": "relation_type",
       "schema": "public",
-      "values": [
-        "blocks",
-        "blocked_by",
-        "related",
-        "duplicate"
-      ]
+      "values": ["blocks", "blocked_by", "related", "duplicate"]
     },
     "public.goal_status": {
       "name": "goal_status",
       "schema": "public",
-      "values": [
-        "active",
-        "achieved",
-        "abandoned"
-      ]
+      "values": ["active", "achieved", "abandoned"]
     },
     "public.project_health": {
       "name": "project_health",
       "schema": "public",
-      "values": [
-        "on_track",
-        "at_risk",
-        "off_track"
-      ]
+      "values": ["on_track", "at_risk", "off_track"]
     },
     "public.project_status": {
       "name": "project_status",
       "schema": "public",
-      "values": [
-        "backlog",
-        "planned",
-        "active",
-        "paused",
-        "completed",
-        "canceled"
-      ]
+      "values": ["backlog", "planned", "active", "paused", "completed", "canceled"]
     },
     "public.signal_severity": {
       "name": "signal_severity",
       "schema": "public",
-      "values": [
-        "low",
-        "medium",
-        "high",
-        "critical"
-      ]
+      "values": ["low", "medium", "high", "critical"]
     },
     "public.prompt_version_status": {
       "name": "prompt_version_status",
       "schema": "public",
-      "values": [
-        "active",
-        "draft",
-        "retired"
-      ]
+      "values": ["active", "draft", "retired"]
     }
   },
   "schemas": {},

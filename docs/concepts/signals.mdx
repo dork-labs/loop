@@ -13,14 +13,14 @@ A signal is a piece of incoming data from an external source: an analytics alert
 
 Each signal record stores:
 
-| Field | Description |
-|-------|-------------|
-| `source` | Where the signal came from: `posthog`, `github`, `sentry`, `feedback`, `manual` |
-| `externalId` | Optional reference ID from the source system |
-| `title` | Human-readable summary of the signal |
-| `body` | Optional detailed description |
-| `severity` | `low`, `medium`, `high`, or `critical` |
-| `metadata` | Arbitrary JSON payload with the raw event data |
+| Field        | Description                                                                     |
+| ------------ | ------------------------------------------------------------------------------- |
+| `source`     | Where the signal came from: `posthog`, `github`, `sentry`, `feedback`, `manual` |
+| `externalId` | Optional reference ID from the source system                                    |
+| `title`      | Human-readable summary of the signal                                            |
+| `body`       | Optional detailed description                                                   |
+| `severity`   | `low`, `medium`, `high`, or `critical`                                          |
+| `metadata`   | Arbitrary JSON payload with the raw event data                                  |
 
 ## Signal Ingestion
 
@@ -69,12 +69,12 @@ Once a signal creates a triage issue, the standard dispatch cycle takes over. An
 
 Signals carry a severity level that influences the priority of the resulting triage issue:
 
-| Severity | Description | Priority Mapping |
-|----------|-------------|-----------------|
-| `critical` | System-breaking events requiring immediate attention | Urgent (1) |
-| `high` | Significant degradation or important events | High (2) |
-| `medium` | Notable changes worth investigating | Medium (3) |
-| `low` | Minor events or informational signals | Low (4) |
+| Severity   | Description                                          | Priority Mapping |
+| ---------- | ---------------------------------------------------- | ---------------- |
+| `critical` | System-breaking events requiring immediate attention | Urgent (1)       |
+| `high`     | Significant degradation or important events          | High (2)         |
+| `medium`   | Notable changes worth investigating                  | Medium (3)       |
+| `low`      | Minor events or informational signals                | Low (4)          |
 
 Severity is set by the signal source. Webhook handlers derive severity from the source system's own severity levels (for example, Sentry error levels). Manual signals can specify severity explicitly.
 

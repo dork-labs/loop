@@ -28,16 +28,16 @@ If the header is missing or the signature does not match, Loop responds with `40
 
 Loop maps GitHub event types to severity levels:
 
-| GitHub Event | Severity |
-|---|---|
-| `security_advisory` | `critical` |
-| `code_scanning_alert` | `critical` |
-| `dependabot_alert` | `high` |
-| `issues` | `medium` |
-| `pull_request` | `low` |
-| `push` | `low` |
-| `issue_comment` | `low` |
-| Other events | `medium` (default) |
+| GitHub Event          | Severity           |
+| --------------------- | ------------------ |
+| `security_advisory`   | `critical`         |
+| `code_scanning_alert` | `critical`         |
+| `dependabot_alert`    | `high`             |
+| `issues`              | `medium`           |
+| `pull_request`        | `low`              |
+| `push`                | `low`              |
+| `issue_comment`       | `low`              |
+| Other events          | `medium` (default) |
 
 ## What Gets Created
 
@@ -62,6 +62,7 @@ openssl rand -hex 32
 ```
 
 Save this value -- you will need it for both GitHub and your Loop environment.
+
 </Step>
 
 <Step>
@@ -74,6 +75,7 @@ GITHUB_WEBHOOK_SECRET=your_generated_secret_here
 ```
 
 This variable must be available to the Loop API process at runtime.
+
 </Step>
 
 <Step>
@@ -88,12 +90,13 @@ This variable must be available to the Loop API process at runtime.
 4. Set **Secret** to the same value you used for `GITHUB_WEBHOOK_SECRET`.
 5. Choose which events to send. Recommended: **Send me everything** or select specific events like `push`, `pull_request`, `issues`, `security_advisory`, `code_scanning_alert`, and `dependabot_alert`.
 6. Ensure **Active** is checked and click **Add webhook**.
-</Step>
+   </Step>
 
 <Step>
 ### Verify the connection
 
 GitHub sends a `ping` event when the webhook is first created. Check your Loop instance for a new signal with source `github`. You can also use the GitHub webhook **Recent Deliveries** tab to confirm a `2xx` response.
+
 </Step>
 
 </Steps>

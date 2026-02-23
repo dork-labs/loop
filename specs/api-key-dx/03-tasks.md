@@ -85,6 +85,7 @@ console.log(`  ${APP_ENV}`);
 **Key format:** `loop_` + 64-character lowercase hex string (256-bit entropy from `crypto.randomBytes(32)`).
 
 **Verification:**
+
 - Run `node scripts/generate-api-key.js` — generates key, writes to both `.env` files
 - Run again — prints skip message (idempotent)
 - Run with `--force` — generates new key even when one exists
@@ -157,6 +158,7 @@ And before:
 ```
 
 **Verification:**
+
 - `npm run generate-key` works from repo root
 - `npm run generate-key -- --force` passes the force flag through
 - `npm run setup` (full flow) generates a key after copying env files
@@ -203,6 +205,7 @@ VITE_LOOP_API_KEY=loop-dev-api-key-insecure
 ```
 
 **Verification:**
+
 - Comments in both files mention `npm run generate-key`
 - Default dev key value `loop-dev-api-key-insecure` is preserved (non-prefixed intentionally)
 
@@ -224,47 +227,43 @@ Add the `ENV_HINTS` constant after the schema definition (after line 13, before 
 const ENV_HINTS: Record<string, string> = {
   LOOP_API_KEY: [
     'Generate one with:',
-    '  node -e "console.log(\'loop_\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+    "  node -e \"console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))\"",
     'Or run: npm run setup',
   ].join('\n'),
   DATABASE_URL: 'Run: npm run db:dev:up (starts local PostgreSQL)',
-}
+};
 ```
 
 Then update the error handler in the `else` branch (currently lines 37-44). Replace:
 
 ```ts
-  const result = apiEnvSchema.safeParse(process.env)
+const result = apiEnvSchema.safeParse(process.env);
 
-  if (!result.success) {
-    console.error('\n  Missing or invalid environment variables:\n')
-    result.error.issues.forEach((i) =>
-      console.error(`  - ${i.path.join('.')}: ${i.message}`)
-    )
-    console.error('\n  Copy apps/api/.env.example to apps/api/.env\n')
-    process.exit(1)
-  }
+if (!result.success) {
+  console.error('\n  Missing or invalid environment variables:\n');
+  result.error.issues.forEach((i) => console.error(`  - ${i.path.join('.')}: ${i.message}`));
+  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n');
+  process.exit(1);
+}
 ```
 
 With:
 
 ```ts
-  const result = apiEnvSchema.safeParse(process.env)
+const result = apiEnvSchema.safeParse(process.env);
 
-  if (!result.success) {
-    console.error('\n  Missing or invalid environment variables:\n')
-    result.error.issues.forEach((i) =>
-      console.error(`  - ${i.path.join('.')}: ${i.message}`)
-    )
-    for (const issue of result.error.issues) {
-      const key = issue.path[0]
-      if (typeof key === 'string' && ENV_HINTS[key]) {
-        console.error(`\n  Hint for ${key}:\n  ${ENV_HINTS[key]}`)
-      }
+if (!result.success) {
+  console.error('\n  Missing or invalid environment variables:\n');
+  result.error.issues.forEach((i) => console.error(`  - ${i.path.join('.')}: ${i.message}`));
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (typeof key === 'string' && ENV_HINTS[key]) {
+      console.error(`\n  Hint for ${key}:\n  ${ENV_HINTS[key]}`);
     }
-    console.error('\n  Copy apps/api/.env.example to apps/api/.env\n')
-    process.exit(1)
   }
+  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n');
+  process.exit(1);
+}
 ```
 
 Also update the test defaults (line 26) from `'test-api-key'` to `'loop_test-api-key'`:
@@ -274,6 +273,7 @@ Also update the test defaults (line 26) from `'test-api-key'` to `'loop_test-api
 ```
 
 **Verification:**
+
 - Delete `LOOP_API_KEY` from `.env`, start API — see hint with generation command
 - Delete `DATABASE_URL` from `.env`, start API — see hint about `db:dev:up`
 - Existing env.test.ts tests still pass (schema validation unchanged)
@@ -291,43 +291,44 @@ Also update the test defaults (line 26) from `'test-api-key'` to `'loop_test-api
 Add the `ENV_HINTS` constant after the schema definition (after line 6) and update the error handler. The full file should become:
 
 ```ts
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const appEnvSchema = z.object({
   VITE_API_URL: z.string().url().default('http://localhost:5667'),
   VITE_LOOP_API_KEY: z.string().min(1),
-})
+});
 
 const ENV_HINTS: Record<string, string> = {
   VITE_LOOP_API_KEY: [
     'Generate one with:',
-    '  node -e "console.log(\'loop_\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+    "  node -e \"console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))\"",
     'Or run: npm run setup',
   ].join('\n'),
-}
+};
 
-const result = appEnvSchema.safeParse(import.meta.env)
+const result = appEnvSchema.safeParse(import.meta.env);
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
+  console.error('\n  Missing or invalid environment variables:\n');
   result.error.issues.forEach((i: z.ZodIssue) =>
     console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
+  );
   for (const issue of result.error.issues) {
-    const key = issue.path[0]
+    const key = issue.path[0];
     if (typeof key === 'string' && ENV_HINTS[key]) {
-      console.error(`\n  Hint for ${key}:\n  ${ENV_HINTS[key]}`)
+      console.error(`\n  Hint for ${key}:\n  ${ENV_HINTS[key]}`);
     }
   }
-  console.error('\n  Copy apps/app/.env.example to apps/app/.env\n')
-  throw new Error('Invalid environment variables')
+  console.error('\n  Copy apps/app/.env.example to apps/app/.env\n');
+  throw new Error('Invalid environment variables');
 }
 
-export const env = result.data
-export type Env = z.infer<typeof appEnvSchema>
+export const env = result.data;
+export type Env = z.infer<typeof appEnvSchema>;
 ```
 
 **Verification:**
+
 - Delete `VITE_LOOP_API_KEY` from app `.env`, start app — see hint with generation command
 - Normal startup with valid env — no changes in behavior
 
@@ -335,8 +336,8 @@ export type Env = z.infer<typeof appEnvSchema>
 
 ### Task 2.3: Fix FTUE masking in `setup-checklist.tsx`
 
-**Subject:** [api-key-dx] [P2] Fix FTUE key masking to show loop_ prefix (slice 0-5)
-**Active Form:** Fixing FTUE key masking to show loop_ prefix
+**Subject:** [api-key-dx] [P2] Fix FTUE key masking to show loop* prefix (slice 0-5)
+**Active Form:** Fixing FTUE key masking to show loop* prefix
 **Depends on:** Task 1.1
 
 **File:** `apps/app/src/components/setup-checklist.tsx`
@@ -344,18 +345,19 @@ export type Env = z.infer<typeof appEnvSchema>
 Change line 24 from:
 
 ```ts
-  const maskedKey = `${apiKey.slice(0, 3)}${'•'.repeat(Math.max(apiKey.length - 3, 8))}`
+const maskedKey = `${apiKey.slice(0, 3)}${'•'.repeat(Math.max(apiKey.length - 3, 8))}`;
 ```
 
 To:
 
 ```ts
-  const maskedKey = `${apiKey.slice(0, 5)}${'•'.repeat(Math.max(apiKey.length - 5, 8))}`
+const maskedKey = `${apiKey.slice(0, 5)}${'•'.repeat(Math.max(apiKey.length - 5, 8))}`;
 ```
 
 This changes the masking from showing 3 characters (`loo•••`) to 5 characters (`loop_•••`), which preserves the `loop_` prefix visibility. For the non-prefixed dev key `loop-dev-api-key-insecure`, it shows `loop-•••` which is also acceptable.
 
 **Verification:**
+
 - With a `loop_`-prefixed key, FTUE displays `loop_•••••••••`
 - With dev key `loop-dev-api-key-insecure`, FTUE displays `loop-•••••••••`
 - Toggle show/hide key still works correctly
@@ -366,8 +368,8 @@ This changes the masking from showing 3 characters (`loo•••`) to 5 charact
 
 ### Task 3.1: Update `docs/self-hosting/environment.mdx`
 
-**Subject:** [api-key-dx] [P3] Update environment docs to use loop_ prefix instead of tok_
-**Active Form:** Updating environment docs to use loop_ prefix instead of tok_
+**Subject:** [api-key-dx] [P3] Update environment docs to use loop* prefix instead of tok*
+**Active Form:** Updating environment docs to use loop* prefix instead of tok*
 **Depends on:** Task 1.1
 
 **File:** `docs/self-hosting/environment.mdx`
@@ -383,6 +385,7 @@ Make these replacements throughout the file:
    - To: `node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"`
 
 3. After the Node.js generation command (line 63), add a new line:
+
    ```bash
    # Or use the built-in script
    npm run generate-key
@@ -401,6 +404,7 @@ Make these replacements throughout the file:
    - To: `VITE_LOOP_API_KEY=loop_your_secret_key_here`
 
 **Verification:**
+
 - No remaining `tok_` references in the file
 - All examples show `loop_` prefix
 - `npm run generate-key` command is documented
@@ -418,13 +422,15 @@ Update the following files:
 **1. `apps/api/src/__tests__/setup.ts` (line 12)**
 
 From:
+
 ```ts
-process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'test-api-key'
+process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'test-api-key';
 ```
 
 To:
+
 ```ts
-process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'loop_test-api-key'
+process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'loop_test-api-key';
 ```
 
 **2. `apps/api/src/__tests__/env.test.ts`**
@@ -444,83 +450,97 @@ LOOP_API_KEY: 'loop_test-key',
 **3. `apps/api/src/__tests__/signals.test.ts` (line 12)**
 
 From:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer test-api-key' };
 ```
 
 To:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' };
 ```
 
 **4. `apps/api/src/__tests__/issues.test.ts` (line 9)**
 
 From:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer test-api-key' };
 ```
 
 To:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' };
 ```
 
 **5. `apps/api/src/__tests__/goals.test.ts` (line 7)**
 
 From:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer test-api-key' };
 ```
 
 To:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' };
 ```
 
 **6. `apps/api/src/__tests__/dispatch.test.ts` (line 19)**
 
 From:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer test-api-key' };
 ```
 
 To:
+
 ```ts
-const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' }
+const AUTH_HEADER = { Authorization: 'Bearer loop_test-api-key' };
 ```
 
 **7. `apps/api/src/__tests__/relations.test.ts` (line 10)**
 
 From:
+
 ```ts
-const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'test-api-key'}` }
+const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'test-api-key'}` };
 ```
 
 To:
+
 ```ts
-const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'loop_test-api-key'}` }
+const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'loop_test-api-key'}` };
 ```
 
 **8. `apps/api/src/__tests__/comments.test.ts` (line 9)**
 
 From:
+
 ```ts
-const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'test-api-key'}` }
+const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'test-api-key'}` };
 ```
 
 To:
+
 ```ts
-const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'loop_test-api-key'}` }
+const AUTH = { Authorization: `Bearer ${process.env.LOOP_API_KEY ?? 'loop_test-api-key'}` };
 ```
 
 **9. `apps/api/src/env.ts` (line 26) — test default**
 
 From:
+
 ```ts
     LOOP_API_KEY: 'test-api-key',
 ```
 
 To:
+
 ```ts
     LOOP_API_KEY: 'loop_test-api-key',
 ```
@@ -528,6 +548,7 @@ To:
 Note: This change is also listed in Task 2.1. If Task 2.1 is completed first, this line will already be updated.
 
 **Verification:**
+
 - Run `npm test` — all tests pass with the updated key format
 - `grep -r "test-api-key" apps/` returns no matches (only spec/research files may reference the old format)
 
@@ -544,6 +565,7 @@ Note: This change is also listed in Task 2.1. If Task 2.1 is completed first, th
 Run the following verification steps:
 
 **Automated:**
+
 ```bash
 npm test                 # All tests pass
 npm run typecheck        # No type errors
@@ -551,6 +573,7 @@ npm run lint             # No lint errors
 ```
 
 **Manual verification checklist:**
+
 - [ ] Fresh clone simulation: delete both `.env` files, run `npm run setup` — both files have matching `loop_`-prefixed key
 - [ ] `npm run dev` — no env validation errors
 - [ ] Delete `LOOP_API_KEY` from API `.env` → restart → see actionable error with generation command and hint
@@ -586,10 +609,10 @@ Task 1.1 (generate-api-key.js)
 
 ## Summary
 
-| Phase | Tasks | Description |
-|-------|-------|-------------|
-| P1    | 3     | Core key generation script, npm integration, env examples |
-| P2    | 3     | Actionable error messages (API + App env.ts) and FTUE masking fix |
-| P3    | 2     | Documentation and test file consistency |
-| P4    | 1     | Full verification |
-| **Total** | **9** | |
+| Phase     | Tasks | Description                                                       |
+| --------- | ----- | ----------------------------------------------------------------- |
+| P1        | 3     | Core key generation script, npm integration, env examples         |
+| P2        | 3     | Actionable error messages (API + App env.ts) and FTUE masking fix |
+| P3        | 2     | Documentation and test file consistency                           |
+| P4        | 1     | Full verification                                                 |
+| **Total** | **9** |                                                                   |

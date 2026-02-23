@@ -1,4 +1,5 @@
 # Loop Developer Onboarding Research
+
 **Date:** 2026-02-22
 **Research Mode:** Deep Research
 **Objective:** How developer tools onboard non-technical and semi-technical users, and what this means for Loop's integration strategy across Cursor, Claude Code, and vibe-coding contexts.
@@ -50,6 +51,7 @@ The `npx create-*` pattern has become the universal expectation for developer to
 **create-next-app** is the template everyone mentally compares against: single command, interactive prompts, instant working app.
 
 The key technical pattern (from Stream's engineering blog) is straightforward:
+
 - Use Node's `readline` or an equivalent library (`enquirer`, `prompts`) for interactive prompts
 - Write to `.env.local` via `fs.appendFileSync`
 - Use find-and-replace to inject values into template files
@@ -60,12 +62,14 @@ The key technical pattern (from Stream's engineering blog) is straightforward:
 The divide is sharp:
 
 **For non-technical and semi-technical users:**
+
 - Interactive wizards that ask one question at a time dramatically outperform documentation
 - Twilio's onboarding redesign (2024-2025) showed 62% improvement in first activation and 33% improvement in production launches by embedding code samples and test environments directly in the onboarding flow — no tab switching required
 - Clerk's Vercel one-click deployment eliminates the `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` copy-paste step entirely: environment variables are synced automatically
 - Supabase on the Vercel Marketplace achieved "zero loss in fidelity" by auto-syncing all env vars to connected Vercel projects
 
 **For technical developers:**
+
 - Copy-paste quickstarts with framework-specific tabs are preferred
 - Engineers want to see exactly what is happening and verify it themselves
 - The "copy this to your .env" pattern is acceptable and expected
@@ -90,6 +94,7 @@ A new category of integration artifact has emerged that sits alongside tradition
 Based on current patterns:
 
 **Cursor user integrating a new tool today:**
+
 1. Finds the tool's docs
 2. Copies install command, runs it
 3. Copies API key from dashboard, pastes into `.env`
@@ -97,11 +102,13 @@ Based on current patterns:
 5. Asks Cursor to "integrate this" and watches it work
 
 **Claude Code user integrating a new tool today:**
+
 1. May add an MCP server via `claude mcp add --transport http tool-name https://api.tool.com/mcp`
 2. Or adds context about the tool to `CLAUDE.md` manually
 3. Asks Claude Code to implement the integration using the docs they paste in
 
 **The minimum steps that genuinely cannot be automated:**
+
 - Creating an account on the external service (requires a browser and email)
 - Generating and copying an API key (security requirement)
 - Confirming what project/environment the user wants to connect
@@ -111,18 +118,21 @@ Everything else — env file creation, config file updates, CLAUDE.md snippets, 
 ### 7. Copy-Paste vs. Automated Setup: When Each Is Appropriate
 
 **"Copy this code" is appropriate when:**
+
 - The user needs to understand what they are adding (auth flows, webhook handlers)
 - The integration requires meaningful customization per-use-case
 - The code lives inside application logic (not just config)
 - The audience is developers who want control
 
 **"Run this command" is appropriate when:**
+
 - The setup is purely configuration (API keys, env vars, config files)
 - The steps are identical for every user
 - The audience includes non-developers or developers who want speed
 - The output can be verified automatically ("API key validated" confirmation)
 
 **The gold standard combination (Clerk on Vercel):**
+
 1. Single click to initiate setup from a marketplace or dashboard
 2. OAuth flow to authorize integration (no manual credential copying)
 3. Automatic env var sync (zero "copy to .env" steps)
@@ -147,6 +157,7 @@ Based on the research, Loop should produce three distinct integration artifacts:
 **1. `npx @loop/init` — The One-Command Setup CLI**
 
 A Node.js CLI that:
+
 - Prompts for the Loop API key (with a URL directing to where to generate it)
 - Optionally prompts for the project slug/ID
 - Writes `LOOP_API_KEY` and `LOOP_API_URL` to `.env.local` (or `.env`)
@@ -159,6 +170,7 @@ This handles the developer-adjacent audience. They run one command and Loop is w
 **2. `loop.mdc` / Cursor Rules File — The AI Context Layer**
 
 A distributable cursor rules file that encodes:
+
 - What Loop is and when to use it
 - How to call the Loop API (endpoint patterns, auth header format)
 - How to create issues (required fields, status values, type values)
@@ -170,6 +182,7 @@ This file should be published to cursor.directory and the awesome-cursorrules re
 **3. `/llms.txt` — The AI-Optimized Documentation Endpoint**
 
 A markdown document at `api.looped.me/llms.txt` (and `looped.me/llms.txt`) that provides:
+
 - A concise description of what Loop is
 - The complete API surface with request/response examples
 - Authentication instructions
@@ -214,6 +227,7 @@ $ npx @loop/init
 ```
 
 This is achievable with ~200 lines of Node.js. The key UX decisions:
+
 - Validate the API key immediately and show which organization it belongs to (trust signal)
 - Show exactly what files are being written before writing them
 - Provide the dashboard URL at the end so the user can verify the connection
@@ -236,6 +250,7 @@ The Clerk + Vercel integration is the gold standard for zero-friction setup amon
 3. **One-click template deployment**: A GitHub repository with the integration pre-wired can be deployed to a live URL in one click.
 
 For Loop, the equivalent would be:
+
 - A Vercel marketplace integration that auto-syncs `LOOP_API_KEY` to Vercel projects
 - A GitHub App that can post signals on push/PR events without manual webhook configuration
 - Potentially, a "Deploy to Vercel with Loop" button on the marketing site
@@ -247,6 +262,7 @@ Twilio's 62% activation improvement and 33% production launch improvement came f
 The mental model is: **time-to-first-successful-API-call** is the only metric that matters in developer onboarding. Everything in the onboarding experience should be measured by whether it reduces or increases this time.
 
 For Loop, the first successful API call is either:
+
 - A signal being ingested (the webhook case)
 - An issue being created (the manual case)
 - An agent retrieving the next priority item (the autonomous agent case)
@@ -270,6 +286,7 @@ Add a `/llms.txt` route to `api.looped.me` (and `looped.me`) that returns a well
 ### Priority 3: Distributable Cursor Rules + CLAUDE.md Snippet
 
 Create a `loop.mdc` cursor rules file and an example `CLAUDE.md` block. Publish them to:
+
 - cursor.directory
 - The awesome-cursorrules GitHub repository
 - Loop's own documentation, with a one-click copy button
@@ -279,6 +296,7 @@ The CLAUDE.md block should be auto-appended by `npx @loop/init`, but also availa
 ### Priority 4: MCP Server
 
 Consider building a Loop MCP server that Claude Code and Cursor can connect to via `claude mcp add --transport http loop https://api.looped.me/mcp`. This would allow agents to:
+
 - Fetch the next priority issue
 - Create issues and signals
 - Update issue status
@@ -296,6 +314,7 @@ Longer-term: a Vercel marketplace integration that auto-syncs `LOOP_API_KEY` and
 For true non-technical users (Lovable/Bolt.new audience), none of the above will work. They cannot run `npx`. They cannot edit `.env` files. They will not configure a webhook.
 
 The path to this audience requires:
+
 - A hosted Loop instance (already the case with `app.looped.me`) where setup is entirely in-browser
 - A Lovable or Bolt.new integration that can be enabled by clicking a button in those platforms' settings
 - A no-code webhook URL that can be pasted into Lovable/Supabase/Vercel without understanding what a webhook is

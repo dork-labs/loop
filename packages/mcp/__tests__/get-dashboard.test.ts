@@ -1,11 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest';
 
-import { registerGetDashboard } from '../src/tools/get-dashboard.js'
-import type { ApiClient } from '../src/types.js'
+import { registerGetDashboard } from '../src/tools/get-dashboard.js';
+import type { ApiClient } from '../src/types.js';
 
 /** Create a mock McpServer that captures the tool handler. */
 function createMockServer() {
-  let handler: (args: Record<string, unknown>) => Promise<unknown>
+  let handler: (args: Record<string, unknown>) => Promise<unknown>;
 
   return {
     tool: vi.fn(
@@ -14,13 +14,13 @@ function createMockServer() {
         _description: string,
         _schema: unknown,
         _annotations: unknown,
-        fn: (args: Record<string, unknown>) => Promise<unknown>,
+        fn: (args: Record<string, unknown>) => Promise<unknown>
       ) => {
-        handler = fn
-      },
+        handler = fn;
+      }
     ),
     getHandler: () => handler,
-  }
+  };
 }
 
 describe('registerGetDashboard', () => {
@@ -40,13 +40,13 @@ describe('registerGetDashboard', () => {
       activeCount: 3,
       completedLast24h: 7,
     },
-  }
+  };
 
   it('registers the tool with correct name and read-only annotations', () => {
-    const server = createMockServer()
-    const client = {} as ApiClient
+    const server = createMockServer();
+    const client = {} as ApiClient;
 
-    registerGetDashboard(server as never, client)
+    registerGetDashboard(server as never, client);
 
     expect(server.tool).toHaveBeenCalledWith(
       'loop_get_dashboard',
@@ -56,30 +56,30 @@ describe('registerGetDashboard', () => {
         readOnlyHint: true,
         idempotentHint: true,
       }),
-      expect.any(Function),
-    )
-  })
+      expect.any(Function)
+    );
+  });
 
   it('returns dashboard stats from the API', async () => {
-    const server = createMockServer()
-    const jsonFn = vi.fn().mockResolvedValue({ data: mockStats })
-    const getFn = vi.fn().mockReturnValue({ json: jsonFn })
-    const client = { get: getFn } as unknown as ApiClient
+    const server = createMockServer();
+    const jsonFn = vi.fn().mockResolvedValue({ data: mockStats });
+    const getFn = vi.fn().mockReturnValue({ json: jsonFn });
+    const client = { get: getFn } as unknown as ApiClient;
 
-    registerGetDashboard(server as never, client)
-    const handler = server.getHandler()
+    registerGetDashboard(server as never, client);
+    const handler = server.getHandler();
     const result = (await handler({})) as {
-      content: Array<{ type: string; text: string }>
-      isError?: boolean
-    }
+      content: Array<{ type: string; text: string }>;
+      isError?: boolean;
+    };
 
-    expect(getFn).toHaveBeenCalledWith('api/dashboard/stats')
-    expect(result.isError).toBeUndefined()
+    expect(getFn).toHaveBeenCalledWith('api/dashboard/stats');
+    expect(result.isError).toBeUndefined();
 
-    const parsed = JSON.parse(result.content[0].text)
-    expect(parsed.issues.total).toBe(42)
-    expect(parsed.goals.active).toBe(4)
-    expect(parsed.dispatch.queueDepth).toBe(12)
-    expect(parsed).toEqual(mockStats)
-  })
-})
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.issues.total).toBe(42);
+    expect(parsed.goals.active).toBe(4);
+    expect(parsed.dispatch.queueDepth).toBe(12);
+    expect(parsed).toEqual(mockStats);
+  });
+});

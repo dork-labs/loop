@@ -1,7 +1,7 @@
-import { z } from 'zod'
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import type { ApiClient } from '../types.js'
-import { handleToolCall } from './error-handler.js'
+import { z } from 'zod';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { ApiClient } from '../types.js';
+import { handleToolCall } from './error-handler.js';
 
 /**
  * Register the `loop_get_issue` tool on the MCP server.
@@ -9,10 +9,7 @@ import { handleToolCall } from './error-handler.js'
  * @param server - The MCP server to register the tool on
  * @param client - Authenticated API client for Loop
  */
-export function registerGetIssue(
-  server: McpServer,
-  client: ApiClient,
-): void {
+export function registerGetIssue(server: McpServer, client: ApiClient): void {
   server.tool(
     'loop_get_issue',
     'Get full details of a single issue by ID, including labels, comments, and relations.',
@@ -27,7 +24,7 @@ export function registerGetIssue(
       return handleToolCall(async () => {
         const res = await client
           .get(`api/issues/${issueId}`)
-          .json<{ data: Record<string, unknown> }>()
+          .json<{ data: Record<string, unknown> }>();
 
         return {
           content: [
@@ -36,8 +33,8 @@ export function registerGetIssue(
               text: JSON.stringify(res.data, null, 2),
             },
           ],
-        }
-      })
-    },
-  )
+        };
+      });
+    }
+  );
 }

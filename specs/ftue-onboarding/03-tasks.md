@@ -11,10 +11,12 @@ created: 2026-02-22
 ### Task 1.1 — Install shadcn/ui Dialog, Tabs, and canvas-confetti dependencies
 
 Install the required dependencies that don't exist in the project yet:
+
 - `npx shadcn@latest add dialog tabs` in `apps/app/`
 - `npm install canvas-confetti` and `npm install -D @types/canvas-confetti` in `apps/app/`
 
 **Acceptance criteria:**
+
 - `apps/app/src/components/ui/dialog.tsx` exists
 - `apps/app/src/components/ui/tabs.tsx` exists
 - `canvas-confetti` is in `apps/app/package.json` dependencies
@@ -26,50 +28,50 @@ Install the required dependencies that don't exist in the project yet:
 Create `apps/app/src/hooks/use-onboarding.ts` with the following implementation:
 
 ```typescript
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react';
 
-const STORAGE_KEY = 'loop:onboarding'
+const STORAGE_KEY = 'loop:onboarding';
 
 interface OnboardingState {
-  welcomed: boolean
-  completedAt: string | null
+  welcomed: boolean;
+  completedAt: string | null;
 }
 
 interface UseOnboardingReturn {
-  state: OnboardingState
+  state: OnboardingState;
   /** True when user has been welcomed but hasn't received first issue yet. */
-  isOnboarding: boolean
+  isOnboarding: boolean;
   /** Mark the welcome modal as dismissed. */
-  markWelcomed: () => void
+  markWelcomed: () => void;
   /** Mark onboarding as complete with current timestamp. */
-  markComplete: () => void
+  markComplete: () => void;
 }
 
-const DEFAULT_STATE: OnboardingState = { welcomed: false, completedAt: null }
+const DEFAULT_STATE: OnboardingState = { welcomed: false, completedAt: null };
 
 function getState(): OnboardingState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return DEFAULT_STATE
-    const parsed = JSON.parse(raw) as Partial<OnboardingState>
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_STATE;
+    const parsed = JSON.parse(raw) as Partial<OnboardingState>;
     return {
       welcomed: parsed.welcomed === true,
       completedAt: typeof parsed.completedAt === 'string' ? parsed.completedAt : null,
-    }
+    };
   } catch {
-    return DEFAULT_STATE
+    return DEFAULT_STATE;
   }
 }
 
 function setState(next: OnboardingState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   // Dispatch storage event so useSyncExternalStore picks up the change
-  window.dispatchEvent(new Event('onboarding-change'))
+  window.dispatchEvent(new Event('onboarding-change'));
 }
 
 function subscribe(callback: () => void): () => void {
-  window.addEventListener('onboarding-change', callback)
-  return () => window.removeEventListener('onboarding-change', callback)
+  window.addEventListener('onboarding-change', callback);
+  return () => window.removeEventListener('onboarding-change', callback);
 }
 
 /**
@@ -78,23 +80,24 @@ function subscribe(callback: () => void): () => void {
  * @param issueCount - Current number of issues (0 means still onboarding)
  */
 export function useOnboarding(issueCount: number): UseOnboardingReturn {
-  const state = useSyncExternalStore(subscribe, getState, () => DEFAULT_STATE)
+  const state = useSyncExternalStore(subscribe, getState, () => DEFAULT_STATE);
 
-  const isOnboarding = state.welcomed && !state.completedAt && issueCount === 0
+  const isOnboarding = state.welcomed && !state.completedAt && issueCount === 0;
 
   const markWelcomed = useCallback(() => {
-    setState({ ...getState(), welcomed: true })
-  }, [])
+    setState({ ...getState(), welcomed: true });
+  }, []);
 
   const markComplete = useCallback(() => {
-    setState({ ...getState(), completedAt: new Date().toISOString() })
-  }, [])
+    setState({ ...getState(), completedAt: new Date().toISOString() });
+  }, []);
 
-  return { state, isOnboarding, markWelcomed, markComplete }
+  return { state, isOnboarding, markWelcomed, markComplete };
 }
 ```
 
 **Key behaviors:**
+
 - Reads/writes localStorage key `loop:onboarding`
 - `isOnboarding` is true when: `welcomed === true` AND `completedAt === null` AND `issueCount === 0`
 - Uses `useSyncExternalStore` for reactivity without `useState`
@@ -102,6 +105,7 @@ export function useOnboarding(issueCount: number): UseOnboardingReturn {
 - Steps 1-3 completion is tracked in component-local state, not here
 
 **Acceptance criteria:**
+
 - Hook reads from localStorage on mount
 - `markWelcomed()` sets `welcomed: true`
 - `markComplete()` sets `completedAt` to ISO timestamp
@@ -170,12 +174,14 @@ export function WelcomeModal({ open, onClose }: WelcomeModalProps) {
 ```
 
 **Design notes:**
+
 - Non-dismissible via backdrop click or Escape (user must click CTA)
 - Uses shadcn/ui Dialog with `onPointerDownOutside` and `onEscapeKeyDown` preventDefault
 - Centered content with icon, heading, description, and full-width CTA button
 - `max-w-md` container
 
 **Acceptance criteria:**
+
 - Renders when `open={true}`, hidden when `open={false}`
 - Cannot be dismissed by clicking outside or pressing Escape
 - Calls `onClose` when "Get Started" is clicked
@@ -296,6 +302,7 @@ export function SetupCodeSnippet({ apiUrl, apiKey, onCopy }: SetupCodeSnippetPro
 ```
 
 **Design notes:**
+
 - Uses shadcn/ui Tabs with 3 tabs: curl, JavaScript, Python
 - Injects real `apiUrl` and `apiKey` (from env vars) into snippets
 - Copy button in top-right corner, shows checkmark for 2 seconds after copy
@@ -303,6 +310,7 @@ export function SetupCodeSnippet({ apiUrl, apiKey, onCopy }: SetupCodeSnippetPro
 - Calls optional `onCopy` callback (used by checklist to mark step complete)
 
 **Acceptance criteria:**
+
 - All three tabs render with correct snippet content
 - API URL and key are injected into snippets (no placeholders)
 - Copy button calls `navigator.clipboard.writeText` with correct content
@@ -519,6 +527,7 @@ function SetupStep({ number, title, completed, children }: SetupStepProps) {
 ```
 
 **Key behaviors:**
+
 - 4 steps: API Endpoint (copy), API Key (copy with reveal/mask), Code Snippet (tabbed), Listening (animated spinner)
 - Steps 1-3 mark as complete independently when copy buttons are clicked (component-local state)
 - Step 4 auto-completes when `issueCount > 0`
@@ -529,6 +538,7 @@ function SetupStep({ number, title, completed, children }: SetupStepProps) {
 - Success state shows "Loop is connected!" with optional "View Issue" link
 
 **Acceptance criteria:**
+
 - All 4 steps render correctly
 - Copy buttons work and show checkmark feedback
 - API key mask/reveal toggle works
@@ -544,16 +554,18 @@ function SetupStep({ number, title, completed, children }: SetupStepProps) {
 Modify `apps/app/src/lib/queries/issues.ts` to accept an optional `polling` parameter:
 
 **Current code:**
+
 ```typescript
 export const issueListOptions = (filters: Record<string, string>) =>
   queryOptions({
     queryKey: queryKeys.issues.list(filters),
     queryFn: () => issuesApi.list(filters),
     staleTime: 30_000,
-  })
+  });
 ```
 
 **Updated code:**
+
 ```typescript
 /** Query options for the paginated/filtered issues list. */
 export const issueListOptions = (
@@ -566,19 +578,21 @@ export const issueListOptions = (
     staleTime: 30_000,
     refetchInterval: options?.polling
       ? (query) => {
-          const hasData = (query.state.data?.data?.length ?? 0) > 0
-          return hasData ? false : 3000
+          const hasData = (query.state.data?.data?.length ?? 0) > 0;
+          return hasData ? false : 3000;
         }
       : undefined,
-  })
+  });
 ```
 
 **Behavior:**
+
 - When `polling: true`, refetches every 3 seconds until data arrives
 - Stops polling (`false`) once `data.length > 0`
 - When `polling` is not provided or false, no `refetchInterval` (existing behavior unchanged)
 
 **Acceptance criteria:**
+
 - Existing callers (without `options`) are unaffected
 - When `polling: true`, query refetches every 3s until data appears
 - Polling stops when data arrives
@@ -589,6 +603,7 @@ export const issueListOptions = (
 Modify `apps/app/src/routes/_dashboard/issues/index.lazy.tsx` to conditionally render the FTUE checklist or data table.
 
 **Updated implementation:**
+
 ```typescript
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
@@ -697,6 +712,7 @@ function IssueListPage() {
 OR use a different approach: call `useOnboarding(0)` initially and update via effect. The simplest approach is to split: use `useOnboarding` with a ref or derive `isOnboarding` from query data directly.
 
 **Recommended hook order fix:**
+
 ```typescript
 function IssueListPage() {
   const search = Route.useSearch()
@@ -725,28 +741,28 @@ Actually, simpler: just pass the polling option inline since `issueListOptions` 
 
 ```typescript
 function IssueListPage() {
-  const search = Route.useSearch()
-  const filters = useMemo(() => { /* ... */ }, [search])
+  const search = Route.useSearch();
+  const filters = useMemo(() => {
+    /* ... */
+  }, [search]);
 
   // Read onboarding state directly (not from hook, to avoid circular dep)
   const onboardingState = useMemo(() => {
     try {
-      const raw = localStorage.getItem('loop:onboarding')
-      if (!raw) return { welcomed: false, completedAt: null }
-      return JSON.parse(raw) as { welcomed: boolean; completedAt: string | null }
+      const raw = localStorage.getItem('loop:onboarding');
+      if (!raw) return { welcomed: false, completedAt: null };
+      return JSON.parse(raw) as { welcomed: boolean; completedAt: string | null };
     } catch {
-      return { welcomed: false, completedAt: null }
+      return { welcomed: false, completedAt: null };
     }
-  }, [])
+  }, []);
 
-  const shouldPoll = !onboardingState.completedAt
+  const shouldPoll = !onboardingState.completedAt;
 
-  const { data, isFetching, error } = useQuery(
-    issueListOptions(filters, { polling: shouldPoll })
-  )
+  const { data, isFetching, error } = useQuery(issueListOptions(filters, { polling: shouldPoll }));
 
-  const issueCount = data?.data?.length ?? 0
-  const { state, isOnboarding, markWelcomed, markComplete } = useOnboarding(issueCount)
+  const issueCount = data?.data?.length ?? 0;
+  const { state, isOnboarding, markWelcomed, markComplete } = useOnboarding(issueCount);
 
   // ... rest of render
 }
@@ -755,6 +771,7 @@ function IssueListPage() {
 The implementer should resolve this hook ordering to ensure no Rules of Hooks violations. The key constraint is: `useOnboarding` needs `issueCount`, and `useQuery` needs `isOnboarding` for polling. Break the cycle by reading localStorage synchronously for the polling decision (since it only needs `completedAt`), and use the hook for reactive state.
 
 **Acceptance criteria:**
+
 - Welcome modal shows on first visit (no localStorage key)
 - After clicking "Get Started", setup checklist replaces the empty state
 - When issues exist, normal data table renders
@@ -768,6 +785,7 @@ The implementer should resolve this hook ordering to ensure no Rules of Hooks vi
 Modify `apps/app/src/components/issue-table/data-table.tsx` to remove the internal empty state rendering (lines 76-86 in the current file). The empty state is now handled at the page level in `issues/index.lazy.tsx`.
 
 **Remove this block from `IssueDataTable`:**
+
 ```typescript
   if (!isLoading && data.length === 0) {
     return (
@@ -785,6 +803,7 @@ Modify `apps/app/src/components/issue-table/data-table.tsx` to remove the intern
 Also remove the `Inbox` import from `lucide-react` if it's no longer used in this file.
 
 **Acceptance criteria:**
+
 - `IssueDataTable` no longer renders its own empty state
 - Empty state is handled by the parent page (`issues/index.lazy.tsx`)
 - `Inbox` import is removed from data-table.tsx
@@ -797,8 +816,9 @@ Also remove the `Inbox` import from `lucide-react` if it's no longer used in thi
 Modify `apps/app/src/routes/_dashboard/activity/index.lazy.tsx`.
 
 **Current empty state (lines 33-37):**
+
 ```tsx
-<div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-muted-foreground">
+<div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center gap-3 rounded-lg border py-20">
   <Activity className="size-12 opacity-30" />
   <p className="text-lg">No activity yet</p>
   <p className="text-sm">The loop is waiting for signals</p>
@@ -806,23 +826,26 @@ Modify `apps/app/src/routes/_dashboard/activity/index.lazy.tsx`.
 ```
 
 **Updated empty state:**
+
 ```tsx
-<div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-center text-muted-foreground">
+<div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center gap-3 rounded-lg border py-20 text-center">
   <Activity className="size-12 opacity-30" />
   <p className="text-lg">No activity yet</p>
   <p className="max-w-sm text-sm">
-    Activity shows the flow of signals through the loop. Once your agent starts
-    creating issues, you&apos;ll see the timeline here.
+    Activity shows the flow of signals through the loop. Once your agent starts creating issues,
+    you&apos;ll see the timeline here.
   </p>
 </div>
 ```
 
 **Changes:**
+
 - Added `text-center` to container
 - Added `max-w-sm` to description for readability
 - Updated description text to be more helpful and contextual
 
 **Acceptance criteria:**
+
 - Empty state shows updated copy
 - Visual layout remains consistent with other empty states
 - `npm run typecheck` passes
@@ -832,30 +855,34 @@ Modify `apps/app/src/routes/_dashboard/activity/index.lazy.tsx`.
 Modify `apps/app/src/routes/_dashboard/goals/index.lazy.tsx`.
 
 **Current empty state (lines 47-50):**
+
 ```tsx
-<div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-muted-foreground">
+<div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center gap-3 rounded-lg border py-20">
   <Target className="size-12 opacity-30" />
   <p className="text-lg">No goals defined yet</p>
 </div>
 ```
 
 **Updated empty state:**
+
 ```tsx
-<div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-center text-muted-foreground">
+<div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center gap-3 rounded-lg border py-20 text-center">
   <Target className="size-12 opacity-30" />
   <p className="text-lg">No goals defined yet</p>
   <p className="max-w-sm text-sm">
-    Goals track measurable outcomes for your projects. Create a project with a
-    goal to see progress here.
+    Goals track measurable outcomes for your projects. Create a project with a goal to see progress
+    here.
   </p>
 </div>
 ```
 
 **Changes:**
+
 - Added `text-center` to container
 - Added description paragraph explaining what goals are and how to get started
 
 **Acceptance criteria:**
+
 - Empty state shows heading + new description
 - `npm run typecheck` passes
 
@@ -864,33 +891,35 @@ Modify `apps/app/src/routes/_dashboard/goals/index.lazy.tsx`.
 Modify `apps/app/src/routes/_dashboard/prompts/index.lazy.tsx`.
 
 **Current empty state (lines 44-50):**
+
 ```tsx
-<div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-muted-foreground">
+<div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center gap-3 rounded-lg border py-20">
   <Sparkles className="size-12 opacity-30" />
   <p className="text-lg">No prompt templates yet</p>
-  <p className="text-sm">
-    Templates are created when the dispatch engine first runs
-  </p>
+  <p className="text-sm">Templates are created when the dispatch engine first runs</p>
 </div>
 ```
 
 **Updated empty state:**
+
 ```tsx
-<div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-20 text-center text-muted-foreground">
+<div className="border-border bg-card text-muted-foreground flex flex-col items-center justify-center gap-3 rounded-lg border py-20 text-center">
   <Sparkles className="size-12 opacity-30" />
   <p className="text-lg">No prompt templates yet</p>
   <p className="max-w-sm text-sm">
-    Prompt templates tell your AI agent what to do. They&apos;re created when
-    the dispatch engine runs for the first time.
+    Prompt templates tell your AI agent what to do. They&apos;re created when the dispatch engine
+    runs for the first time.
   </p>
 </div>
 ```
 
 **Changes:**
+
 - Added `text-center` and `max-w-sm` for consistency
 - Updated description text to be warmer and more explanatory
 
 **Acceptance criteria:**
+
 - Empty state shows updated copy
 - `npm run typecheck` passes
 
@@ -901,70 +930,74 @@ Modify `apps/app/src/routes/_dashboard/prompts/index.lazy.tsx`.
 Create `apps/app/src/__tests__/hooks/use-onboarding.test.ts`:
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
-import { useOnboarding } from '@/hooks/use-onboarding'
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useOnboarding } from '@/hooks/use-onboarding';
 
 describe('useOnboarding', () => {
   beforeEach(() => {
-    localStorage.clear()
-  })
+    localStorage.clear();
+  });
 
   it('returns default state when localStorage is empty', () => {
-    const { result } = renderHook(() => useOnboarding(0))
-    expect(result.current.state).toEqual({ welcomed: false, completedAt: null })
-  })
+    const { result } = renderHook(() => useOnboarding(0));
+    expect(result.current.state).toEqual({ welcomed: false, completedAt: null });
+  });
 
   it('returns stored state when localStorage has data', () => {
-    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }))
-    const { result } = renderHook(() => useOnboarding(0))
-    expect(result.current.state.welcomed).toBe(true)
-    expect(result.current.state.completedAt).toBeNull()
-  })
+    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }));
+    const { result } = renderHook(() => useOnboarding(0));
+    expect(result.current.state.welcomed).toBe(true);
+    expect(result.current.state.completedAt).toBeNull();
+  });
 
   it('markWelcomed sets welcomed to true', () => {
-    const { result } = renderHook(() => useOnboarding(0))
-    act(() => result.current.markWelcomed())
-    expect(result.current.state.welcomed).toBe(true)
-  })
+    const { result } = renderHook(() => useOnboarding(0));
+    act(() => result.current.markWelcomed());
+    expect(result.current.state.welcomed).toBe(true);
+  });
 
   it('markComplete sets completedAt to ISO string', () => {
-    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }))
-    const { result } = renderHook(() => useOnboarding(0))
-    act(() => result.current.markComplete())
-    expect(result.current.state.completedAt).toBeTruthy()
-    expect(() => new Date(result.current.state.completedAt!)).not.toThrow()
-  })
+    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }));
+    const { result } = renderHook(() => useOnboarding(0));
+    act(() => result.current.markComplete());
+    expect(result.current.state.completedAt).toBeTruthy();
+    expect(() => new Date(result.current.state.completedAt!)).not.toThrow();
+  });
 
   it('isOnboarding is true when welcomed and no completedAt and no issues', () => {
-    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }))
-    const { result } = renderHook(() => useOnboarding(0))
-    expect(result.current.isOnboarding).toBe(true)
-  })
+    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }));
+    const { result } = renderHook(() => useOnboarding(0));
+    expect(result.current.isOnboarding).toBe(true);
+  });
 
   it('isOnboarding is false when completedAt is set', () => {
-    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: '2026-01-01T00:00:00Z' }))
-    const { result } = renderHook(() => useOnboarding(0))
-    expect(result.current.isOnboarding).toBe(false)
-  })
+    localStorage.setItem(
+      'loop:onboarding',
+      JSON.stringify({ welcomed: true, completedAt: '2026-01-01T00:00:00Z' })
+    );
+    const { result } = renderHook(() => useOnboarding(0));
+    expect(result.current.isOnboarding).toBe(false);
+  });
 
   it('isOnboarding is false when issues exist', () => {
-    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }))
-    const { result } = renderHook(() => useOnboarding(5))
-    expect(result.current.isOnboarding).toBe(false)
-  })
+    localStorage.setItem('loop:onboarding', JSON.stringify({ welcomed: true, completedAt: null }));
+    const { result } = renderHook(() => useOnboarding(5));
+    expect(result.current.isOnboarding).toBe(false);
+  });
 
   it('handles malformed localStorage JSON gracefully', () => {
-    localStorage.setItem('loop:onboarding', 'not-json')
-    const { result } = renderHook(() => useOnboarding(0))
-    expect(result.current.state).toEqual({ welcomed: false, completedAt: null })
-  })
-})
+    localStorage.setItem('loop:onboarding', 'not-json');
+    const { result } = renderHook(() => useOnboarding(0));
+    expect(result.current.state).toEqual({ welcomed: false, completedAt: null });
+  });
+});
 ```
 
 **Dependencies:** `@testing-library/react` must be available (check if installed, add if needed).
 
 **Acceptance criteria:**
+
 - All 8 test cases pass
 - Covers default state, stored state, mutations, derived `isOnboarding`, and malformed JSON
 - `npx vitest run apps/app/src/__tests__/hooks/use-onboarding.test.ts` passes
@@ -1019,6 +1052,7 @@ describe('SetupCodeSnippet', () => {
 **Dependencies:** `@testing-library/react`, `@testing-library/jest-dom` (for `toBeInTheDocument`)
 
 **Acceptance criteria:**
+
 - All 4 test cases pass
 - Tests verify tab rendering, credential injection, clipboard copy, and tab switching
 - `npx vitest run apps/app/src/__tests__/components/setup-code-snippet.test.tsx` passes
@@ -1112,6 +1146,7 @@ describe('WelcomeModal', () => {
 ```
 
 **Acceptance criteria:**
+
 - All setup-checklist tests pass (4 steps render, spinner shows, onComplete fires)
 - All welcome-modal tests pass (open/close rendering, CTA callback)
 - `npx vitest run apps/app/src/__tests__/components/` passes

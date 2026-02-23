@@ -56,6 +56,7 @@ status: ideation
 **Current State:** The repo has been partially cleaned. Only `apps/web` remains as a functioning app. All other apps and packages have been deleted but their directories exist as empty folders.
 
 **Primary Components/Modules:**
+
 - `apps/web/` — Next.js 16 marketing site with Fumadocs docs, blog, and marketing pages. All content is DorkOS-branded.
 - `packages/` — Empty directories (cli/, shared/, test-utils/, typescript-config/)
 - `docs/` — Full MDX documentation tree, all DorkOS-focused
@@ -66,6 +67,7 @@ status: ideation
 - `research/` — Research artifacts (some DorkOS-specific, some reusable)
 
 **Shared Dependencies (Reusable):**
+
 - Turborepo build orchestration
 - ESLint 9 flat config + Prettier
 - Tailwind CSS 4 + shadcn/ui (new-york style)
@@ -74,6 +76,7 @@ status: ideation
 - `.claude/` automation (agents, commands, rules, skills)
 
 **DorkOS-Specific Items to Remove/Update:**
+
 - All `@dorkos/*` package references
 - `DORKOS_*` environment variables
 - DorkOS branding in README, CLAUDE.md, .env.example
@@ -84,6 +87,7 @@ status: ideation
 - ESLint/turbo/vitest configs referencing deleted apps
 
 **Potential Blast Radius:**
+
 - Config changes (turbo, eslint, vitest) affect the entire build pipeline
 - Package renaming touches every import statement
 - Marketing site content is a full rewrite
@@ -102,6 +106,7 @@ N/A — not a bug fix.
 ### Potential Solutions
 
 **1. Hono on Vercel (Recommended for API)**
+
 - Description: Use Hono framework for the Loop API, deployed as Vercel Functions with Fluid Compute
 - Pros:
   - Zero-config deployment on Vercel — export default and it works
@@ -116,6 +121,7 @@ N/A — not a bug fix.
 - Maintenance: Low
 
 **2. Express on Vercel**
+
 - Description: Keep Express from DorkOS, deploy on Vercel
 - Pros:
   - Familiar, large ecosystem
@@ -128,6 +134,7 @@ N/A — not a bug fix.
 - Maintenance: Medium
 
 **3. Split Hosting: Vercel (marketing) + Railway (API)**
+
 - Description: Marketing site on Vercel, API on Railway for persistent connections
 - Pros:
   - True WebSocket/SSE support without timeouts
@@ -144,16 +151,17 @@ N/A — not a bug fix.
 
 Two Vercel projects from one monorepo:
 
-| Project | Root Directory | Domain | Framework |
-|---|---|---|---|
-| `loop-web` | `apps/web` | `www.looped.me` | Next.js 16 |
-| `loop-app` | `apps/app` | `app.looped.me` | Hono + Vite React |
+| Project    | Root Directory | Domain          | Framework         |
+| ---------- | -------------- | --------------- | ----------------- |
+| `loop-web` | `apps/web`     | `www.looped.me` | Next.js 16        |
+| `loop-app` | `apps/app`     | `app.looped.me` | Hono + Vite React |
 
 Vercel's native "skip unaffected projects" avoids unnecessary rebuilds. Optional `turbo-ignore` for granular control.
 
 ### Package Renaming Strategy
 
 No tooling automates `@dorkos/` → `@loop/` renaming. Manual process:
+
 1. Update `name` in each `package.json`
 2. Global find-and-replace across all source files
 3. Update tsconfig paths

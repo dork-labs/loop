@@ -7,7 +7,7 @@ spec: api-key-dx
 superseded-by: null
 ---
 
-# 23. Use loop_ prefix for identifiable API keys
+# 23. Use loop\_ prefix for identifiable API keys
 
 ## Status
 

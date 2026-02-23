@@ -10,6 +10,7 @@
 The Loop MVP is broken into 4 sequential specs, each building on the last. This document contains the plan and the exact `/ideate` prompt to use for each phase.
 
 **Reference docs:**
+
 - Litepaper: `meta/loop-litepaper.md`
 - MVP spec: `meta/loop-mvp.md`
 
@@ -17,12 +18,12 @@ The Loop MVP is broken into 4 sequential specs, each building on the last. This 
 
 ## Build Order
 
-| Phase | Spec | Focus | Depends On |
-|-------|------|-------|------------|
-| 1 | Data Layer & Core API | Drizzle schema, migrations, CRUD endpoints, signal ingestion | Nothing — foundation |
-| 2 | Prompt & Dispatch Engine | Template CRUD, selection algorithm, Handlebars hydration, dispatch endpoint, prompt reviews | Phase 1 |
-| 3 | React Dashboard | Issue list, issue detail, loop activity, goals, prompt health | Phases 1 & 2 |
-| 4 | CLI | `loop` command-line tool | Phases 1 & 2 |
+| Phase | Spec                     | Focus                                                                                       | Depends On           |
+| ----- | ------------------------ | ------------------------------------------------------------------------------------------- | -------------------- |
+| 1     | Data Layer & Core API    | Drizzle schema, migrations, CRUD endpoints, signal ingestion                                | Nothing — foundation |
+| 2     | Prompt & Dispatch Engine | Template CRUD, selection algorithm, Handlebars hydration, dispatch endpoint, prompt reviews | Phase 1              |
+| 3     | React Dashboard          | Issue list, issue detail, loop activity, goals, prompt health                               | Phases 1 & 2         |
+| 4     | CLI                      | `loop` command-line tool                                                                    | Phases 1 & 2         |
 
 Phases 3 and 4 are independent of each other and can be built in parallel.
 
@@ -31,6 +32,7 @@ Phases 3 and 4 are independent of each other and can be built in parallel.
 ## Phase 1: Data Layer & Core API
 
 **What's in scope:**
+
 - PostgreSQL + Drizzle ORM setup and configuration
 - Schema for all 10 entities: Issue, Project, Goal, Label, IssueLabel, IssueRelation, Comment, Signal, PromptTemplate, PromptVersion, PromptReview
 - Database migrations
@@ -41,6 +43,7 @@ Phases 3 and 4 are independent of each other and can be built in parallel.
 - Tests for all endpoints
 
 **What's NOT in scope (comes in later phases):**
+
 - Prompt template selection/hydration logic (Phase 2)
 - Dispatch endpoint and priority scoring (Phase 2)
 - Prompt reviews and improvement loop (Phase 2)
@@ -111,6 +114,7 @@ The prompt template, version, and review tables should be created in the schema 
 ## Phase 2: Prompt & Dispatch Engine
 
 **What's in scope:**
+
 - Prompt template conditions-based selection algorithm
 - Handlebars template hydration with full context injection
 - Shared partials system (api_reference, review_instructions, parent_context, etc.)
@@ -123,6 +127,7 @@ The prompt template, version, and review tables should be created in the schema 
 - Tests for selection algorithm, hydration, priority scoring, and dispatch
 
 **What's NOT in scope (comes in later phases):**
+
 - React dashboard (Phase 3)
 - CLI (Phase 4)
 
@@ -192,6 +197,7 @@ This is Loop's core differentiator — the system that selects the right prompt 
 ## Phase 3: React Dashboard
 
 **What's in scope:**
+
 - 5 dashboard views in the existing React app (`apps/app/`)
 - Dashboard API endpoints in `apps/api/`
 - Data fetching with TanStack Query
@@ -271,6 +277,7 @@ Build 5 dashboard views in the existing React 19 + Vite 6 + Tailwind CSS 4 + sha
 ## Phase 4: CLI
 
 **What's in scope:**
+
 - `loop` CLI tool for issue management, signals, triage, projects, goals, templates, dispatch, config, and status
 - Published as npm package or local binary
 

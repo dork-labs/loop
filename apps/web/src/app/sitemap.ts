@@ -1,8 +1,8 @@
-import type { MetadataRoute } from 'next'
-import { siteConfig } from '@/config/site'
-import { source } from '@/lib/source'
+import type { MetadataRoute } from 'next';
+import { siteConfig } from '@/config/site';
+import { source } from '@/lib/source';
 
-const BASE_URL = siteConfig.url
+const BASE_URL = siteConfig.url;
 
 /**
  * Generate the sitemap for the Loop marketing site.
@@ -35,14 +35,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
-  ]
+  ];
 
   const docPages: MetadataRoute.Sitemap = source.getPages().map((page) => ({
     url: `${BASE_URL}${page.url}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
-  }))
+  }));
 
-  return [...staticPages, ...docPages]
+  return [...staticPages, ...docPages];
 }

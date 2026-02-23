@@ -9,11 +9,11 @@ Loop receives signals from external tools through **webhook endpoints**. Each in
 
 ## Supported Providers
 
-| Provider | Endpoint | Auth Method | Signal Types |
-|----------|----------|-------------|--------------|
-| [GitHub](/docs/integrations/github) | `POST /api/signals/github` | HMAC-SHA256 (`X-Hub-Signature-256`) | Push, PR, issues, security alerts, Dependabot |
-| [Sentry](/docs/integrations/sentry) | `POST /api/signals/sentry` | HMAC-SHA256 (`Sentry-Hook-Signature`) | Errors, warnings, fatal crashes |
-| [PostHog](/docs/integrations/posthog) | `POST /api/signals/posthog` | Shared secret (`X-PostHog-Secret`) | Metric change alerts |
+| Provider                              | Endpoint                    | Auth Method                           | Signal Types                                  |
+| ------------------------------------- | --------------------------- | ------------------------------------- | --------------------------------------------- |
+| [GitHub](/docs/integrations/github)   | `POST /api/signals/github`  | HMAC-SHA256 (`X-Hub-Signature-256`)   | Push, PR, issues, security alerts, Dependabot |
+| [Sentry](/docs/integrations/sentry)   | `POST /api/signals/sentry`  | HMAC-SHA256 (`Sentry-Hook-Signature`) | Errors, warnings, fatal crashes               |
+| [PostHog](/docs/integrations/posthog) | `POST /api/signals/posthog` | Shared secret (`X-PostHog-Secret`)    | Metric change alerts                          |
 
 ## How It Works
 
@@ -26,12 +26,12 @@ Every webhook integration follows the same pattern:
 
 The created issue inherits a priority derived from the severity mapping:
 
-| Severity | Priority |
-|----------|----------|
+| Severity   | Priority   |
+| ---------- | ---------- |
 | `critical` | 1 (urgent) |
-| `high` | 2 |
-| `medium` | 3 |
-| `low` | 4 |
+| `high`     | 2          |
+| `medium`   | 3          |
+| `low`      | 4          |
 
 ## Security
 

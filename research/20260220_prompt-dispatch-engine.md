@@ -25,22 +25,22 @@ This report covers six technical areas required to build the Prompt & Dispatch E
 Compile templates on first use and cache the compiled function in a `Map<string, HandlebarsTemplateDelegate>`. Subsequent calls skip compilation entirely.
 
 ```typescript
-import Handlebars from 'handlebars'
+import Handlebars from 'handlebars';
 
-const templateCache = new Map<string, HandlebarsTemplateDelegate>()
+const templateCache = new Map<string, HandlebarsTemplateDelegate>();
 
 export function compileTemplate(content: string): HandlebarsTemplateDelegate {
-  const cached = templateCache.get(content)
-  if (cached) return cached
+  const cached = templateCache.get(content);
+  if (cached) return cached;
 
   const compiled = Handlebars.compile(content, {
-    strict: true,        // throw on missing properties (no silent undefined)
-    noEscape: false,     // keep HTML escaping enabled
+    strict: true, // throw on missing properties (no silent undefined)
+    noEscape: false, // keep HTML escaping enabled
     preventIndent: true, // avoid whitespace surprises in multiline templates
-  })
+  });
 
-  templateCache.set(content, compiled)
-  return compiled
+  templateCache.set(content, compiled);
+  return compiled;
 }
 ```
 
@@ -160,11 +160,11 @@ score = (w_explicit × normalized_priority)
 
 In practice, for Loop's issue model:
 
-| Factor | Formula | Rationale |
-|--------|---------|-----------|
-| Explicit priority | `issues.priority / 10.0` | Direct human/agent signal |
-| Age | `LEAST(age_days / 30.0, 1.0)` | Prevents starvation |
-| Issue type | `CASE type WHEN 'task' THEN 1.0 WHEN 'hypothesis' THEN 0.7 WHEN 'monitor' THEN 0.5 ELSE 0.3 END` | Actionable types first |
+| Factor            | Formula                                                                                          | Rationale                 |
+| ----------------- | ------------------------------------------------------------------------------------------------ | ------------------------- |
+| Explicit priority | `issues.priority / 10.0`                                                                         | Direct human/agent signal |
+| Age               | `LEAST(age_days / 30.0, 1.0)`                                                                    | Prevents starvation       |
+| Issue type        | `CASE type WHEN 'task' THEN 1.0 WHEN 'hypothesis' THEN 0.7 WHEN 'monitor' THEN 0.5 ELSE 0.3 END` | Actionable types first    |
 
 Weights can start at `0.6 / 0.2 / 0.2` and be tuned later.
 
@@ -189,7 +189,7 @@ A partial index on `status = 'todo'` keeps the index small and the dispatch quer
 
 #### Recommendation
 
-Use **Option A** exclusively. The `FOR UPDATE SKIP LOCKED` pattern is already well-suited to Neon's serverless PostgreSQL. Implement the dispatch as a Drizzle `db.transaction()` call wrapping a raw SQL `sql\`...\`` query (Drizzle's relational query builder does not yet support `FOR UPDATE SKIP LOCKED` natively; use `db.execute(sql\`...\`)` inside the transaction).
+Use **Option A** exclusively. The `FOR UPDATE SKIP LOCKED` pattern is already well-suited to Neon's serverless PostgreSQL. Implement the dispatch as a Drizzle `db.transaction()` call wrapping a raw SQL `sql\`...\``query (Drizzle's relational query builder does not yet support`FOR UPDATE SKIP LOCKED`natively; use`db.execute(sql\`...\`)` inside the transaction).
 
 ---
 
@@ -205,52 +205,49 @@ Each template has a `conditions` JSON object defining key-value match criteria a
 
 ```typescript
 type TemplateConditions = {
-  issueType?: IssueType | IssueType[]
-  projectId?: string
-  labelIds?: string[]        // issue must have ALL listed labels
-  signalSource?: string
-  priorityMin?: number
-  priorityMax?: number
-}
+  issueType?: IssueType | IssueType[];
+  projectId?: string;
+  labelIds?: string[]; // issue must have ALL listed labels
+  signalSource?: string;
+  priorityMin?: number;
+  priorityMax?: number;
+};
 
 type IssueContext = {
-  issueType: IssueType
-  projectId: string | null
-  labelIds: string[]
-  signalSource: string | null
-  priority: number
-}
+  issueType: IssueType;
+  projectId: string | null;
+  labelIds: string[];
+  signalSource: string | null;
+  priority: number;
+};
 
-function matchesConditions(
-  conditions: TemplateConditions,
-  context: IssueContext,
-): boolean {
+function matchesConditions(conditions: TemplateConditions, context: IssueContext): boolean {
   if (conditions.issueType) {
     const allowed = Array.isArray(conditions.issueType)
       ? conditions.issueType
-      : [conditions.issueType]
-    if (!allowed.includes(context.issueType)) return false
+      : [conditions.issueType];
+    if (!allowed.includes(context.issueType)) return false;
   }
-  if (conditions.projectId && conditions.projectId !== context.projectId) return false
+  if (conditions.projectId && conditions.projectId !== context.projectId) return false;
   if (conditions.labelIds?.length) {
-    const hasAll = conditions.labelIds.every((id) => context.labelIds.includes(id))
-    if (!hasAll) return false
+    const hasAll = conditions.labelIds.every((id) => context.labelIds.includes(id));
+    if (!hasAll) return false;
   }
-  if (conditions.signalSource && conditions.signalSource !== context.signalSource) return false
-  if (conditions.priorityMin != null && context.priority < conditions.priorityMin) return false
-  if (conditions.priorityMax != null && context.priority > conditions.priorityMax) return false
-  return true
+  if (conditions.signalSource && conditions.signalSource !== context.signalSource) return false;
+  if (conditions.priorityMin != null && context.priority < conditions.priorityMin) return false;
+  if (conditions.priorityMax != null && context.priority > conditions.priorityMax) return false;
+  return true;
 }
 
 function selectTemplate(
   templates: Array<{ conditions: TemplateConditions; specificity: number; id: string }>,
-  context: IssueContext,
+  context: IssueContext
 ): string | null {
   const candidates = templates
     .filter((t) => matchesConditions(t.conditions, context))
-    .sort((a, b) => b.specificity - a.specificity)
+    .sort((a, b) => b.specificity - a.specificity);
 
-  return candidates[0]?.id ?? null
+  return candidates[0]?.id ?? null;
 }
 ```
 
@@ -258,9 +255,10 @@ A "catch-all" template has `conditions = {}` and `specificity = 0`. Any template
 
 ```typescript
 function deriveSpecificity(conditions: TemplateConditions): number {
-  return Object.keys(conditions).filter(
-    (k) => conditions[k as keyof TemplateConditions] != null
-  ).length * 10
+  return (
+    Object.keys(conditions).filter((k) => conditions[k as keyof TemplateConditions] != null)
+      .length * 10
+  );
 }
 ```
 
@@ -291,6 +289,7 @@ Use **Option A**. The `matchesConditions` function is a pure function with zero 
 #### Potential Solutions
 
 The existing `promptReviews` table has `clarity`, `completeness`, and `relevance` (each 1–5), and `promptVersions` has a `reviewScore` (double precision). The feedback loop needs to:
+
 1. Aggregate new review scores onto the version.
 2. Trigger actions (auto-create issues, auto-retire versions) at thresholds.
 
@@ -299,36 +298,41 @@ The existing `promptReviews` table has `clarity`, `completeness`, and `relevance
 EWMA gives more weight to recent reviews than old ones. This is ideal because prompt quality can drift: a prompt that was 4.5/5 six months ago but is now 2.0/5 should reflect the recent decline, not the historical mean.
 
 ```typescript
-const EWMA_ALPHA = 0.3   // λ: 0.3 weights recent reviews heavily; 0.1 is more conservative
+const EWMA_ALPHA = 0.3; // λ: 0.3 weights recent reviews heavily; 0.1 is more conservative
 
 function computeEwmaScore(
   current: number | null,
   incoming: number,
-  alpha: number = EWMA_ALPHA,
+  alpha: number = EWMA_ALPHA
 ): number {
-  if (current == null) return incoming
+  if (current == null) return incoming;
   // EWMA formula: new = α × incoming + (1 − α) × old
-  return alpha * incoming + (1 - alpha) * current
+  return alpha * incoming + (1 - alpha) * current;
 }
 ```
 
 The composite review score for a version is computed from the three sub-scores:
 
 ```typescript
-function reviewToScore(review: { clarity: number; completeness: number; relevance: number }): number {
+function reviewToScore(review: {
+  clarity: number;
+  completeness: number;
+  relevance: number;
+}): number {
   // Equal-weight average of three 1-5 dimensions, normalized to 0-1
-  return (review.clarity + review.completeness + review.relevance) / 15
+  return (review.clarity + review.completeness + review.relevance) / 15;
 }
 ```
 
 After creating a `promptReview`, run an update:
 
 ```typescript
-const score = reviewToScore(newReview)
-const updated = computeEwmaScore(version.reviewScore, score)
-await db.update(promptVersions)
+const score = reviewToScore(newReview);
+const updated = computeEwmaScore(version.reviewScore, score);
+await db
+  .update(promptVersions)
   .set({ reviewScore: updated })
-  .where(eq(promptVersions.id, versionId))
+  .where(eq(promptVersions.id, versionId));
 ```
 
 **B. Simple rolling average**
@@ -352,9 +356,9 @@ Cons: Requires storing review history redundantly, schema complexity, window-bou
 Define thresholds as constants (not magic numbers):
 
 ```typescript
-const REVIEW_THRESHOLD_RETIRE = 0.35    // score below 35% → auto-retire (≈ 1.75/5 avg)
-const REVIEW_THRESHOLD_WARN   = 0.50    // score below 50% → create degradation issue
-const REVIEW_MIN_SAMPLES      = 3       // ignore threshold checks until 3 reviews exist
+const REVIEW_THRESHOLD_RETIRE = 0.35; // score below 35% → auto-retire (≈ 1.75/5 avg)
+const REVIEW_THRESHOLD_WARN = 0.5; // score below 50% → create degradation issue
+const REVIEW_MIN_SAMPLES = 3; // ignore threshold checks until 3 reviews exist
 ```
 
 After each review insertion, check thresholds:
@@ -363,19 +367,20 @@ After each review insertion, check thresholds:
 async function handleReviewThresholds(
   db: DbType,
   version: PromptVersion,
-  newScore: number,
+  newScore: number
 ): Promise<void> {
-  if (version.usageCount < REVIEW_MIN_SAMPLES) return
+  if (version.usageCount < REVIEW_MIN_SAMPLES) return;
 
   if (newScore < REVIEW_THRESHOLD_RETIRE && version.status === 'active') {
     // Auto-retire the version
-    await db.update(promptVersions)
+    await db
+      .update(promptVersions)
       .set({ status: 'retired' })
-      .where(eq(promptVersions.id, version.id))
+      .where(eq(promptVersions.id, version.id));
     // Create a 'task' issue for human review
-    await createDegradationIssue(db, version, 'critical')
+    await createDegradationIssue(db, version, 'critical');
   } else if (newScore < REVIEW_THRESHOLD_WARN) {
-    await createDegradationIssue(db, version, 'warning')
+    await createDegradationIssue(db, version, 'warning');
   }
 }
 ```
@@ -473,6 +478,7 @@ Use **Option A** for production system defaults: a custom Drizzle migration with
 #### Overview of Existing Infrastructure
 
 The project already has an excellent test foundation in `apps/api/src/__tests__/setup.ts`:
+
 - `withTestDb()` — spins up a fresh PGlite in-memory database per test with full migrations applied
 - `createTestApp()` — injects the test DB into a Hono app context
 - Migrations are applied from `apps/api/drizzle/migrations/` — meaning seeded test data in migrations appears in tests automatically
@@ -487,22 +493,26 @@ describe('selectTemplate', () => {
     const templates = [
       { id: 'generic', conditions: {}, specificity: 0 },
       { id: 'task-only', conditions: { issueType: 'task' }, specificity: 10 },
-      { id: 'task-project', conditions: { issueType: 'task', projectId: 'proj_1' }, specificity: 20 },
-    ]
+      {
+        id: 'task-project',
+        conditions: { issueType: 'task', projectId: 'proj_1' },
+        specificity: 20,
+      },
+    ];
     const context: IssueContext = {
       issueType: 'task',
       projectId: 'proj_1',
       labelIds: [],
       signalSource: null,
       priority: 5,
-    }
-    expect(selectTemplate(templates, context)).toBe('task-project')
-  })
+    };
+    expect(selectTemplate(templates, context)).toBe('task-project');
+  });
 
   it('falls back to catch-all when no specific template matches', () => {
     // ...
-  })
-})
+  });
+});
 ```
 
 No database needed. These tests run in microseconds.
@@ -512,17 +522,17 @@ No database needed. These tests run in microseconds.
 ```typescript
 describe('hydrateTemplate', () => {
   it('interpolates issue context into the template', () => {
-    const content = 'Issue #{{issue.number}}: {{issue.title}}'
-    const context = { issue: { number: 42, title: 'Fix login bug' } }
-    const result = hydrateTemplate(content, context)
-    expect(result).toBe('Issue #42: Fix login bug')
-  })
+    const content = 'Issue #{{issue.number}}: {{issue.title}}';
+    const context = { issue: { number: 42, title: 'Fix login bug' } };
+    const result = hydrateTemplate(content, context);
+    expect(result).toBe('Issue #42: Fix login bug');
+  });
 
   it('throws on missing required properties in strict mode', () => {
-    const content = '{{issue.missingField}}'
-    expect(() => hydrateTemplate(content, { issue: {} })).toThrow()
-  })
-})
+    const content = '{{issue.missingField}}';
+    expect(() => hydrateTemplate(content, { issue: {} })).toThrow();
+  });
+});
 ```
 
 #### Testing Atomic Dispatch (Database Integration)
@@ -531,24 +541,24 @@ Use `withTestDb()` with concurrent test workers to verify the `FOR UPDATE SKIP L
 
 ```typescript
 describe('dispatch', () => {
-  withTestDb()
+  withTestDb();
 
   it('prevents two agents claiming the same issue', async () => {
-    const db = getTestDb()
+    const db = getTestDb();
     // Seed one issue
-    await db.insert(issues).values({ title: 'Test', type: 'task', status: 'todo', priority: 5 })
+    await db.insert(issues).values({ title: 'Test', type: 'task', status: 'todo', priority: 5 });
 
     // Simulate two concurrent dispatch calls
     const [result1, result2] = await Promise.all([
       claimNextIssue(db, 'agent-1'),
       claimNextIssue(db, 'agent-2'),
-    ])
+    ]);
 
     // Only one agent should have claimed the issue
-    const claimed = [result1, result2].filter(Boolean)
-    expect(claimed).toHaveLength(1)
-  })
-})
+    const claimed = [result1, result2].filter(Boolean);
+    expect(claimed).toHaveLength(1);
+  });
+});
 ```
 
 Note: PGlite runs in a single Node.js process with cooperative concurrency. True concurrent locking behavior is best verified with integration tests against a real Neon database in CI. PGlite tests verify the SQL logic is correct; the locking semantics are proven by PostgreSQL itself.
@@ -557,16 +567,16 @@ Note: PGlite runs in a single Node.js process with cooperative concurrency. True
 
 ```typescript
 it('claims the highest-priority todo issue first', async () => {
-  const db = getTestDb()
+  const db = getTestDb();
   await db.insert(issues).values([
     { title: 'Low priority', type: 'task', status: 'todo', priority: 1 },
     { title: 'High priority', type: 'task', status: 'todo', priority: 9 },
     { title: 'Medium priority', type: 'task', status: 'todo', priority: 5 },
-  ])
+  ]);
 
-  const claimed = await claimNextIssue(db, 'agent-1')
-  expect(claimed?.title).toBe('High priority')
-})
+  const claimed = await claimNextIssue(db, 'agent-1');
+  expect(claimed?.title).toBe('High priority');
+});
 ```
 
 #### Testing EWMA Review Score Computation
@@ -576,16 +586,16 @@ The EWMA function is pure — test without any DB:
 ```typescript
 describe('computeEwmaScore', () => {
   it('returns the incoming score when there is no prior score', () => {
-    expect(computeEwmaScore(null, 0.8)).toBe(0.8)
-  })
+    expect(computeEwmaScore(null, 0.8)).toBe(0.8);
+  });
 
   it('weights recent scores higher than historical', () => {
     // Historical score was 0.9, new review is 0.2 — EWMA should fall significantly
-    const result = computeEwmaScore(0.9, 0.2, 0.3)
-    expect(result).toBeCloseTo(0.69, 2)   // 0.3 * 0.2 + 0.7 * 0.9 = 0.69
-    expect(result).toBeLessThan(0.9)
-  })
-})
+    const result = computeEwmaScore(0.9, 0.2, 0.3);
+    expect(result).toBeCloseTo(0.69, 2); // 0.3 * 0.2 + 0.7 * 0.9 = 0.69
+    expect(result).toBeLessThan(0.9);
+  });
+});
 ```
 
 ---
@@ -621,14 +631,16 @@ This entire flow should be a single route handler using `db.transaction()`.
 The `conditions` JSONB column should be validated by a Zod schema on every write:
 
 ```typescript
-const TemplateConditionsSchema = z.object({
-  issueType: z.union([IssueTypeSchema, z.array(IssueTypeSchema)]).optional(),
-  projectId: z.string().cuid2().optional(),
-  labelIds: z.array(z.string().cuid2()).optional(),
-  signalSource: z.string().optional(),
-  priorityMin: z.number().int().min(0).max(10).optional(),
-  priorityMax: z.number().int().min(0).max(10).optional(),
-}).strict()   // reject unknown keys — future conditions must be explicitly added
+const TemplateConditionsSchema = z
+  .object({
+    issueType: z.union([IssueTypeSchema, z.array(IssueTypeSchema)]).optional(),
+    projectId: z.string().cuid2().optional(),
+    labelIds: z.array(z.string().cuid2()).optional(),
+    signalSource: z.string().optional(),
+    priorityMin: z.number().int().min(0).max(10).optional(),
+    priorityMax: z.number().int().min(0).max(10).optional(),
+  })
+  .strict(); // reject unknown keys — future conditions must be explicitly added
 ```
 
 The `.strict()` call prevents silently-ignored condition keys from being stored (which would make a template appear non-specific when it was intended to be specific).
@@ -637,28 +649,28 @@ The `.strict()` call prevents silently-ignored condition keys from being stored 
 
 ## Security Considerations
 
-| Risk | Mitigation |
-|------|-----------|
+| Risk                             | Mitigation                                                                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | SSTI via user-authored templates | Templates authored by humans/agents in trusted DB, not from request input. Never call `Handlebars.compile(req.body.template)`. |
-| Triple-brace XSS | Ban `{{{` via ESLint rule or grep CI check. |
-| Prototype pollution | Pin `handlebars >= 4.6.0`, keep updated, never set `allowProtoPropertiesByDefault = true`. |
-| Race condition in dispatch | `FOR UPDATE SKIP LOCKED` eliminates this at the database level. |
-| Advisory lock leaks | Avoid advisory locks for dispatch — `SKIP LOCKED` is sufficient and leak-safe. |
-| Condition schema injection | Validate `conditions` JSON with Zod `.strict()` on every insert/update. |
-| Threshold manipulation | Thresholds are code constants, not DB-configurable, preventing configuration drift attacks. |
+| Triple-brace XSS                 | Ban `{{{` via ESLint rule or grep CI check.                                                                                    |
+| Prototype pollution              | Pin `handlebars >= 4.6.0`, keep updated, never set `allowProtoPropertiesByDefault = true`.                                     |
+| Race condition in dispatch       | `FOR UPDATE SKIP LOCKED` eliminates this at the database level.                                                                |
+| Advisory lock leaks              | Avoid advisory locks for dispatch — `SKIP LOCKED` is sufficient and leak-safe.                                                 |
+| Condition schema injection       | Validate `conditions` JSON with Zod `.strict()` on every insert/update.                                                        |
+| Threshold manipulation           | Thresholds are code constants, not DB-configurable, preventing configuration drift attacks.                                    |
 
 ---
 
 ## Performance Considerations
 
-| Area | Strategy |
-|------|---------|
-| Template compilation | `Map<versionId, HandlebarsTemplateDelegate>` cache, compiled once per version ID per process lifetime |
-| Dispatch query | Partial index on `(status = 'todo', priority DESC, created_at ASC)` — small, fast, covers the exact query shape |
-| Template selection | In-memory pure function — O(n × c) where n = template count and c = condition fields; negligible for n < 1000 |
-| Review score update | Single UPDATE per review, no aggregation query needed (EWMA is O(1)) |
-| Handlebars helpers | Register once at module load, reused across all requests |
-| PGlite test speed | Snapshot pattern (restore from snapshot vs. re-migrate) reduces test setup from ~575ms to ~190ms if needed |
+| Area                 | Strategy                                                                                                        |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Template compilation | `Map<versionId, HandlebarsTemplateDelegate>` cache, compiled once per version ID per process lifetime           |
+| Dispatch query       | Partial index on `(status = 'todo', priority DESC, created_at ASC)` — small, fast, covers the exact query shape |
+| Template selection   | In-memory pure function — O(n × c) where n = template count and c = condition fields; negligible for n < 1000   |
+| Review score update  | Single UPDATE per review, no aggregation query needed (EWMA is O(1))                                            |
+| Handlebars helpers   | Register once at module load, reused across all requests                                                        |
+| PGlite test speed    | Snapshot pattern (restore from snapshot vs. re-migrate) reduces test setup from ~575ms to ~190ms if needed      |
 
 ---
 

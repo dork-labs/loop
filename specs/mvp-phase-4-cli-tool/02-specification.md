@@ -26,6 +26,7 @@ Published as npm package `looped` with binary `looped`. Lives in `apps/cli/` in 
 Loop's API (Phases 1-2) and dashboard (Phase 3) are complete. Developers and AI agents need a fast, scriptable interface to Loop that works in terminals, CI pipelines, and automation scripts. The CLI completes the MVP by providing the command-line interface described in the [Loop MVP spec](../../meta/loop-mvp.md#cli).
 
 The CLI is the primary interface for:
+
 - Agents (DorkOS) interacting with Loop programmatically
 - Developers managing issues, signals, and triage from the terminal
 - CI/CD pipelines submitting signals and checking status
@@ -53,18 +54,18 @@ The CLI is the primary interface for:
 
 ## 5. Technical Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `commander` | `^14` | CLI framework — subcommands, options, help generation |
-| `ky` | `^1.14` | HTTP client (already in monorepo via `@loop/app`) |
-| `picocolors` | `^1` | Terminal colors (7KB, zero deps) |
-| `cli-table3` | `^0.6` | Table output formatting |
-| `nanospinner` | `^1` | Loading spinners (20KB) |
-| `@inquirer/prompts` | `^7` | Interactive prompts for TTY mode |
-| `tsup` | `^8` (dev) | ESM bundling with shebang preservation |
-| `typescript` | `^5` (dev) | Type checking |
-| `@types/node` | `^20` (dev) | Node.js type definitions |
-| `vitest` | (workspace root) | Testing framework |
+| Package             | Version          | Purpose                                               |
+| ------------------- | ---------------- | ----------------------------------------------------- |
+| `commander`         | `^14`            | CLI framework — subcommands, options, help generation |
+| `ky`                | `^1.14`          | HTTP client (already in monorepo via `@loop/app`)     |
+| `picocolors`        | `^1`             | Terminal colors (7KB, zero deps)                      |
+| `cli-table3`        | `^0.6`           | Table output formatting                               |
+| `nanospinner`       | `^1`             | Loading spinners (20KB)                               |
+| `@inquirer/prompts` | `^7`             | Interactive prompts for TTY mode                      |
+| `tsup`              | `^8` (dev)       | ESM bundling with shebang preservation                |
+| `typescript`        | `^5` (dev)       | Type checking                                         |
+| `@types/node`       | `^20` (dev)      | Node.js type definitions                              |
+| `vitest`            | (workspace root) | Testing framework                                     |
 
 ## 6. Detailed Design
 
@@ -111,6 +112,7 @@ apps/cli/
 ### 6.2 Package Configuration
 
 **`package.json`:**
+
 ```json
 {
   "name": "looped",
@@ -146,8 +148,9 @@ apps/cli/
 Note: `"private"` is intentionally omitted — this package is publishable to npm.
 
 **`tsup.config.ts`:**
+
 ```typescript
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/bin.ts'],
@@ -156,10 +159,11 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   dts: false,
-})
+});
 ```
 
 **`tsconfig.json`:**
+
 ```json
 {
   "extends": "../../tsconfig.json",
@@ -181,21 +185,23 @@ export default defineConfig({
 ### 6.3 Entry Point & Root Command
 
 **`src/bin.ts`:**
+
 ```typescript
 #!/usr/bin/env node
-import { program } from './cli.js'
-program.parseAsync()
+import { program } from './cli.js';
+program.parseAsync();
 ```
 
 **`src/cli.ts`** — Root Commander program:
+
 ```typescript
-import { Command } from 'commander'
+import { Command } from 'commander';
 // Import all command modules
-import { registerConfigCommand } from './commands/config.js'
-import { registerIssuesCommand } from './commands/issues.js'
+import { registerConfigCommand } from './commands/config.js';
+import { registerIssuesCommand } from './commands/issues.js';
 // ... etc
 
-export const program = new Command()
+export const program = new Command();
 
 program
   .name('looped')
@@ -203,11 +209,11 @@ program
   .version('0.1.0')
   .option('--json', 'Output raw JSON instead of formatted tables')
   .option('--api-url <url>', 'Override API URL for this invocation')
-  .option('--token <token>', 'Override auth token for this invocation')
+  .option('--token <token>', 'Override auth token for this invocation');
 
 // Register all subcommands
-registerConfigCommand(program)
-registerIssuesCommand(program)
+registerConfigCommand(program);
+registerIssuesCommand(program);
 // ... etc
 ```
 
@@ -218,19 +224,22 @@ Global options (`--json`, `--api-url`, `--token`) are accessible in every comman
 Config file: `~/.loop/config.json`
 
 **Schema:**
+
 ```typescript
 interface LoopConfig {
-  url?: string    // API base URL (e.g., "https://api.looped.me")
-  token?: string  // Bearer token for authentication
+  url?: string; // API base URL (e.g., "https://api.looped.me")
+  token?: string; // Bearer token for authentication
 }
 ```
 
 **Resolution order** (highest priority first):
+
 1. CLI flags (`--api-url`, `--token`)
 2. Environment variables (`LOOP_API_URL`, `LOOP_API_TOKEN`)
 3. Config file (`~/.loop/config.json`)
 
 **Implementation:**
+
 - Read: `JSON.parse(fs.readFileSync(configPath, 'utf-8'))` with graceful fallback to `{}`
 - Write: `fs.mkdirSync(dir, { recursive: true })` then `fs.writeFileSync(configPath, JSON.stringify(config, null, 2))` with mode `0o600`
 - Config path: `path.join(os.homedir(), '.loop', 'config.json')`
@@ -242,19 +251,19 @@ interface LoopConfig {
 Factory function that creates a configured ky instance:
 
 ```typescript
-import ky from 'ky'
-import { resolveConfig } from './config.js'
+import ky from 'ky';
+import { resolveConfig } from './config.js';
 
 export function createApiClient(globalOpts?: GlobalOptions): typeof ky {
-  const { url, token } = resolveConfig(globalOpts)
+  const { url, token } = resolveConfig(globalOpts);
 
   if (!url) {
-    console.error('No API URL configured. Run: looped config set url <url>')
-    process.exit(1)
+    console.error('No API URL configured. Run: looped config set url <url>');
+    process.exit(1);
   }
   if (!token) {
-    console.error('No auth token configured. Run: looped config set token <token>')
-    process.exit(1)
+    console.error('No auth token configured. Run: looped config set token <token>');
+    process.exit(1);
   }
 
   return ky.create({
@@ -266,7 +275,7 @@ export function createApiClient(globalOpts?: GlobalOptions): typeof ky {
       limit: 2,
       statusCodes: [429, 500, 503],
     },
-  })
+  });
 }
 ```
 
@@ -277,24 +286,24 @@ Centralized error handler wrapping every command action:
 ```typescript
 export async function withErrorHandler(fn: () => Promise<void>): Promise<void> {
   try {
-    await fn()
+    await fn();
   } catch (error) {
     if (error instanceof HTTPError) {
-      const status = error.response.status
-      const body = await error.response.json().catch(() => null)
-      const message = body?.error ?? error.message
+      const status = error.response.status;
+      const body = await error.response.json().catch(() => null);
+      const message = body?.error ?? error.message;
 
       if (status === 401 || status === 403) {
-        console.error('Authentication failed. Run: looped config set token <your-token>')
+        console.error('Authentication failed. Run: looped config set token <your-token>');
       } else if (status === 404) {
-        console.error(`Not found: ${message}`)
+        console.error(`Not found: ${message}`);
       } else {
-        console.error(`API error (${status}): ${message}`)
+        console.error(`API error (${status}): ${message}`);
       }
     } else {
-      console.error(`Error: ${(error as Error).message}`)
+      console.error(`Error: ${(error as Error).message}`);
     }
-    process.exit(1)
+    process.exit(1);
   }
 }
 ```
@@ -306,8 +315,8 @@ export async function withErrorHandler(fn: () => Promise<void>): Promise<void> {
 **Table rendering** with cli-table3 + picocolors:
 
 ```typescript
-import Table from 'cli-table3'
-import pc from 'picocolors'
+import Table from 'cli-table3';
+import pc from 'picocolors';
 
 // Color maps
 const STATUS_COLOR: Record<string, (s: string) => string> = {
@@ -317,7 +326,7 @@ const STATUS_COLOR: Record<string, (s: string) => string> = {
   in_progress: pc.blue,
   done: pc.green,
   canceled: pc.red,
-}
+};
 
 const PRIORITY_LABEL: Record<number, string> = {
   0: pc.dim('none'),
@@ -325,7 +334,7 @@ const PRIORITY_LABEL: Record<number, string> = {
   2: pc.yellow('high'),
   3: pc.white('medium'),
   4: pc.dim('low'),
-}
+};
 
 const TYPE_ICON: Record<string, string> = {
   signal: '⚡',
@@ -333,17 +342,18 @@ const TYPE_ICON: Record<string, string> = {
   plan: '📋',
   task: '🔧',
   monitor: '👁',
-}
+};
 ```
 
 **JSON mode:** When `--json` is set, write raw JSON to stdout via `JSON.stringify(data, null, 2)`. No colors, no table formatting.
 
 **Pattern for every command:**
+
 ```typescript
 if (opts.json) {
-  process.stdout.write(JSON.stringify(result, null, 2) + '\n')
+  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 } else {
-  renderIssueTable(result.data)
+  renderIssueTable(result.data);
 }
 ```
 
@@ -353,167 +363,167 @@ Manual type definitions matching API response shapes. These are the CLI's view o
 
 ```typescript
 // Core enums
-export type IssueStatus = 'triage' | 'todo' | 'backlog' | 'in_progress' | 'done' | 'canceled'
-export type IssueType = 'signal' | 'hypothesis' | 'plan' | 'task' | 'monitor'
-export type SignalSeverity = 'critical' | 'high' | 'medium' | 'low'
-export type ProjectStatus = 'backlog' | 'planned' | 'active' | 'on_hold' | 'completed'
-export type ProjectHealth = 'on_track' | 'at_risk' | 'off_track'
-export type GoalStatus = 'active' | 'achieved' | 'abandoned'
-export type VersionStatus = 'active' | 'draft' | 'retired'
+export type IssueStatus = 'triage' | 'todo' | 'backlog' | 'in_progress' | 'done' | 'canceled';
+export type IssueType = 'signal' | 'hypothesis' | 'plan' | 'task' | 'monitor';
+export type SignalSeverity = 'critical' | 'high' | 'medium' | 'low';
+export type ProjectStatus = 'backlog' | 'planned' | 'active' | 'on_hold' | 'completed';
+export type ProjectHealth = 'on_track' | 'at_risk' | 'off_track';
+export type GoalStatus = 'active' | 'achieved' | 'abandoned';
+export type VersionStatus = 'active' | 'draft' | 'retired';
 
 // Response wrappers
 export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
+  data: T[];
+  total: number;
 }
 
 export interface SingleResponse<T> {
-  data: T
+  data: T;
 }
 
 // Entities
 export interface Issue {
-  id: string
-  number: number
-  title: string
-  description?: string | null
-  type: IssueType
-  status: IssueStatus
-  priority: number
-  parentId?: string | null
-  projectId?: string | null
-  signalSource?: string | null
-  signalPayload?: Record<string, unknown> | null
-  hypothesis?: HypothesisData | null
-  agentSessionId?: string | null
-  agentSummary?: string | null
-  commits?: unknown[] | null
-  pullRequests?: unknown[] | null
-  completedAt?: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  number: number;
+  title: string;
+  description?: string | null;
+  type: IssueType;
+  status: IssueStatus;
+  priority: number;
+  parentId?: string | null;
+  projectId?: string | null;
+  signalSource?: string | null;
+  signalPayload?: Record<string, unknown> | null;
+  hypothesis?: HypothesisData | null;
+  agentSessionId?: string | null;
+  agentSummary?: string | null;
+  commits?: unknown[] | null;
+  pullRequests?: unknown[] | null;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IssueDetail extends Issue {
-  parent?: Issue | null
-  children: Issue[]
-  labels: Label[]
-  relations: IssueRelation[]
+  parent?: Issue | null;
+  children: Issue[];
+  labels: Label[];
+  relations: IssueRelation[];
 }
 
 export interface HypothesisData {
-  statement: string
-  confidence: number
-  evidence: string[]
-  validationCriteria: string
-  prediction?: string
+  statement: string;
+  confidence: number;
+  evidence: string[];
+  validationCriteria: string;
+  prediction?: string;
 }
 
 export interface Project {
-  id: string
-  name: string
-  description?: string | null
-  status: ProjectStatus
-  health: ProjectHealth
-  goalId?: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  name: string;
+  description?: string | null;
+  status: ProjectStatus;
+  health: ProjectHealth;
+  goalId?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Goal {
-  id: string
-  title: string
-  description?: string | null
-  metric?: string | null
-  targetValue?: number | null
-  currentValue?: number | null
-  unit?: string | null
-  status: GoalStatus
-  projectId?: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  title: string;
+  description?: string | null;
+  metric?: string | null;
+  targetValue?: number | null;
+  currentValue?: number | null;
+  unit?: string | null;
+  status: GoalStatus;
+  projectId?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Label {
-  id: string
-  name: string
-  color: string
+  id: string;
+  name: string;
+  color: string;
 }
 
 export interface IssueRelation {
-  id: string
-  issueId: string
-  relatedIssueId: string
-  type: string
-  createdAt: string
+  id: string;
+  issueId: string;
+  relatedIssueId: string;
+  type: string;
+  createdAt: string;
 }
 
 export interface Signal {
-  id: string
-  source: string
-  sourceId?: string | null
-  type: string
-  severity: SignalSeverity
-  payload: Record<string, unknown>
-  issueId: string
-  createdAt: string
+  id: string;
+  source: string;
+  sourceId?: string | null;
+  type: string;
+  severity: SignalSeverity;
+  payload: Record<string, unknown>;
+  issueId: string;
+  createdAt: string;
 }
 
 export interface PromptTemplate {
-  id: string
-  slug: string
-  name: string
-  description?: string | null
-  conditions: Record<string, unknown>
-  specificity: number
-  activeVersionId?: string | null
-  projectId?: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  conditions: Record<string, unknown>;
+  specificity: number;
+  activeVersionId?: string | null;
+  projectId?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PromptVersion {
-  id: string
-  templateId: string
-  version: number
-  content: string
-  changelog?: string | null
-  authorType: string
-  authorName: string
-  status: VersionStatus
-  reviewScore?: number | null
-  usageCount: number
-  completionRate?: number | null
-  createdAt: string
+  id: string;
+  templateId: string;
+  version: number;
+  content: string;
+  changelog?: string | null;
+  authorType: string;
+  authorName: string;
+  status: VersionStatus;
+  reviewScore?: number | null;
+  usageCount: number;
+  completionRate?: number | null;
+  createdAt: string;
 }
 
 export interface DashboardStats {
   issues: {
-    total: number
-    byStatus: Record<string, number>
-    byType: Record<string, number>
-  }
+    total: number;
+    byStatus: Record<string, number>;
+    byType: Record<string, number>;
+  };
   goals: {
-    total: number
-    active: number
-    achieved: number
-  }
+    total: number;
+    active: number;
+    achieved: number;
+  };
   dispatch: {
-    queueDepth: number
-    activeCount: number
-    completedLast24h: number
-  }
+    queueDepth: number;
+    activeCount: number;
+    completedLast24h: number;
+  };
 }
 
 export interface DispatchQueueItem {
-  issue: Issue
-  score: number
+  issue: Issue;
+  score: number;
   breakdown: {
-    priorityWeight: number
-    goalBonus: number
-    ageBonus: number
-    typeBonus: number
-  }
+    priorityWeight: number;
+    goalBonus: number;
+    ageBonus: number;
+    typeBonus: number;
+  };
 }
 ```
 
@@ -521,11 +531,11 @@ export interface DispatchQueueItem {
 
 ### 7.1 `looped config`
 
-| Command | API Call | Description |
-|---------|----------|-------------|
+| Command                           | API Call     | Description                                   |
+| --------------------------------- | ------------ | --------------------------------------------- |
 | `looped config set <key> <value>` | None (local) | Set `url` or `token` in `~/.loop/config.json` |
-| `looped config get <key>` | None (local) | Print config value |
-| `looped config list` | None (local) | Print all config (token masked) |
+| `looped config get <key>`         | None (local) | Print config value                            |
+| `looped config list`              | None (local) | Print all config (token masked)               |
 
 `config set token` masks output: `Token set: tok_****abcd`
 
@@ -533,14 +543,14 @@ export interface DispatchQueueItem {
 
 List issues with filtering and pagination.
 
-| Option | Maps to API Query Param | Description |
-|--------|------------------------|-------------|
-| `--status <s>` | `?status=<s>` | Filter by status |
-| `--type <t>` | `?type=<t>` | Filter by issue type |
-| `--project <id>` | `?projectId=<id>` | Filter by project |
-| `--priority <n>` | `?priority=<n>` | Filter by priority (0-4) |
-| `--limit <n>` | `?limit=<n>` | Results per page (default 50) |
-| `--offset <n>` | `?offset=<n>` | Pagination offset |
+| Option           | Maps to API Query Param | Description                   |
+| ---------------- | ----------------------- | ----------------------------- |
+| `--status <s>`   | `?status=<s>`           | Filter by status              |
+| `--type <t>`     | `?type=<t>`             | Filter by issue type          |
+| `--project <id>` | `?projectId=<id>`       | Filter by project             |
+| `--priority <n>` | `?priority=<n>`         | Filter by priority (0-4)      |
+| `--limit <n>`    | `?limit=<n>`            | Results per page (default 50) |
+| `--offset <n>`   | `?offset=<n>`           | Pagination offset             |
 
 **API:** `GET /api/issues`
 
@@ -553,6 +563,7 @@ Show issue detail including parent, children, labels, and relations.
 **API:** `GET /api/issues/:id`
 
 **Output sections:**
+
 - Header: `#42 [🔧 task] Fix login timeout`
 - Metadata: status, priority, project, labels
 - Description (if present)
@@ -565,15 +576,16 @@ Show issue detail including parent, children, labels, and relations.
 
 Create a new issue.
 
-| Flag | Default (non-TTY) | Description |
-|------|-------------------|-------------|
-| `--type <t>` | `task` | Issue type |
-| `--priority <n>` | `3` | Priority (0-4) |
-| `--project <id>` | none | Project ID |
-| `--description <text>` | none | Issue description |
-| `--parent <id>` | none | Parent issue ID |
+| Flag                   | Default (non-TTY) | Description       |
+| ---------------------- | ----------------- | ----------------- |
+| `--type <t>`           | `task`            | Issue type        |
+| `--priority <n>`       | `3`               | Priority (0-4)    |
+| `--project <id>`       | none              | Project ID        |
+| `--description <text>` | none              | Issue description |
+| `--parent <id>`        | none              | Parent issue ID   |
 
 **TTY mode:** If `--type` or `--priority` not provided and `process.stdout.isTTY`, prompt interactively:
+
 1. Select type (signal/hypothesis/plan/task/monitor)
 2. Select priority (0-4 with labels)
 3. Optionally select project (fetches project list from API)
@@ -592,15 +604,16 @@ Request body: `{ body, authorName: "looped-cli", authorType: "human" }`
 
 Submit a manual signal, which creates a Signal record and a linked triage Issue.
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--source <s>` | `"manual"` | Signal source identifier |
+| Flag               | Default    | Description                 |
+| ------------------ | ---------- | --------------------------- |
+| `--source <s>`     | `"manual"` | Signal source identifier    |
 | `--severity <sev>` | `"medium"` | critical, high, medium, low |
-| `--project <id>` | none | Project ID |
+| `--project <id>`   | none       | Project ID                  |
 
 **API:** `POST /api/signals`
 
 Request body:
+
 ```json
 {
   "source": "manual",
@@ -615,11 +628,11 @@ Request body:
 
 ### 7.7 `looped triage`
 
-| Command | API Call | Description |
-|---------|----------|-------------|
-| `looped triage` | `GET /api/issues?status=triage` | Show triage queue as table |
-| `looped triage accept <id>` | `PATCH /api/issues/:id` `{ status: "backlog" }` | Accept into backlog |
-| `looped triage decline <id> [reason]` | `PATCH /api/issues/:id` `{ status: "canceled" }` + `POST /api/issues/:id/comments` | Cancel with reason |
+| Command                               | API Call                                                                           | Description                |
+| ------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------- |
+| `looped triage`                       | `GET /api/issues?status=triage`                                                    | Show triage queue as table |
+| `looped triage accept <id>`           | `PATCH /api/issues/:id` `{ status: "backlog" }`                                    | Accept into backlog        |
+| `looped triage decline <id> [reason]` | `PATCH /api/issues/:id` `{ status: "canceled" }` + `POST /api/issues/:id/comments` | Cancel with reason         |
 
 `decline` without a reason: sets status to canceled only.
 `decline` with a reason: also posts a comment with `authorName: "looped-cli"`, `authorType: "human"`.
@@ -642,11 +655,11 @@ List all goals with progress indicators.
 
 ### 7.10 `looped templates`
 
-| Command | API Call | Description |
-|---------|----------|-------------|
-| `looped templates` | `GET /api/templates` | List templates |
-| `looped templates show <id>` | `GET /api/templates/:id` + `GET /api/templates/:id/versions` | Template detail + versions |
-| `looped templates promote <versionId>` | `POST /api/templates/:templateId/versions/:versionId/promote` | Promote version to active |
+| Command                                | API Call                                                      | Description                |
+| -------------------------------------- | ------------------------------------------------------------- | -------------------------- |
+| `looped templates`                     | `GET /api/templates`                                          | List templates             |
+| `looped templates show <id>`           | `GET /api/templates/:id` + `GET /api/templates/:id/versions`  | Template detail + versions |
+| `looped templates promote <versionId>` | `POST /api/templates/:templateId/versions/:versionId/promote` | Promote version to active  |
 
 **List table columns:** `ID`, `SLUG`, `NAME`, `ACTIVE VERSION`, `REVIEW SCORE`, `USAGE`
 
@@ -679,6 +692,7 @@ Show system health overview.
 **API:** `GET /api/dashboard/stats`
 
 **Output (formatted):**
+
 ```
 Loop Status
 ───────────────────────────
@@ -712,6 +726,7 @@ looped status
 ### 8.2 Typical Workflows
 
 **Developer checking the queue:**
+
 ```bash
 looped list --status todo          # What's ready to work on?
 looped show abc123                 # Get details on an issue
@@ -720,6 +735,7 @@ looped triage accept def456        # Accept a signal into backlog
 ```
 
 **Agent/CI submitting a signal:**
+
 ```bash
 LOOP_API_URL=https://api.looped.me \
 LOOP_API_TOKEN=tok_... \
@@ -727,16 +743,17 @@ looped signal --severity high "Checkout error rate spike: 5.2% → 12.1%"
 ```
 
 **Scripting with JSON output:**
+
 ```bash
 looped list --status in_progress --json | jq '.[].title'
 ```
 
 ### 8.3 Interactive vs Non-Interactive
 
-| Context | Behavior |
-|---------|----------|
-| TTY (terminal) | Colored output, interactive prompts, spinners |
-| Piped / CI | Plain JSON-safe output, no prompts (uses defaults), no spinners |
+| Context        | Behavior                                                        |
+| -------------- | --------------------------------------------------------------- |
+| TTY (terminal) | Colored output, interactive prompts, spinners                   |
+| Piped / CI     | Plain JSON-safe output, no prompts (uses defaults), no spinners |
 
 Detection: `process.stdout.isTTY` for output, `process.stdin.isTTY` for input prompts.
 
@@ -745,6 +762,7 @@ Detection: `process.stdout.isTTY` for output, `process.stdin.isTTY` for input pr
 ### 9.1 Unit Tests (`lib/`)
 
 **`config.test.ts`:**
+
 - Reads config from file, returns empty object when missing
 - Writes config with correct permissions (0o600)
 - Creates `~/.loop/` directory if it doesn't exist
@@ -752,11 +770,13 @@ Detection: `process.stdout.isTTY` for output, `process.stdin.isTTY` for input pr
 - Masks token in output
 
 **`api-client.test.ts`:**
+
 - Creates ky instance with correct prefixUrl and Authorization header
 - Exits with error when url/token missing
 - Uses global options when provided
 
 **`output.test.ts`:**
+
 - Renders issue table with correct columns and colors
 - JSON mode outputs valid JSON to stdout
 - Handles empty data arrays gracefully
@@ -765,14 +785,16 @@ Detection: `process.stdout.isTTY` for output, `process.stdin.isTTY` for input pr
 ### 9.2 Command Tests (`commands/`)
 
 Each command test mocks `createApiClient()` and verifies:
+
 1. Correct HTTP method and path called
 2. Correct query parameters passed
 3. Correct request body sent
 4. Output formatted correctly (table or JSON)
 
 **Example test structure:**
+
 ```typescript
-import { vi, describe, it, expect } from 'vitest'
+import { vi, describe, it, expect } from 'vitest';
 
 // Mock the api-client module
 vi.mock('../lib/api-client.js', () => ({
@@ -781,10 +803,11 @@ vi.mock('../lib/api-client.js', () => ({
     post: vi.fn().mockReturnValue({ json: () => mockResponse }),
     patch: vi.fn().mockReturnValue({ json: () => mockResponse }),
   })),
-}))
+}));
 ```
 
 **Key command tests:**
+
 - `issues.test.ts`: list with filters, show by ID, create with flags vs interactive
 - `signal.test.ts`: submit signal with defaults, with all flags
 - `triage.test.ts`: list triage queue, accept (patches to backlog), decline with reason (patches + comment)
@@ -793,6 +816,7 @@ vi.mock('../lib/api-client.js', () => ({
 ### 9.3 Testing Interactive Prompts
 
 For TTY-dependent behavior, tests should:
+
 - Mock `process.stdout.isTTY` and `process.stdin.isTTY`
 - Mock `@inquirer/prompts` to return predefined answers
 - Verify non-TTY mode uses defaults without prompting
@@ -834,6 +858,7 @@ After implementation, update:
 Set up the CLI project and core libraries.
 
 **Files:**
+
 - `apps/cli/package.json`
 - `apps/cli/tsconfig.json`
 - `apps/cli/tsup.config.ts`
@@ -848,6 +873,7 @@ Set up the CLI project and core libraries.
 - `apps/cli/src/commands/config.ts`
 
 **Deliverables:**
+
 - CLI scaffolding builds and runs (`npx looped --help`)
 - `looped config set/get/list` works
 - API client connects and authenticates
@@ -860,12 +886,14 @@ Set up the CLI project and core libraries.
 The most-used commands for daily workflow.
 
 **Files:**
+
 - `apps/cli/src/commands/issues.ts`
 - `apps/cli/src/commands/comment.ts`
 - `apps/cli/src/commands/signal.ts`
 - `apps/cli/src/commands/triage.ts`
 
 **Deliverables:**
+
 - `looped list` with all filters and `--json`
 - `looped show <id>` with full detail output
 - `looped create <title>` with interactive and flag modes
@@ -879,6 +907,7 @@ The most-used commands for daily workflow.
 Complete the command surface.
 
 **Files:**
+
 - `apps/cli/src/commands/projects.ts`
 - `apps/cli/src/commands/goals.ts`
 - `apps/cli/src/commands/templates.ts`
@@ -886,6 +915,7 @@ Complete the command surface.
 - `apps/cli/src/commands/status.ts`
 
 **Deliverables:**
+
 - `looped projects`, `looped goals`
 - `looped templates` / `looped templates show` / `looped templates promote`
 - `looped next`, `looped dispatch <id>`
@@ -899,12 +929,12 @@ No open questions remain — all clarifications were resolved during ideation.
 
 ## 15. Related ADRs
 
-| ADR | Title | Relevance |
-|-----|-------|-----------|
-| 0001 | Use Hono over Express | API framework the CLI calls |
-| 0005 | Use CUID2 text primary keys | All entity IDs are 24-char CUID2 strings |
-| 0006 | Use soft delete | CLI never sees hard-deleted records; `deletedAt` filtering is server-side |
-| 0013 | Use ky over Axios | CLI uses same HTTP client as `@loop/app` for consistency |
+| ADR  | Title                       | Relevance                                                                 |
+| ---- | --------------------------- | ------------------------------------------------------------------------- |
+| 0001 | Use Hono over Express       | API framework the CLI calls                                               |
+| 0005 | Use CUID2 text primary keys | All entity IDs are 24-char CUID2 strings                                  |
+| 0006 | Use soft delete             | CLI never sees hard-deleted records; `deletedAt` filtering is server-side |
+| 0013 | Use ky over Axios           | CLI uses same HTTP client as `@loop/app` for consistency                  |
 
 ## 16. References
 

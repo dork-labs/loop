@@ -11,7 +11,7 @@ license: MIT
 compatibility: Requires internet access to reach https://app.looped.me
 metadata:
   author: dork-labs
-  version: "1.0"
+  version: '1.0'
 ---
 
 # Loop

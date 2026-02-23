@@ -1,37 +1,32 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
-import { Separator } from '@/components/ui/separator'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
 interface ShortcutRowProps {
-  keys: string[]
-  label: string
+  keys: string[];
+  label: string;
 }
 
 function ShortcutRow({ keys, label }: ShortcutRowProps) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-sm">{label}</span>
       <div className="flex items-center gap-1">
         {keys.map((key, i) => (
           <span key={i} className="flex items-center gap-1">
-            {i > 0 && <span className="text-xs text-muted-foreground">then</span>}
-            <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs">
+            {i > 0 && <span className="text-muted-foreground text-xs">then</span>}
+            <kbd className="border-border bg-muted rounded border px-1.5 py-0.5 font-mono text-xs">
               {key}
             </kbd>
           </span>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 interface KeyboardShortcutsDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 /**
@@ -47,7 +42,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
 
         <div className="mt-6 space-y-4">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
               Navigation
             </p>
             <ShortcutRow keys={['g', 'i']} label="Go to Issues" />
@@ -59,7 +54,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
           <Separator />
 
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
               Layout
             </p>
             <ShortcutRow keys={['⌘', 'B']} label="Toggle sidebar" />
@@ -68,7 +63,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
           <Separator />
 
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
               General
             </p>
             <ShortcutRow keys={['?']} label="Show this help" />
@@ -76,5 +71,5 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

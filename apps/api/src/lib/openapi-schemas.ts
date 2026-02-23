@@ -6,26 +6,26 @@
  *
  * Call `generateOpenApiDocument()` to produce a complete OpenAPI 3.1 spec.
  */
-import { OpenAPIRegistry, OpenApiGeneratorV31, extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi'
-import { z } from 'zod'
+import {
+  OpenAPIRegistry,
+  OpenApiGeneratorV31,
+  extendZodWithOpenApi,
+} from '@asteasolutions/zod-to-openapi';
+import { z } from 'zod';
 import {
   issueTypeValues,
   issueStatusValues,
   relationTypeValues,
   authorTypeValues,
-} from '../db/schema/issues'
-import { signalSeverityValues } from '../db/schema/signals'
-import {
-  projectStatusValues,
-  projectHealthValues,
-  goalStatusValues,
-} from '../db/schema/projects'
-import { promptVersionStatusValues } from '../db/schema/prompts'
+} from '../db/schema/issues';
+import { signalSeverityValues } from '../db/schema/signals';
+import { projectStatusValues, projectHealthValues, goalStatusValues } from '../db/schema/projects';
+import { promptVersionStatusValues } from '../db/schema/prompts';
 
 // Extend Zod with OpenAPI support — must be called once before any schema definitions
-extendZodWithOpenApi(z)
+extendZodWithOpenApi(z);
 
-export const registry = new OpenAPIRegistry()
+export const registry = new OpenAPIRegistry();
 
 // ─── Template conditions (inline to avoid cross-module extendZodWithOpenApi timing) ──
 
@@ -41,15 +41,15 @@ const ConditionsSchema = z
   .openapi({
     description: 'Conditions that determine when this template is selected',
     example: { type: 'signal' },
-  })
+  });
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
-const IdSchema = z.string().openapi({ example: 'cuid2_abc123' })
+const IdSchema = z.string().openapi({ example: 'cuid2_abc123' });
 const DateTimeSchema = z.string().openapi({
   format: 'date-time',
   example: '2026-02-20T12:00:00.000Z',
-})
+});
 const PaginationQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50).openapi({
     description: 'Maximum records to return (1–200)',
@@ -59,19 +59,27 @@ const PaginationQuerySchema = z.object({
     description: 'Number of records to skip',
     example: 0,
   }),
-})
+});
 
 // ─── Issues ───────────────────────────────────────────────────────────────────
 
 const HypothesisDataSchema = z
   .object({
-    statement: z.string().openapi({ example: 'Switching to a new auth provider will reduce login failures by 30%' }),
+    statement: z
+      .string()
+      .openapi({ example: 'Switching to a new auth provider will reduce login failures by 30%' }),
     confidence: z.number().min(0).max(1).openapi({ example: 0.75 }),
-    evidence: z.array(z.string()).openapi({ example: ['Login failure rate up 20%', 'PostHog session data shows 15% drop-off'] }),
-    validationCriteria: z.string().openapi({ example: 'Login failure rate drops below 5% within 30 days' }),
+    evidence: z
+      .array(z.string())
+      .openapi({
+        example: ['Login failure rate up 20%', 'PostHog session data shows 15% drop-off'],
+      }),
+    validationCriteria: z
+      .string()
+      .openapi({ example: 'Login failure rate drops below 5% within 30 days' }),
     prediction: z.string().optional().openapi({ example: 'Failure rate reduced to ~2%' }),
   })
-  .openapi('HypothesisData')
+  .openapi('HypothesisData');
 
 const CommitRefSchema = z
   .object({
@@ -81,7 +89,7 @@ const CommitRefSchema = z
     author: z.string().optional().openapi({ example: 'agent-claude' }),
     timestamp: z.string().optional().openapi({ example: '2026-02-20T10:00:00Z' }),
   })
-  .openapi('CommitRef')
+  .openapi('CommitRef');
 
 const PullRequestRefSchema = z
   .object({
@@ -91,7 +99,7 @@ const PullRequestRefSchema = z
     state: z.string().optional().openapi({ example: 'merged' }),
     mergedAt: z.string().nullable().optional().openapi({ example: '2026-02-20T11:00:00Z' }),
   })
-  .openapi('PullRequestRef')
+  .openapi('PullRequestRef');
 
 const IssueSchema = registry.register(
   'Issue',
@@ -99,14 +107,20 @@ const IssueSchema = registry.register(
     id: IdSchema,
     number: z.number().int().openapi({ example: 1 }),
     title: z.string().openapi({ example: '[PostHog] error_rate: Login failures spiked' }),
-    description: z.string().nullable().openapi({ example: 'Auth failure rate exceeded 20% over the last hour.' }),
+    description: z
+      .string()
+      .nullable()
+      .openapi({ example: 'Auth failure rate exceeded 20% over the last hour.' }),
     type: z.enum(issueTypeValues).openapi({ example: 'signal' }),
     status: z.enum(issueStatusValues).openapi({ example: 'triage' }),
     priority: z.number().int().min(0).max(4).openapi({ example: 2 }),
     parentId: IdSchema.nullable().openapi({ example: null }),
     projectId: IdSchema.nullable().openapi({ example: null }),
     signalSource: z.string().nullable().openapi({ example: 'posthog' }),
-    signalPayload: z.record(z.string(), z.unknown()).nullable().openapi({ example: { event: 'error_rate', value: 0.22 } }),
+    signalPayload: z
+      .record(z.string(), z.unknown())
+      .nullable()
+      .openapi({ example: { event: 'error_rate', value: 0.22 } }),
     hypothesis: HypothesisDataSchema.nullable(),
     agentSessionId: z.string().nullable().openapi({ example: null }),
     agentSummary: z.string().nullable().openapi({ example: null }),
@@ -117,7 +131,7 @@ const IssueSchema = registry.register(
     updatedAt: DateTimeSchema,
     deletedAt: DateTimeSchema.nullable().openapi({ example: null }),
   })
-)
+);
 
 const LabelSchema = registry.register(
   'Label',
@@ -128,7 +142,7 @@ const LabelSchema = registry.register(
     createdAt: DateTimeSchema,
     deletedAt: DateTimeSchema.nullable(),
   })
-)
+);
 
 const IssueRelationSchema = registry.register(
   'IssueRelation',
@@ -139,20 +153,22 @@ const IssueRelationSchema = registry.register(
     relatedIssueId: IdSchema,
     createdAt: DateTimeSchema,
   })
-)
+);
 
 const CommentSchema = registry.register(
   'Comment',
   z.object({
     id: IdSchema,
-    body: z.string().openapi({ example: 'Investigated — this is caused by an expired JWT secret.' }),
+    body: z
+      .string()
+      .openapi({ example: 'Investigated — this is caused by an expired JWT secret.' }),
     issueId: IdSchema,
     authorName: z.string().openapi({ example: 'claude-agent' }),
     authorType: z.enum(authorTypeValues).openapi({ example: 'agent' }),
     parentId: IdSchema.nullable(),
     createdAt: DateTimeSchema,
   })
-)
+);
 
 // ─── Projects + Goals ─────────────────────────────────────────────────────────
 
@@ -161,7 +177,10 @@ const GoalSchema = registry.register(
   z.object({
     id: IdSchema,
     title: z.string().openapi({ example: 'Reduce login failure rate to < 5%' }),
-    description: z.string().nullable().openapi({ example: 'Track auth failure rates from PostHog.' }),
+    description: z
+      .string()
+      .nullable()
+      .openapi({ example: 'Track auth failure rates from PostHog.' }),
     metric: z.string().nullable().openapi({ example: 'login_failure_rate' }),
     targetValue: z.number().nullable().openapi({ example: 0.05 }),
     currentValue: z.number().nullable().openapi({ example: 0.18 }),
@@ -172,14 +191,17 @@ const GoalSchema = registry.register(
     updatedAt: DateTimeSchema,
     deletedAt: DateTimeSchema.nullable(),
   })
-)
+);
 
 const ProjectSchema = registry.register(
   'Project',
   z.object({
     id: IdSchema,
     name: z.string().openapi({ example: 'Auth Reliability' }),
-    description: z.string().nullable().openapi({ example: 'Improve authentication reliability and reduce failures.' }),
+    description: z
+      .string()
+      .nullable()
+      .openapi({ example: 'Improve authentication reliability and reduce failures.' }),
     status: z.enum(projectStatusValues).openapi({ example: 'active' }),
     health: z.enum(projectHealthValues).openapi({ example: 'on_track' }),
     goalId: IdSchema.nullable(),
@@ -187,7 +209,7 @@ const ProjectSchema = registry.register(
     updatedAt: DateTimeSchema,
     deletedAt: DateTimeSchema.nullable(),
   })
-)
+);
 
 // ─── Signals ──────────────────────────────────────────────────────────────────
 
@@ -199,11 +221,13 @@ const SignalSchema = registry.register(
     sourceId: z.string().nullable().openapi({ example: 'evt_12345' }),
     type: z.string().openapi({ example: 'error_rate' }),
     severity: z.enum(signalSeverityValues).openapi({ example: 'high' }),
-    payload: z.record(z.string(), z.unknown()).openapi({ example: { event: 'error_rate', value: 0.22 } }),
+    payload: z
+      .record(z.string(), z.unknown())
+      .openapi({ example: { event: 'error_rate', value: 0.22 } }),
     issueId: IdSchema,
     createdAt: DateTimeSchema,
   })
-)
+);
 
 // ─── Prompt templates, versions, reviews ─────────────────────────────────────
 
@@ -213,7 +237,10 @@ const PromptTemplateSchema = registry.register(
     id: IdSchema,
     slug: z.string().openapi({ example: 'signal-triage' }),
     name: z.string().openapi({ example: 'Signal Triage' }),
-    description: z.string().nullable().openapi({ example: 'Default template for triaging incoming signals.' }),
+    description: z
+      .string()
+      .nullable()
+      .openapi({ example: 'Default template for triaging incoming signals.' }),
     conditions: ConditionsSchema.openapi({
       description: 'Conditions that determine when this template is selected',
       example: { type: 'signal' },
@@ -225,7 +252,7 @@ const PromptTemplateSchema = registry.register(
     updatedAt: DateTimeSchema,
     deletedAt: DateTimeSchema.nullable(),
   })
-)
+);
 
 const PromptVersionSchema = registry.register(
   'PromptVersion',
@@ -233,7 +260,11 @@ const PromptVersionSchema = registry.register(
     id: IdSchema,
     templateId: IdSchema,
     version: z.number().int().openapi({ example: 1 }),
-    content: z.string().openapi({ example: '# Signal Triage: {{issue.title}}\n\nYou are triaging signal #{{issue.number}}.' }),
+    content: z
+      .string()
+      .openapi({
+        example: '# Signal Triage: {{issue.title}}\n\nYou are triaging signal #{{issue.number}}.',
+      }),
     changelog: z.string().nullable().openapi({ example: 'Initial version' }),
     authorType: z.enum(authorTypeValues).openapi({ example: 'human' }),
     authorName: z.string().openapi({ example: 'system' }),
@@ -244,7 +275,7 @@ const PromptVersionSchema = registry.register(
     reviewScore: z.number().nullable().openapi({ example: null }),
     createdAt: DateTimeSchema,
   })
-)
+);
 
 const PromptReviewSchema = registry.register(
   'PromptReview',
@@ -255,17 +286,20 @@ const PromptReviewSchema = registry.register(
     clarity: z.number().int().min(1).max(5).openapi({ example: 4 }),
     completeness: z.number().int().min(1).max(5).openapi({ example: 5 }),
     relevance: z.number().int().min(1).max(5).openapi({ example: 3 }),
-    feedback: z.string().nullable().openapi({ example: 'Instructions were clear but missing error handling steps.' }),
+    feedback: z
+      .string()
+      .nullable()
+      .openapi({ example: 'Instructions were clear but missing error handling steps.' }),
     authorType: z.enum(authorTypeValues).openapi({ example: 'agent' }),
     createdAt: DateTimeSchema,
   })
-)
+);
 
 // ─── Response wrappers ────────────────────────────────────────────────────────
 
 /** Wraps a single item response: `{ data: T }` */
 function dataResponse<T extends z.ZodTypeAny>(schema: T) {
-  return z.object({ data: schema })
+  return z.object({ data: schema });
 }
 
 /** Wraps a paginated list response: `{ data: T[], total: number }` */
@@ -273,13 +307,13 @@ function paginatedResponse<T extends z.ZodTypeAny>(schema: T) {
   return z.object({
     data: z.array(schema),
     total: z.number().int().openapi({ example: 42 }),
-  })
+  });
 }
 
 /** Error response shape returned by the global error handler. */
 const ErrorSchema = z.object({
   error: z.string().openapi({ example: 'Issue not found' }),
-})
+});
 
 // ─── Security scheme ──────────────────────────────────────────────────────────
 
@@ -287,7 +321,7 @@ registry.registerComponent('securitySchemes', 'bearerAuth', {
   type: 'http',
   scheme: 'bearer',
   description: 'API key passed as Bearer token in the Authorization header',
-})
+});
 
 // ─── Health endpoints ─────────────────────────────────────────────────────────
 
@@ -311,7 +345,7 @@ registry.registerPath({
       },
     },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -332,7 +366,7 @@ registry.registerPath({
       },
     },
   },
-})
+});
 
 // ─── Issues endpoints ─────────────────────────────────────────────────────────
 
@@ -341,7 +375,8 @@ registry.registerPath({
   path: '/api/issues',
   tags: ['Issues'],
   summary: 'List issues',
-  description: 'Returns a paginated list of issues, filterable by status, type, projectId, labelId, priority, and parentId.',
+  description:
+    'Returns a paginated list of issues, filterable by status, type, projectId, labelId, priority, and parentId.',
   security: [{ bearerAuth: [] }],
   request: {
     query: z.object({
@@ -372,7 +407,7 @@ registry.registerPath({
     },
     401: { description: 'Unauthorized — invalid or missing Bearer token' },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
@@ -385,8 +420,15 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: z.object({
-            title: z.string().min(1).max(500).openapi({ example: 'Investigate login failure spike' }),
-            description: z.string().optional().openapi({ example: 'Auth failure rate exceeded 20% over the last hour.' }),
+            title: z
+              .string()
+              .min(1)
+              .max(500)
+              .openapi({ example: 'Investigate login failure spike' }),
+            description: z
+              .string()
+              .optional()
+              .openapi({ example: 'Auth failure rate exceeded 20% over the last hour.' }),
             type: z.enum(issueTypeValues).openapi({ example: 'signal' }),
             status: z.enum(issueStatusValues).default('triage').openapi({ example: 'triage' }),
             priority: z.number().int().min(0).max(4).default(0).openapi({ example: 2 }),
@@ -409,7 +451,7 @@ registry.registerPath({
     401: { description: 'Unauthorized' },
     422: { description: 'Validation error or parent hierarchy violation' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -439,7 +481,7 @@ registry.registerPath({
     },
     404: { description: 'Issue not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'patch',
@@ -469,11 +511,14 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Updated issue', content: { 'application/json': { schema: dataResponse(IssueSchema) } } },
+    200: {
+      description: 'Updated issue',
+      content: { 'application/json': { schema: dataResponse(IssueSchema) } },
+    },
     404: { description: 'Issue not found' },
     422: { description: 'Validation error' },
   },
-})
+});
 
 registry.registerPath({
   method: 'delete',
@@ -486,7 +531,7 @@ registry.registerPath({
     204: { description: 'Issue deleted' },
     404: { description: 'Issue not found' },
   },
-})
+});
 
 // ─── Issue relations endpoints ────────────────────────────────────────────────
 
@@ -510,11 +555,14 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Relation created', content: { 'application/json': { schema: dataResponse(IssueRelationSchema) } } },
+    201: {
+      description: 'Relation created',
+      content: { 'application/json': { schema: dataResponse(IssueRelationSchema) } },
+    },
     404: { description: 'Issue not found' },
     422: { description: 'Validation error or self-relation' },
   },
-})
+});
 
 registry.registerPath({
   method: 'delete',
@@ -527,7 +575,7 @@ registry.registerPath({
     204: { description: 'Relation deleted' },
     404: { description: 'Relation not found' },
   },
-})
+});
 
 // ─── Comments endpoints ───────────────────────────────────────────────────────
 
@@ -544,17 +592,13 @@ registry.registerPath({
       description: 'Threaded comment list',
       content: {
         'application/json': {
-          schema: dataResponse(
-            z.array(
-              CommentSchema.extend({ replies: z.array(CommentSchema) })
-            )
-          ),
+          schema: dataResponse(z.array(CommentSchema.extend({ replies: z.array(CommentSchema) }))),
         },
       },
     },
     404: { description: 'Issue not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
@@ -568,21 +612,30 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: z.object({
-            body: z.string().min(1).openapi({ example: 'Investigated the auth logs — found an expired JWT secret.' }),
+            body: z
+              .string()
+              .min(1)
+              .openapi({ example: 'Investigated the auth logs — found an expired JWT secret.' }),
             authorName: z.string().min(1).openapi({ example: 'claude-agent' }),
             authorType: z.enum(authorTypeValues).openapi({ example: 'agent' }),
-            parentId: z.string().optional().openapi({ description: 'Parent comment ID for threaded replies' }),
+            parentId: z
+              .string()
+              .optional()
+              .openapi({ description: 'Parent comment ID for threaded replies' }),
           }),
         },
       },
     },
   },
   responses: {
-    201: { description: 'Comment created', content: { 'application/json': { schema: dataResponse(CommentSchema) } } },
+    201: {
+      description: 'Comment created',
+      content: { 'application/json': { schema: dataResponse(CommentSchema) } },
+    },
     404: { description: 'Issue not found' },
     422: { description: 'Validation error or parent comment not found' },
   },
-})
+});
 
 // ─── Labels endpoints ─────────────────────────────────────────────────────────
 
@@ -599,7 +652,7 @@ registry.registerPath({
       content: { 'application/json': { schema: paginatedResponse(LabelSchema) } },
     },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
@@ -620,11 +673,14 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Label created', content: { 'application/json': { schema: dataResponse(LabelSchema) } } },
+    201: {
+      description: 'Label created',
+      content: { 'application/json': { schema: dataResponse(LabelSchema) } },
+    },
     409: { description: 'Label name already exists' },
     422: { description: 'Validation error' },
   },
-})
+});
 
 registry.registerPath({
   method: 'delete',
@@ -637,7 +693,7 @@ registry.registerPath({
     204: { description: 'Label deleted' },
     404: { description: 'Label not found' },
   },
-})
+});
 
 // ─── Projects endpoints ───────────────────────────────────────────────────────
 
@@ -654,7 +710,7 @@ registry.registerPath({
       content: { 'application/json': { schema: paginatedResponse(ProjectSchema) } },
     },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
@@ -668,9 +724,15 @@ registry.registerPath({
         'application/json': {
           schema: z.object({
             name: z.string().min(1).max(500).openapi({ example: 'Auth Reliability' }),
-            description: z.string().optional().openapi({ example: 'Improve authentication reliability.' }),
+            description: z
+              .string()
+              .optional()
+              .openapi({ example: 'Improve authentication reliability.' }),
             status: z.enum(projectStatusValues).default('backlog').openapi({ example: 'active' }),
-            health: z.enum(projectHealthValues).default('on_track').openapi({ example: 'on_track' }),
+            health: z
+              .enum(projectHealthValues)
+              .default('on_track')
+              .openapi({ example: 'on_track' }),
             goalId: z.string().optional().openapi({ example: undefined }),
           }),
         },
@@ -678,10 +740,13 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Project created', content: { 'application/json': { schema: dataResponse(ProjectSchema) } } },
+    201: {
+      description: 'Project created',
+      content: { 'application/json': { schema: dataResponse(ProjectSchema) } },
+    },
     422: { description: 'Validation error or goal not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -699,7 +764,9 @@ registry.registerPath({
           schema: dataResponse(
             ProjectSchema.extend({
               goal: GoalSchema.nullable(),
-              issueCounts: z.record(z.string(), z.number()).openapi({ example: { todo: 3, in_progress: 1, done: 10 } }),
+              issueCounts: z
+                .record(z.string(), z.number())
+                .openapi({ example: { todo: 3, in_progress: 1, done: 10 } }),
             })
           ),
         },
@@ -707,7 +774,7 @@ registry.registerPath({
     },
     404: { description: 'Project not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'patch',
@@ -732,11 +799,14 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Updated project', content: { 'application/json': { schema: dataResponse(ProjectSchema) } } },
+    200: {
+      description: 'Updated project',
+      content: { 'application/json': { schema: dataResponse(ProjectSchema) } },
+    },
     404: { description: 'Project not found' },
     422: { description: 'Validation error or goal not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'delete',
@@ -749,7 +819,7 @@ registry.registerPath({
     204: { description: 'Project deleted' },
     404: { description: 'Project not found' },
   },
-})
+});
 
 // ─── Goals endpoints ──────────────────────────────────────────────────────────
 
@@ -766,7 +836,7 @@ registry.registerPath({
       content: { 'application/json': { schema: paginatedResponse(GoalSchema) } },
     },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
@@ -779,7 +849,11 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: z.object({
-            title: z.string().min(1).max(500).openapi({ example: 'Reduce login failure rate to < 5%' }),
+            title: z
+              .string()
+              .min(1)
+              .max(500)
+              .openapi({ example: 'Reduce login failure rate to < 5%' }),
             description: z.string().optional(),
             metric: z.string().optional().openapi({ example: 'login_failure_rate' }),
             targetValue: z.number().optional().openapi({ example: 0.05 }),
@@ -793,10 +867,13 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Goal created', content: { 'application/json': { schema: dataResponse(GoalSchema) } } },
+    201: {
+      description: 'Goal created',
+      content: { 'application/json': { schema: dataResponse(GoalSchema) } },
+    },
     422: { description: 'Validation error' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -806,10 +883,13 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   request: { params: z.object({ id: IdSchema }) },
   responses: {
-    200: { description: 'Goal', content: { 'application/json': { schema: dataResponse(GoalSchema) } } },
+    200: {
+      description: 'Goal',
+      content: { 'application/json': { schema: dataResponse(GoalSchema) } },
+    },
     404: { description: 'Goal not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'patch',
@@ -837,11 +917,14 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Updated goal', content: { 'application/json': { schema: dataResponse(GoalSchema) } } },
+    200: {
+      description: 'Updated goal',
+      content: { 'application/json': { schema: dataResponse(GoalSchema) } },
+    },
     404: { description: 'Goal not found' },
     422: { description: 'Validation error' },
   },
-})
+});
 
 registry.registerPath({
   method: 'delete',
@@ -854,7 +937,7 @@ registry.registerPath({
     204: { description: 'Goal deleted' },
     404: { description: 'Goal not found' },
   },
-})
+});
 
 // ─── Signals endpoints ────────────────────────────────────────────────────────
 
@@ -874,7 +957,9 @@ registry.registerPath({
             sourceId: z.string().optional().openapi({ example: 'evt_12345' }),
             type: z.string().min(1).openapi({ example: 'error_rate' }),
             severity: z.enum(signalSeverityValues).openapi({ example: 'high' }),
-            payload: z.record(z.string(), z.unknown()).openapi({ example: { event: 'error_rate', value: 0.22 } }),
+            payload: z
+              .record(z.string(), z.unknown())
+              .openapi({ example: { event: 'error_rate', value: 0.22 } }),
             projectId: z.string().optional(),
           }),
         },
@@ -886,15 +971,13 @@ registry.registerPath({
       description: 'Signal and linked issue created',
       content: {
         'application/json': {
-          schema: dataResponse(
-            z.object({ signal: SignalSchema, issue: IssueSchema })
-          ),
+          schema: dataResponse(z.object({ signal: SignalSchema, issue: IssueSchema })),
         },
       },
     },
     422: { description: 'Validation error' },
   },
-})
+});
 
 // ─── Templates endpoints ──────────────────────────────────────────────────────
 
@@ -911,7 +994,7 @@ registry.registerPath({
       content: { 'application/json': { schema: paginatedResponse(PromptTemplateSchema) } },
     },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
@@ -931,7 +1014,10 @@ registry.registerPath({
               .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Lowercase alphanumeric with hyphens')
               .openapi({ example: 'signal-triage' }),
             name: z.string().min(1).max(500).openapi({ example: 'Signal Triage' }),
-            description: z.string().optional().openapi({ example: 'Default template for triaging signals.' }),
+            description: z
+              .string()
+              .optional()
+              .openapi({ example: 'Default template for triaging signals.' }),
             conditions: ConditionsSchema.default({}).openapi({
               example: { type: 'signal' },
             }),
@@ -943,11 +1029,14 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Template created', content: { 'application/json': { schema: dataResponse(PromptTemplateSchema) } } },
+    201: {
+      description: 'Template created',
+      content: { 'application/json': { schema: dataResponse(PromptTemplateSchema) } },
+    },
     409: { description: 'Template slug already exists' },
     422: { description: 'Validation error' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -962,13 +1051,15 @@ registry.registerPath({
       description: 'Template with active version',
       content: {
         'application/json': {
-          schema: dataResponse(PromptTemplateSchema.extend({ activeVersion: PromptVersionSchema.nullable() })),
+          schema: dataResponse(
+            PromptTemplateSchema.extend({ activeVersion: PromptVersionSchema.nullable() })
+          ),
         },
       },
     },
     404: { description: 'Template not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'patch',
@@ -993,10 +1084,13 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Updated template', content: { 'application/json': { schema: dataResponse(PromptTemplateSchema) } } },
+    200: {
+      description: 'Updated template',
+      content: { 'application/json': { schema: dataResponse(PromptTemplateSchema) } },
+    },
     404: { description: 'Template not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'delete',
@@ -1009,7 +1103,7 @@ registry.registerPath({
     204: { description: 'Template deleted' },
     404: { description: 'Template not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -1028,14 +1122,15 @@ registry.registerPath({
     },
     404: { description: 'Template not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
   path: '/api/templates/{id}/versions',
   tags: ['Templates'],
   summary: 'Create a new version',
-  description: 'Auto-increments version number. Rejects content containing triple-braces to prevent template injection.',
+  description:
+    'Auto-increments version number. Rejects content containing triple-braces to prevent template injection.',
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({ id: IdSchema }),
@@ -1043,8 +1138,14 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: z.object({
-            content: z.string().min(1).openapi({ example: '# Signal Triage: {{issue.title}}\n\n...' }),
-            changelog: z.string().optional().openapi({ example: 'Improved instructions for signal analysis.' }),
+            content: z
+              .string()
+              .min(1)
+              .openapi({ example: '# Signal Triage: {{issue.title}}\n\n...' }),
+            changelog: z
+              .string()
+              .optional()
+              .openapi({ example: 'Improved instructions for signal analysis.' }),
             authorType: z.enum(authorTypeValues).openapi({ example: 'human' }),
             authorName: z.string().min(1).openapi({ example: 'dorian' }),
           }),
@@ -1053,11 +1154,14 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Version created', content: { 'application/json': { schema: dataResponse(PromptVersionSchema) } } },
+    201: {
+      description: 'Version created',
+      content: { 'application/json': { schema: dataResponse(PromptVersionSchema) } },
+    },
     404: { description: 'Template not found' },
     422: { description: 'Triple-brace content rejected' },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
@@ -1070,11 +1174,14 @@ registry.registerPath({
     params: z.object({ id: IdSchema, versionId: IdSchema }),
   },
   responses: {
-    200: { description: 'Version promoted', content: { 'application/json': { schema: dataResponse(PromptVersionSchema) } } },
+    200: {
+      description: 'Version promoted',
+      content: { 'application/json': { schema: dataResponse(PromptVersionSchema) } },
+    },
     404: { description: 'Template or version not found' },
     422: { description: 'Version is already active' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -1094,14 +1201,15 @@ registry.registerPath({
     },
     404: { description: 'Template not found' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
   path: '/api/templates/preview/{issueId}',
   tags: ['Templates'],
   summary: 'Preview template selection for an issue',
-  description: 'Selects and hydrates a template for the given issue without claiming it. Useful for debugging template selection.',
+  description:
+    'Selects and hydrates a template for the given issue without claiming it. Useful for debugging template selection.',
   security: [{ bearerAuth: [] }],
   request: { params: z.object({ issueId: IdSchema }) },
   responses: {
@@ -1126,7 +1234,10 @@ registry.registerPath({
               })
               .nullable(),
             version: z.object({ id: IdSchema, version: z.number().int() }).nullable(),
-            prompt: z.string().nullable().openapi({ description: 'Hydrated Handlebars prompt content' }),
+            prompt: z
+              .string()
+              .nullable()
+              .openapi({ description: 'Hydrated Handlebars prompt content' }),
             message: z.string().optional().openapi({ example: 'No matching template found' }),
           }),
         },
@@ -1134,7 +1245,7 @@ registry.registerPath({
     },
     404: { description: 'Issue not found' },
   },
-})
+});
 
 // ─── Prompt reviews endpoint ──────────────────────────────────────────────────
 
@@ -1143,7 +1254,8 @@ registry.registerPath({
   path: '/api/prompt-reviews',
   tags: ['Prompt Reviews'],
   summary: 'Submit a prompt review',
-  description: 'Submits a quality review for a prompt version. Updates the version\'s EWMA review score and triggers an improvement issue if quality degrades below threshold.',
+  description:
+    "Submits a quality review for a prompt version. Updates the version's EWMA review score and triggers an improvement issue if quality degrades below threshold.",
   security: [{ bearerAuth: [] }],
   request: {
     body: {
@@ -1155,7 +1267,10 @@ registry.registerPath({
             clarity: z.number().int().min(1).max(5).openapi({ example: 4 }),
             completeness: z.number().int().min(1).max(5).openapi({ example: 5 }),
             relevance: z.number().int().min(1).max(5).openapi({ example: 3 }),
-            feedback: z.string().optional().openapi({ example: 'Instructions were clear but missing error handling steps.' }),
+            feedback: z
+              .string()
+              .optional()
+              .openapi({ example: 'Instructions were clear but missing error handling steps.' }),
             authorType: z.enum(authorTypeValues).openapi({ example: 'agent' }),
           }),
         },
@@ -1163,11 +1278,14 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Review submitted', content: { 'application/json': { schema: dataResponse(PromptReviewSchema) } } },
+    201: {
+      description: 'Review submitted',
+      content: { 'application/json': { schema: dataResponse(PromptReviewSchema) } },
+    },
     404: { description: 'Version not found' },
     422: { description: 'Validation error' },
   },
-})
+});
 
 // ─── Dispatch endpoints ───────────────────────────────────────────────────────
 
@@ -1178,18 +1296,25 @@ const DispatchIssueSchema = z.object({
   type: z.enum(issueTypeValues).openapi({ example: 'signal' }),
   priority: z.number().int().openapi({ example: 2 }),
   status: z.enum(issueStatusValues).openapi({ example: 'in_progress' }),
-})
+});
 
 registry.registerPath({
   method: 'get',
   path: '/api/dispatch/next',
   tags: ['Dispatch'],
   summary: 'Claim the highest-priority unblocked issue',
-  description: 'Atomically claims the highest-priority unblocked todo issue using FOR UPDATE SKIP LOCKED, sets it to in_progress, selects the best matching template, and returns a hydrated prompt. Returns 204 when queue is empty.',
+  description:
+    'Atomically claims the highest-priority unblocked todo issue using FOR UPDATE SKIP LOCKED, sets it to in_progress, selects the best matching template, and returns a hydrated prompt. Returns 204 when queue is empty.',
   security: [{ bearerAuth: [] }],
   request: {
     query: z.object({
-      projectId: z.string().optional().openapi({ description: 'Restrict dispatch to issues in this project', example: 'cuid2_proj' }),
+      projectId: z
+        .string()
+        .optional()
+        .openapi({
+          description: 'Restrict dispatch to issues in this project',
+          example: 'cuid2_proj',
+        }),
     }),
   },
   responses: {
@@ -1199,7 +1324,10 @@ registry.registerPath({
         'application/json': {
           schema: z.object({
             issue: DispatchIssueSchema,
-            prompt: z.string().nullable().openapi({ description: 'Hydrated prompt text, or null if no template matched' }),
+            prompt: z
+              .string()
+              .nullable()
+              .openapi({ description: 'Hydrated prompt text, or null if no template matched' }),
             meta: z
               .object({
                 templateSlug: z.string().openapi({ example: 'signal-triage' }),
@@ -1216,14 +1344,15 @@ registry.registerPath({
     204: { description: 'No eligible issues in queue' },
     401: { description: 'Unauthorized' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
   path: '/api/dispatch/queue',
   tags: ['Dispatch'],
   summary: 'Preview the priority-ordered dispatch queue',
-  description: 'Returns unblocked todo issues sorted by priority score (does not claim any issues).',
+  description:
+    'Returns unblocked todo issues sorted by priority score (does not claim any issues).',
   security: [{ bearerAuth: [] }],
   request: {
     query: z.object({
@@ -1257,7 +1386,7 @@ registry.registerPath({
     },
     401: { description: 'Unauthorized' },
   },
-})
+});
 
 // ─── Dashboard endpoints ──────────────────────────────────────────────────────
 
@@ -1266,7 +1395,8 @@ registry.registerPath({
   path: '/api/dashboard/stats',
   tags: ['Dashboard'],
   summary: 'System health metrics',
-  description: 'Returns aggregated issue counts by status/type, goal counts, and dispatch queue metrics.',
+  description:
+    'Returns aggregated issue counts by status/type, goal counts, and dispatch queue metrics.',
   security: [{ bearerAuth: [] }],
   responses: {
     200: {
@@ -1301,14 +1431,15 @@ registry.registerPath({
     },
     401: { description: 'Unauthorized' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
   path: '/api/dashboard/activity',
   tags: ['Dashboard'],
   summary: 'Signal chains for activity timeline',
-  description: 'Returns pre-assembled signal chains (root issues with children and relations), sorted by most recent activity.',
+  description:
+    'Returns pre-assembled signal chains (root issues with children and relations), sorted by most recent activity.',
   security: [{ bearerAuth: [] }],
   request: {
     query: z.object({
@@ -1340,7 +1471,7 @@ registry.registerPath({
     },
     401: { description: 'Unauthorized' },
   },
-})
+});
 
 registry.registerPath({
   method: 'get',
@@ -1359,7 +1490,9 @@ registry.registerPath({
               z.object({
                 template: PromptTemplateSchema,
                 activeVersion: PromptVersionSchema.nullable(),
-                recentVersions: z.array(PromptVersionSchema).openapi({ description: 'Last 5 versions' }),
+                recentVersions: z
+                  .array(PromptVersionSchema)
+                  .openapi({ description: 'Last 5 versions' }),
                 reviewSummary: z.object({
                   totalReviews: z.number().int().openapi({ example: 12 }),
                   avgClarity: z.number().nullable().openapi({ example: 4.1 }),
@@ -1367,7 +1500,12 @@ registry.registerPath({
                   avgRelevance: z.number().nullable().openapi({ example: 4.3 }),
                   compositeScore: z.number().nullable().openapi({ example: 4.07 }),
                 }),
-                needsAttention: z.boolean().openapi({ description: 'True when compositeScore < 3.0 or completionRate < 50%', example: false }),
+                needsAttention: z
+                  .boolean()
+                  .openapi({
+                    description: 'True when compositeScore < 3.0 or completionRate < 50%',
+                    example: false,
+                  }),
               })
             )
           ),
@@ -1376,7 +1514,7 @@ registry.registerPath({
     },
     401: { description: 'Unauthorized' },
   },
-})
+});
 
 // ─── Webhook endpoints ────────────────────────────────────────────────────────
 
@@ -1385,66 +1523,96 @@ registry.registerPath({
   path: '/api/signals/posthog',
   tags: ['Webhooks'],
   summary: 'PostHog metric alert webhook',
-  description: 'Receives metric alert webhooks from PostHog. Authenticated via POSTHOG_WEBHOOK_SECRET in the Authorization header.',
+  description:
+    'Receives metric alert webhooks from PostHog. Authenticated via POSTHOG_WEBHOOK_SECRET in the Authorization header.',
   request: {
     body: {
       content: {
         'application/json': {
-          schema: z.record(z.string(), z.unknown()).openapi({ description: 'PostHog webhook payload' }),
+          schema: z
+            .record(z.string(), z.unknown())
+            .openapi({ description: 'PostHog webhook payload' }),
         },
       },
     },
   },
   responses: {
-    200: { description: 'Webhook processed', content: { 'application/json': { schema: dataResponse(z.object({ signal: SignalSchema, issue: IssueSchema })) } } },
+    200: {
+      description: 'Webhook processed',
+      content: {
+        'application/json': {
+          schema: dataResponse(z.object({ signal: SignalSchema, issue: IssueSchema })),
+        },
+      },
+    },
     400: { description: 'Bad request or payload parsing failure' },
     401: { description: 'Invalid PostHog webhook secret' },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
   path: '/api/signals/github',
   tags: ['Webhooks'],
   summary: 'GitHub events webhook',
-  description: 'Receives GitHub events (push, pull_request, issues). Verified via HMAC-SHA256 signature using GITHUB_WEBHOOK_SECRET.',
+  description:
+    'Receives GitHub events (push, pull_request, issues). Verified via HMAC-SHA256 signature using GITHUB_WEBHOOK_SECRET.',
   request: {
     body: {
       content: {
         'application/json': {
-          schema: z.record(z.string(), z.unknown()).openapi({ description: 'GitHub webhook payload' }),
+          schema: z
+            .record(z.string(), z.unknown())
+            .openapi({ description: 'GitHub webhook payload' }),
         },
       },
     },
   },
   responses: {
-    200: { description: 'Webhook processed', content: { 'application/json': { schema: dataResponse(z.object({ signal: SignalSchema, issue: IssueSchema })) } } },
+    200: {
+      description: 'Webhook processed',
+      content: {
+        'application/json': {
+          schema: dataResponse(z.object({ signal: SignalSchema, issue: IssueSchema })),
+        },
+      },
+    },
     400: { description: 'Bad request or signature mismatch' },
     401: { description: 'Invalid GitHub webhook signature' },
   },
-})
+});
 
 registry.registerPath({
   method: 'post',
   path: '/api/signals/sentry',
   tags: ['Webhooks'],
   summary: 'Sentry error alert webhook',
-  description: 'Receives Sentry error alerts. Verified via HMAC-SHA256 signature using SENTRY_CLIENT_SECRET.',
+  description:
+    'Receives Sentry error alerts. Verified via HMAC-SHA256 signature using SENTRY_CLIENT_SECRET.',
   request: {
     body: {
       content: {
         'application/json': {
-          schema: z.record(z.string(), z.unknown()).openapi({ description: 'Sentry webhook payload' }),
+          schema: z
+            .record(z.string(), z.unknown())
+            .openapi({ description: 'Sentry webhook payload' }),
         },
       },
     },
   },
   responses: {
-    200: { description: 'Webhook processed', content: { 'application/json': { schema: dataResponse(z.object({ signal: SignalSchema, issue: IssueSchema })) } } },
+    200: {
+      description: 'Webhook processed',
+      content: {
+        'application/json': {
+          schema: dataResponse(z.object({ signal: SignalSchema, issue: IssueSchema })),
+        },
+      },
+    },
     400: { description: 'Bad request or signature mismatch' },
     401: { description: 'Invalid Sentry webhook signature' },
   },
-})
+});
 
 // ─── Document generator ───────────────────────────────────────────────────────
 
@@ -1454,13 +1622,14 @@ registry.registerPath({
  * @returns OpenAPI 3.1 document object ready for serialization to JSON or YAML.
  */
 export function generateOpenApiDocument() {
-  const generator = new OpenApiGeneratorV31(registry.definitions)
+  const generator = new OpenApiGeneratorV31(registry.definitions);
   return generator.generateDocument({
     openapi: '3.1.0',
     info: {
       title: 'Loop API',
       version: '0.1.0',
-      description: 'The Loop Autonomous Improvement Engine API. Collects signals, organizes work into issues, and dispatches AI agents with hydrated prompts.',
+      description:
+        'The Loop Autonomous Improvement Engine API. Collects signals, organizes work into issues, and dispatches AI agents with hydrated prompts.',
       contact: {
         name: 'Loop by Dork Labs',
         url: 'https://www.looped.me',
@@ -1476,7 +1645,10 @@ export function generateOpenApiDocument() {
     tags: [
       { name: 'System', description: 'Health check and service info' },
       { name: 'Issues', description: 'Issue management — CRUD, labels' },
-      { name: 'Relations', description: 'Issue relation management (blocks, relates_to, duplicates)' },
+      {
+        name: 'Relations',
+        description: 'Issue relation management (blocks, relates_to, duplicates)',
+      },
       { name: 'Comments', description: 'Issue comments (threaded)' },
       { name: 'Projects', description: 'Project management' },
       { name: 'Goals', description: 'Goal tracking linked to projects' },
@@ -1486,7 +1658,10 @@ export function generateOpenApiDocument() {
       { name: 'Prompt Reviews', description: 'Quality reviews for prompt versions' },
       { name: 'Dispatch', description: 'AI agent work dispatch and queue preview' },
       { name: 'Dashboard', description: 'Aggregated system health metrics' },
-      { name: 'Webhooks', description: 'Provider-specific inbound webhooks (PostHog, GitHub, Sentry)' },
+      {
+        name: 'Webhooks',
+        description: 'Provider-specific inbound webhooks (PostHog, GitHub, Sentry)',
+      },
     ],
-  })
+  });
 }

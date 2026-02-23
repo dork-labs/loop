@@ -8,11 +8,11 @@ services:
       POSTGRES_PASSWORD: loop
       POSTGRES_DB: loop
     ports:
-      - "54320:5432"
+      - '54320:5432'
     volumes:
       - loop_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loop -d loop"]
+      test: ['CMD-SHELL', 'pg_isready -U loop -d loop']
       interval: 5s
       timeout: 3s
       retries: 5

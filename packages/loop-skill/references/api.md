@@ -28,79 +28,79 @@ All endpoints below require `Authorization: Bearer $LOOP_API_KEY`.
 
 ### Issues
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/issues` | List issues (filterable by status, type, projectId; paginated) |
-| `POST` | `/api/issues` | Create an issue |
-| `GET` | `/api/issues/:id` | Get issue by ID with labels, relations, comments |
-| `PATCH` | `/api/issues/:id` | Update an issue |
-| `DELETE` | `/api/issues/:id` | Soft-delete an issue |
-| `POST` | `/api/issues/:id/relations` | Create a relation between two issues |
-| `GET` | `/api/issues/:id/comments` | List comments for an issue (threaded) |
-| `POST` | `/api/issues/:id/comments` | Add a comment to an issue |
+| Method   | Path                        | Description                                                    |
+| -------- | --------------------------- | -------------------------------------------------------------- |
+| `GET`    | `/api/issues`               | List issues (filterable by status, type, projectId; paginated) |
+| `POST`   | `/api/issues`               | Create an issue                                                |
+| `GET`    | `/api/issues/:id`           | Get issue by ID with labels, relations, comments               |
+| `PATCH`  | `/api/issues/:id`           | Update an issue                                                |
+| `DELETE` | `/api/issues/:id`           | Soft-delete an issue                                           |
+| `POST`   | `/api/issues/:id/relations` | Create a relation between two issues                           |
+| `GET`    | `/api/issues/:id/comments`  | List comments for an issue (threaded)                          |
+| `POST`   | `/api/issues/:id/comments`  | Add a comment to an issue                                      |
 
 ### Projects
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/projects` | List projects (paginated) |
-| `POST` | `/api/projects` | Create a project |
-| `GET` | `/api/projects/:id` | Get project with goal and issue counts |
-| `PATCH` | `/api/projects/:id` | Update a project |
-| `DELETE` | `/api/projects/:id` | Soft-delete a project |
+| Method   | Path                | Description                            |
+| -------- | ------------------- | -------------------------------------- |
+| `GET`    | `/api/projects`     | List projects (paginated)              |
+| `POST`   | `/api/projects`     | Create a project                       |
+| `GET`    | `/api/projects/:id` | Get project with goal and issue counts |
+| `PATCH`  | `/api/projects/:id` | Update a project                       |
+| `DELETE` | `/api/projects/:id` | Soft-delete a project                  |
 
 ### Goals
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/goals` | List goals (paginated) |
-| `POST` | `/api/goals` | Create a goal |
-| `GET` | `/api/goals/:id` | Get goal by ID |
-| `PATCH` | `/api/goals/:id` | Update a goal |
-| `DELETE` | `/api/goals/:id` | Soft-delete a goal |
+| Method   | Path             | Description            |
+| -------- | ---------------- | ---------------------- |
+| `GET`    | `/api/goals`     | List goals (paginated) |
+| `POST`   | `/api/goals`     | Create a goal          |
+| `GET`    | `/api/goals/:id` | Get goal by ID         |
+| `PATCH`  | `/api/goals/:id` | Update a goal          |
+| `DELETE` | `/api/goals/:id` | Soft-delete a goal     |
 
 ### Labels
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/labels` | List labels (paginated) |
-| `POST` | `/api/labels` | Create a label |
-| `DELETE` | `/api/labels/:id` | Soft-delete a label |
+| Method   | Path              | Description             |
+| -------- | ----------------- | ----------------------- |
+| `GET`    | `/api/labels`     | List labels (paginated) |
+| `POST`   | `/api/labels`     | Create a label          |
+| `DELETE` | `/api/labels/:id` | Soft-delete a label     |
 
 ### Relations
 
-| Method | Path | Description |
-|--------|------|-------------|
+| Method   | Path                 | Description            |
+| -------- | -------------------- | ---------------------- |
 | `DELETE` | `/api/relations/:id` | Hard-delete a relation |
 
 ### Signals
 
-| Method | Path | Description |
-|--------|------|-------------|
+| Method | Path           | Description                                     |
+| ------ | -------------- | ----------------------------------------------- |
 | `POST` | `/api/signals` | Ingest a signal (creates signal + linked issue) |
 
 ### Prompt Templates
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/templates` | List prompt templates (paginated) |
-| `POST` | `/api/templates` | Create a prompt template |
-| `GET` | `/api/templates/:id` | Get template with active version |
-| `PATCH` | `/api/templates/:id` | Update a template |
-| `DELETE` | `/api/templates/:id` | Soft-delete a template |
-| `GET` | `/api/templates/:id/versions` | List versions for a template |
-| `POST` | `/api/templates/:id/versions` | Create a new version |
-| `POST` | `/api/templates/:id/versions/:versionId/promote` | Promote a version to active |
-| `GET` | `/api/templates/:id/reviews` | List reviews across all versions |
-| `POST` | `/api/prompt-reviews` | Create a prompt review |
+| Method   | Path                                             | Description                       |
+| -------- | ------------------------------------------------ | --------------------------------- |
+| `GET`    | `/api/templates`                                 | List prompt templates (paginated) |
+| `POST`   | `/api/templates`                                 | Create a prompt template          |
+| `GET`    | `/api/templates/:id`                             | Get template with active version  |
+| `PATCH`  | `/api/templates/:id`                             | Update a template                 |
+| `DELETE` | `/api/templates/:id`                             | Soft-delete a template            |
+| `GET`    | `/api/templates/:id/versions`                    | List versions for a template      |
+| `POST`   | `/api/templates/:id/versions`                    | Create a new version              |
+| `POST`   | `/api/templates/:id/versions/:versionId/promote` | Promote a version to active       |
+| `GET`    | `/api/templates/:id/reviews`                     | List reviews across all versions  |
+| `POST`   | `/api/prompt-reviews`                            | Create a prompt review            |
 
 ### Dashboard
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/dashboard/stats` | System health metrics |
-| `GET` | `/api/dashboard/activity` | Signal chains for activity timeline |
-| `GET` | `/api/dashboard/prompts` | Template health with scores |
+| Method | Path                      | Description                         |
+| ------ | ------------------------- | ----------------------------------- |
+| `GET`  | `/api/dashboard/stats`    | System health metrics               |
+| `GET`  | `/api/dashboard/activity` | Signal chains for activity timeline |
+| `GET`  | `/api/dashboard/prompts`  | Template health with scores         |
 
 ---
 
@@ -108,11 +108,11 @@ All endpoints below require `Authorization: Bearer $LOOP_API_KEY`.
 
 Webhook endpoints use provider-specific authentication, not Bearer tokens.
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/api/signals/posthog` | `POSTHOG_WEBHOOK_SECRET` | PostHog metric alerts |
-| `POST` | `/api/signals/github` | `GITHUB_WEBHOOK_SECRET` (HMAC-SHA256) | GitHub events |
-| `POST` | `/api/signals/sentry` | `SENTRY_CLIENT_SECRET` (HMAC-SHA256) | Sentry error alerts |
+| Method | Path                   | Auth                                  | Description           |
+| ------ | ---------------------- | ------------------------------------- | --------------------- |
+| `POST` | `/api/signals/posthog` | `POSTHOG_WEBHOOK_SECRET`              | PostHog metric alerts |
+| `POST` | `/api/signals/github`  | `GITHUB_WEBHOOK_SECRET` (HMAC-SHA256) | GitHub events         |
+| `POST` | `/api/signals/sentry`  | `SENTRY_CLIENT_SECRET` (HMAC-SHA256)  | Sentry error alerts   |
 
 ---
 
@@ -120,10 +120,10 @@ Webhook endpoints use provider-specific authentication, not Bearer tokens.
 
 No authentication required.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check (`{ ok, service, timestamp }`) |
-| `GET` | `/` | Service info (`{ name, version }`) |
+| Method | Path      | Description                                 |
+| ------ | --------- | ------------------------------------------- |
+| `GET`  | `/health` | Health check (`{ ok, service, timestamp }`) |
+| `GET`  | `/`       | Service info (`{ name, version }`)          |
 
 ---
 

@@ -1,11 +1,11 @@
-import { DocsLayout } from 'fumadocs-ui/layouts/docs'
-import { RootProvider } from 'fumadocs-ui/provider/next'
-import type { ReactNode } from 'react'
-import { source } from '@/lib/source'
-import { siteConfig } from '@/config/site'
-import { MarketingFooter } from '@/layers/features/marketing'
-import { DocsNavTitle } from './_components/DocsNavTitle'
-import 'fumadocs-ui/style.css'
+import { DocsLayout } from 'fumadocs-ui/layouts/docs';
+import { RootProvider } from 'fumadocs-ui/provider/next';
+import type { ReactNode } from 'react';
+import { source } from '@/lib/source';
+import { siteConfig } from '@/config/site';
+import { MarketingFooter } from '@/layers/features/marketing';
+import { DocsNavTitle } from './_components/DocsNavTitle';
+import 'fumadocs-ui/style.css';
 
 const socialLinks = [
   {
@@ -17,7 +17,7 @@ const socialLinks = [
       </svg>
     ),
   },
-]
+];
 
 /**
  * Layout for the /docs route group.
@@ -33,12 +33,11 @@ export default function Layout({ children }: { children: ReactNode }) {
           containerProps={{ className: 'flex-1' }}
           tree={source.pageTree}
           nav={{ title: <DocsNavTitle />, url: '/' }}
-
         >
           {children}
         </DocsLayout>
         <MarketingFooter email={siteConfig.contactEmail} socialLinks={socialLinks} />
       </div>
     </RootProvider>
-  )
+  );
 }

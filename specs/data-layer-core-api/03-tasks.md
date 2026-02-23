@@ -22,28 +22,32 @@ last-decompose: 2026-02-19
 **Steps:**
 
 1. Install production dependencies in `apps/api/`:
+
    ```bash
    npm install drizzle-orm @neondatabase/serverless @paralleldrive/cuid2 zod @hono/zod-validator ws dotenv
    ```
 
 2. Install dev dependencies in `apps/api/`:
+
    ```bash
    npm install -D drizzle-kit @electric-sql/pglite @types/ws
    ```
 
 3. Create `apps/api/drizzle.config.ts`:
+
    ```typescript
-   import { defineConfig } from 'drizzle-kit'
+   import { defineConfig } from 'drizzle-kit';
 
    export default defineConfig({
      dialect: 'postgresql',
      schema: './src/db/schema',
      out: './drizzle/migrations',
      dbCredentials: { url: process.env.DATABASE_URL! },
-   })
+   });
    ```
 
 4. Add migration scripts to `apps/api/package.json`:
+
    ```json
    {
      "scripts": {
@@ -65,6 +69,7 @@ last-decompose: 2026-02-19
    ```
 
 **Acceptance Criteria:**
+
 - All dependencies install without errors
 - `drizzle.config.ts` exists and exports a valid config
 - `package.json` has `db:generate`, `db:migrate`, `db:push`, `db:studio` scripts
@@ -80,24 +85,30 @@ last-decompose: 2026-02-19
 **Steps:**
 
 1. Create `apps/api/src/db/schema/_helpers.ts`:
+
    ```typescript
-   import { timestamp, text } from 'drizzle-orm/pg-core'
-   import { createId } from '@paralleldrive/cuid2'
+   import { timestamp, text } from 'drizzle-orm/pg-core';
+   import { createId } from '@paralleldrive/cuid2';
 
    export const timestamps = {
      createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-       .defaultNow().notNull(),
+       .defaultNow()
+       .notNull(),
      updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
-       .defaultNow().notNull().$onUpdate(() => new Date()),
-   }
+       .defaultNow()
+       .notNull()
+       .$onUpdate(() => new Date()),
+   };
 
    export const softDelete = {
      deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-   }
+   };
 
    export const cuid2Id = {
-     id: text('id').primaryKey().$defaultFn(() => createId()),
-   }
+     id: text('id')
+       .primaryKey()
+       .$defaultFn(() => createId()),
+   };
    ```
 
 2. Create `apps/api/src/db/schema/issues.ts` with:
@@ -113,6 +124,7 @@ last-decompose: 2026-02-19
    - Drizzle `relations()` definitions for all foreign keys
 
 **Acceptance Criteria:**
+
 - Schema file exports all tables and enums
 - Enum value arrays exported for Zod reuse
 - All JSONB columns have `.$type<T>()` typing
@@ -149,14 +161,15 @@ last-decompose: 2026-02-19
 
 4. Create `apps/api/src/db/schema/index.ts` barrel export:
    ```typescript
-   export * from './_helpers'
-   export * from './issues'
-   export * from './projects'
-   export * from './signals'
-   export * from './prompts'
+   export * from './_helpers';
+   export * from './issues';
+   export * from './projects';
+   export * from './signals';
+   export * from './prompts';
    ```
 
 **Acceptance Criteria:**
+
 - All 11 tables defined across schema files
 - All enums with exported value arrays
 - All indexes and constraints defined
@@ -172,44 +185,48 @@ last-decompose: 2026-02-19
 **Steps:**
 
 1. Create `apps/api/src/db/index.ts`:
-   ```typescript
-   import { neon } from '@neondatabase/serverless'
-   import { drizzle } from 'drizzle-orm/neon-http'
-   import * as schema from './schema'
 
-   const sql = neon(process.env.DATABASE_URL!)
-   export const db = drizzle(sql, { schema })
-   export type Database = typeof db
+   ```typescript
+   import { neon } from '@neondatabase/serverless';
+   import { drizzle } from 'drizzle-orm/neon-http';
+   import * as schema from './schema';
+
+   const sql = neon(process.env.DATABASE_URL!);
+   export const db = drizzle(sql, { schema });
+   export type Database = typeof db;
    ```
 
 2. Create `apps/api/src/db/pool.ts`:
+
    ```typescript
-   import { Pool, neonConfig } from '@neondatabase/serverless'
-   import { drizzle } from 'drizzle-orm/neon-serverless'
-   import ws from 'ws'
-   import * as schema from './schema'
+   import { Pool, neonConfig } from '@neondatabase/serverless';
+   import { drizzle } from 'drizzle-orm/neon-serverless';
+   import ws from 'ws';
+   import * as schema from './schema';
 
-   neonConfig.webSocketConstructor = ws
+   neonConfig.webSocketConstructor = ws;
 
-   const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-   export const poolDb = drizzle(pool, { schema })
+   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+   export const poolDb = drizzle(pool, { schema });
    ```
 
 3. Create `apps/api/src/db/migrate.ts`:
+
    ```typescript
-   import { neon } from '@neondatabase/serverless'
-   import { drizzle } from 'drizzle-orm/neon-http'
-   import { migrate } from 'drizzle-orm/neon-http/migrator'
+   import { neon } from '@neondatabase/serverless';
+   import { drizzle } from 'drizzle-orm/neon-http';
+   import { migrate } from 'drizzle-orm/neon-http/migrator';
 
-   const sql = neon(process.env.DATABASE_URL!)
-   const db = drizzle(sql)
+   const sql = neon(process.env.DATABASE_URL!);
+   const db = drizzle(sql);
 
-   await migrate(db, { migrationsFolder: './drizzle/migrations' })
-   console.log('Migrations complete')
-   process.exit(0)
+   await migrate(db, { migrationsFolder: './drizzle/migrations' });
+   console.log('Migrations complete');
+   process.exit(0);
    ```
 
 **Acceptance Criteria:**
+
 - `db/index.ts` exports `db` and `Database` type
 - `db/pool.ts` exports `poolDb` for transactional use
 - `db/migrate.ts` runs programmatic migrations
@@ -235,12 +252,14 @@ last-decompose: 2026-02-19
 2. Configure the test app to use the PGLite-backed Drizzle client instead of the Neon client. This requires the app/routes to accept a database instance (via dependency injection or Hono context variable).
 
 **Design consideration:** The database client needs to be injectable for testing. Two approaches:
+
 - **Option A (Hono context):** Set `db` in Hono context via middleware, routes read from `c.get('db')`
 - **Option B (Module override):** Export a `setDb()` function from `db/index.ts` that tests call to swap the client
 
 Choose the approach that best fits Hono patterns while keeping production code clean.
 
 **Acceptance Criteria:**
+
 - Test setup creates an in-memory Postgres database
 - Schema is applied to the test database
 - Database is wiped between tests
@@ -259,56 +278,61 @@ Choose the approach that best fits Hono patterns while keeping production code c
 **Steps:**
 
 1. Create `apps/api/src/app.ts`:
+
    ```typescript
-   import { Hono } from 'hono'
-   import { HTTPException } from 'hono/http-exception'
-   import { ZodError } from 'zod'
+   import { Hono } from 'hono';
+   import { HTTPException } from 'hono/http-exception';
+   import { ZodError } from 'zod';
 
    export type AppEnv = {
      Variables: {
        // Empty for now — db is imported directly
-     }
-   }
+     };
+   };
 
-   const app = new Hono<AppEnv>()
+   const app = new Hono<AppEnv>();
 
    // Global error handler
    app.onError((err, c) => {
      if (err instanceof HTTPException) {
-       return c.json({ error: err.message }, err.status)
+       return c.json({ error: err.message }, err.status);
      }
      if (err instanceof ZodError) {
-       return c.json({ error: 'Validation error', details: err.flatten() }, 422)
+       return c.json({ error: 'Validation error', details: err.flatten() }, 422);
      }
-     console.error(err)
-     return c.json({ error: 'Internal server error' }, 500)
-   })
+     console.error(err);
+     return c.json({ error: 'Internal server error' }, 500);
+   });
 
    // Health check (no auth)
-   app.get('/health', (c) => c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() }))
-   app.get('/', (c) => c.json({ name: 'Loop API', version: '0.1.0' }))
+   app.get('/health', (c) =>
+     c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() })
+   );
+   app.get('/', (c) => c.json({ name: 'Loop API', version: '0.1.0' }));
 
-   export { app }
+   export { app };
    ```
 
 2. Update `apps/api/src/index.ts`:
+
    ```typescript
-   import { serve } from '@hono/node-server'
-   import { app } from './app'
+   import { serve } from '@hono/node-server';
+   import { app } from './app';
 
    if (process.env.NODE_ENV !== 'production') {
-     const port = parseInt(process.env.PORT || '4242', 10)
+     const port = parseInt(process.env.PORT || '4242', 10);
      serve({ fetch: app.fetch, port }, (info) => {
-       console.log(`Loop API running at http://localhost:${info.port}`)
-     })
+       console.log(`Loop API running at http://localhost:${info.port}`);
+     });
    }
 
-   export default app
+   export default app;
    ```
 
 3. Verify existing health check and root endpoints still work.
 
 **Acceptance Criteria:**
+
 - `app.ts` exports the Hono app instance
 - `index.ts` imports from `app.ts` and only handles server startup
 - Health check and root endpoints function identically
@@ -325,45 +349,47 @@ Choose the approach that best fits Hono patterns while keeping production code c
 **Steps:**
 
 1. Create `apps/api/src/middleware/auth.ts`:
+
    ```typescript
-   import { createMiddleware } from 'hono/factory'
-   import { HTTPException } from 'hono/http-exception'
-   import { timingSafeEqual } from 'node:crypto'
-   import type { AppEnv } from '../app'
+   import { createMiddleware } from 'hono/factory';
+   import { HTTPException } from 'hono/http-exception';
+   import { timingSafeEqual } from 'node:crypto';
+   import type { AppEnv } from '../app';
 
    export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {
-     const authHeader = c.req.header('Authorization')
+     const authHeader = c.req.header('Authorization');
      if (!authHeader?.startsWith('Bearer ')) {
-       throw new HTTPException(401, { message: 'Missing or malformed Authorization header' })
+       throw new HTTPException(401, { message: 'Missing or malformed Authorization header' });
      }
 
-     const token = authHeader.slice(7)
-     const expected = process.env.LOOP_API_KEY
+     const token = authHeader.slice(7);
+     const expected = process.env.LOOP_API_KEY;
 
      if (!expected) {
-       throw new HTTPException(500, { message: 'LOOP_API_KEY not configured' })
+       throw new HTTPException(500, { message: 'LOOP_API_KEY not configured' });
      }
 
-     const tokenBuf = Buffer.from(token)
-     const expectedBuf = Buffer.from(expected)
+     const tokenBuf = Buffer.from(token);
+     const expectedBuf = Buffer.from(expected);
 
      if (tokenBuf.length !== expectedBuf.length || !timingSafeEqual(tokenBuf, expectedBuf)) {
-       throw new HTTPException(401, { message: 'Invalid API key' })
+       throw new HTTPException(401, { message: 'Invalid API key' });
      }
 
-     await next()
-   })
+     await next();
+   });
    ```
 
 2. Wire up auth middleware in `app.ts`:
+
    ```typescript
-   import { apiKeyAuth } from './middleware/auth'
+   import { apiKeyAuth } from './middleware/auth';
 
    // Protected API routes
-   const api = new Hono<AppEnv>()
-   api.use('*', apiKeyAuth)
+   const api = new Hono<AppEnv>();
+   api.use('*', apiKeyAuth);
    // ... routes will be added in subsequent tasks
-   app.route('/api', api)
+   app.route('/api', api);
    ```
 
 3. Write tests in the auth test section:
@@ -373,6 +399,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Request with correct API key → passes through to route handler
 
 **Acceptance Criteria:**
+
 - Auth middleware rejects missing, malformed, and invalid tokens with 401
 - Valid tokens pass through
 - Comparison uses `timingSafeEqual` (no `===`)
@@ -416,6 +443,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Missing environment secret → 500
 
 **Acceptance Criteria:**
+
 - Each provider has a dedicated middleware factory
 - All comparisons use `crypto.timingSafeEqual`
 - Tests cover valid, invalid, and missing scenarios
@@ -451,15 +479,17 @@ Choose the approach that best fits Hono patterns while keeping production code c
        projectId: z.string().optional(),
        signalSource: z.string().optional(),
        signalPayload: z.record(z.unknown()).optional(),
-       hypothesis: z.object({
-         statement: z.string(),
-         confidence: z.number().min(0).max(1),
-         evidence: z.array(z.string()),
-         validationCriteria: z.string(),
-         prediction: z.string().optional(),
-       }).optional(),
+       hypothesis: z
+         .object({
+           statement: z.string(),
+           confidence: z.number().min(0).max(1),
+           evidence: z.array(z.string()),
+           validationCriteria: z.string(),
+           prediction: z.string().optional(),
+         })
+         .optional(),
        labelIds: z.array(z.string()).optional(),
-     })
+     });
      ```
    - **Hierarchy constraint**: If `parentId` is provided, look up the parent. If parent has a `parentId` itself, reject with 422: `"Cannot create a child of an issue that already has a parent (1-level hierarchy limit)"`
    - If `labelIds` provided, insert into `issue_labels` join table
@@ -497,6 +527,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Auth: no token → 401
 
 **Acceptance Criteria:**
+
 - All CRUD operations work correctly
 - Hierarchy constraint enforced (no grandchildren)
 - Filtering works for all supported query params
@@ -539,6 +570,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Pagination
 
 **Acceptance Criteria:**
+
 - Full CRUD works
 - Goal linking works
 - Soft delete filters correctly
@@ -568,6 +600,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Soft delete behavior
 
 **Acceptance Criteria:**
+
 - Full CRUD works
 - Progress tracking (currentValue update) works
 - Soft delete filters correctly
@@ -587,7 +620,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    **POST `/api/labels`** — Create label:
    - Validate: `name` (required, unique), `color` (required)
    - Return 201
-   **DELETE `/api/labels/:id`** — Soft delete
+     **DELETE `/api/labels/:id`** — Soft delete
 
 2. Create `apps/api/src/__tests__/labels.test.ts`:
    - Create label → 201
@@ -596,6 +629,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Soft delete → 204
 
 **Acceptance Criteria:**
+
 - CRUD works
 - Unique name constraint enforced
 - Tests pass
@@ -611,12 +645,14 @@ Choose the approach that best fits Hono patterns while keeping production code c
 1. Create `apps/api/src/routes/relations.ts`:
 
    **POST `/api/issues/:id/relations`** — Create relation:
+
    ```typescript
    const createRelationSchema = z.object({
      type: z.enum(relationTypeValues),
      relatedIssueId: z.string(),
-   })
+   });
    ```
+
    - Return 201
 
    **DELETE `/api/relations/:id`** — Hard delete relation (not soft delete)
@@ -626,14 +662,16 @@ Choose the approach that best fits Hono patterns while keeping production code c
 
    **GET `/api/issues/:id/comments`** — List comments (threaded by parentId)
    **POST `/api/issues/:id/comments`** — Add comment:
+
    ```typescript
    const createCommentSchema = z.object({
      body: z.string().min(1),
      authorName: z.string().min(1),
      authorType: z.enum(authorTypeValues),
      parentId: z.string().optional(),
-   })
+   });
    ```
+
    - Return 201
 
 3. Create `apps/api/src/__tests__/relations.test.ts`:
@@ -647,6 +685,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Comment with parentId (reply) → 201
 
 **Acceptance Criteria:**
+
 - Relations create and hard-delete work
 - Comments create and list with threading work
 - Tests pass
@@ -660,28 +699,29 @@ Choose the approach that best fits Hono patterns while keeping production code c
 **Steps:**
 
 1. Update `apps/api/src/app.ts` to import and mount all routes:
+
    ```typescript
-   import { apiKeyAuth } from './middleware/auth'
-   import { issueRoutes } from './routes/issues'
-   import { projectRoutes } from './routes/projects'
-   import { goalRoutes } from './routes/goals'
-   import { labelRoutes } from './routes/labels'
-   import { templateRoutes } from './routes/templates'
-   import { promptReviewRoutes } from './routes/templates' // or separate
+   import { apiKeyAuth } from './middleware/auth';
+   import { issueRoutes } from './routes/issues';
+   import { projectRoutes } from './routes/projects';
+   import { goalRoutes } from './routes/goals';
+   import { labelRoutes } from './routes/labels';
+   import { templateRoutes } from './routes/templates';
+   import { promptReviewRoutes } from './routes/templates'; // or separate
 
-   const api = new Hono<AppEnv>()
-   api.use('*', apiKeyAuth)
-   api.route('/issues', issueRoutes)
-   api.route('/projects', projectRoutes)
-   api.route('/goals', goalRoutes)
-   api.route('/labels', labelRoutes)
-   api.route('/templates', templateRoutes)
-   api.route('/prompt-reviews', promptReviewRoutes)
+   const api = new Hono<AppEnv>();
+   api.use('*', apiKeyAuth);
+   api.route('/issues', issueRoutes);
+   api.route('/projects', projectRoutes);
+   api.route('/goals', goalRoutes);
+   api.route('/labels', labelRoutes);
+   api.route('/templates', templateRoutes);
+   api.route('/prompt-reviews', promptReviewRoutes);
 
-   app.route('/api', api)
+   app.route('/api', api);
 
    // Signal webhooks (separate auth)
-   app.route('/api/signals', signalRoutes)
+   app.route('/api/signals', signalRoutes);
    ```
 
 2. Ensure comments and relations are nested under issues:
@@ -691,6 +731,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
 3. Verify all routes are accessible with correct auth.
 
 **Acceptance Criteria:**
+
 - All routes mounted at correct paths
 - Auth middleware applied to all `/api/*` routes except signals (which use webhook auth)
 - Health check and root endpoint remain unprotected
@@ -709,6 +750,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
 1. Create `apps/api/src/routes/signals.ts` implementing:
 
    **POST `/api/signals`** (Bearer token auth):
+
    ```typescript
    const createSignalSchema = z.object({
      source: z.string().min(1),
@@ -717,7 +759,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
      severity: z.enum(signalSeverityValues),
      payload: z.record(z.unknown()),
      projectId: z.string().optional(),
-   })
+   });
    ```
 
    **Signal ingestion flow (atomic transaction using poolDb):**
@@ -739,6 +781,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Validation: missing required fields → 422
 
 **Acceptance Criteria:**
+
 - Signal ingestion creates both Signal and Issue atomically
 - Priority derived from severity correctly
 - Transaction rolls back on failure
@@ -783,6 +826,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Payload normalization produces correct signal fields
 
 **Acceptance Criteria:**
+
 - Each provider endpoint normalizes payload correctly
 - Webhook verification middleware applied per-route
 - Signal + Issue created atomically for each provider
@@ -830,6 +874,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Soft delete template
 
 **Acceptance Criteria:**
+
 - Template CRUD works with slug uniqueness
 - Version numbering auto-increments
 - Version promotion updates template's active_version_id
@@ -856,7 +901,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
        relevance: z.number().int().min(1).max(5),
        feedback: z.string().optional(),
        authorType: z.enum(authorTypeValues),
-     })
+     });
      ```
    - After creating review, update the version's `review_score` (average of all reviews' average scores)
    - Return 201
@@ -868,6 +913,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
    - Missing required fields → 422
 
 **Acceptance Criteria:**
+
 - Review creation works
 - Version review_score updated after review submission
 - Validation enforces 1-5 range
@@ -894,6 +940,7 @@ Choose the approach that best fits Hono patterns while keeping production code c
 6. Generate migration: `cd apps/api && npm run db:generate`
 
 **Acceptance Criteria:**
+
 - CLAUDE.md updated with database and API documentation
 - All tests pass
 - Typecheck passes

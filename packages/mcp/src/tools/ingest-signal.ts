@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { z } from 'zod';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-import type { ApiClient } from '../types.js'
-import { handleToolCall } from './error-handler.js'
+import type { ApiClient } from '../types.js';
+import { handleToolCall } from './error-handler.js';
 
 /**
  * Register the `loop_ingest_signal` tool on the MCP server.
@@ -16,21 +16,13 @@ export function registerIngestSignal(server: McpServer, client: ApiClient): void
     'loop_ingest_signal',
     'Ingest a signal (error, metric change, user feedback) into Loop. Creates a signal and a linked triage issue.',
     {
-      source: z
-        .string()
-        .describe('Signal source (e.g., "agent", "posthog", "sentry")'),
-      type: z
-        .string()
-        .describe(
-          'Signal type (e.g., "error", "metric_change", "user_feedback")',
-        ),
+      source: z.string().describe('Signal source (e.g., "agent", "posthog", "sentry")'),
+      type: z.string().describe('Signal type (e.g., "error", "metric_change", "user_feedback")'),
       severity: z
         .enum(['critical', 'high', 'medium', 'low'])
         .optional()
         .describe('Signal severity (default: medium)'),
-      payload: z
-        .record(z.unknown())
-        .describe('Signal data as key-value pairs'),
+      payload: z.record(z.unknown()).describe('Signal data as key-value pairs'),
       projectId: z.string().optional(),
     },
     { readOnlyHint: false, idempotentHint: false },
@@ -48,17 +40,17 @@ export function registerIngestSignal(server: McpServer, client: ApiClient): void
           })
           .json<{
             data: {
-              signal: { id: string; source: string }
+              signal: { id: string; source: string };
               issue: {
-                id: string
-                number: number
-                title: string
-                status: string
-              }
-            }
-          }>()
+                id: string;
+                number: number;
+                title: string;
+                status: string;
+              };
+            };
+          }>();
 
-        const { signal, issue } = response.data
+        const { signal, issue } = response.data;
 
         return {
           content: [
@@ -67,8 +59,8 @@ export function registerIngestSignal(server: McpServer, client: ApiClient): void
               text: JSON.stringify({ signal, issue }, null, 2),
             },
           ],
-        }
-      })
-    },
-  )
+        };
+      });
+    }
+  );
 }

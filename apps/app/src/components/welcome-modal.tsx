@@ -4,12 +4,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface WelcomeModalProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
 /** One-time welcome dialog shown on first visit to the dashboard. */
@@ -23,9 +23,9 @@ export function WelcomeModal({ open, onClose }: WelcomeModalProps) {
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader className="space-y-4 text-center">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/10">
+          <div className="bg-primary/10 mx-auto flex size-16 items-center justify-center rounded-full">
             <svg
-              className="size-8 text-primary"
+              className="text-primary size-8"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -38,9 +38,9 @@ export function WelcomeModal({ open, onClose }: WelcomeModalProps) {
             </svg>
           </div>
           <DialogTitle className="text-2xl font-bold">Welcome to Loop</DialogTitle>
-          <DialogDescription className="text-base leading-relaxed text-muted-foreground">
-            Loop collects signals, organizes work into issues, and tells your AI
-            agent what to do next.
+          <DialogDescription className="text-muted-foreground text-base leading-relaxed">
+            Loop collects signals, organizes work into issues, and tells your AI agent what to do
+            next.
             <br />
             <br />
             Let&apos;s get you connected.
@@ -51,5 +51,5 @@ export function WelcomeModal({ open, onClose }: WelcomeModalProps) {
         </Button>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

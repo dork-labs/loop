@@ -68,31 +68,31 @@ The dashboard transforms Loop from an invisible API into a visible, monitorable 
 
 ### New Dependencies (`apps/app/`)
 
-| Package | Purpose | Version |
-|---------|---------|---------|
-| `@tanstack/react-router` | File-based routing with typed search params | `^1` |
-| `@tanstack/react-router-vite-plugin` | Vite plugin for file-based route generation | `^1` |
-| `@tanstack/zod-adapter` | Zod validation for route search params | `^1` |
-| `@tanstack/react-query` | Data fetching, caching, polling | `^5` |
-| `@tanstack/react-query-devtools` | Dev tools for query debugging | `^5` |
-| `@tanstack/react-table` | Headless table with sorting, filtering, pagination | `^8` |
-| `ky` | Lightweight fetch wrapper (4KB) | `^1` |
-| `zod` | Schema validation for search params and API types | `^3` |
-| `react-markdown` | Markdown rendering | `^9` |
-| `remark-gfm` | GitHub Flavored Markdown support | `^4` |
-| `rehype-pretty-code` | Syntax highlighting (Shiki-powered) | `^0.14` |
-| `recharts` | Charts for Prompt Health sparklines | `^2` |
-| `lucide-react` | Icons (included with shadcn/ui) | `^0.460` |
-| `class-variance-authority` | Component variants (shadcn/ui dependency) | `^0.7` |
-| `clsx` | Conditional classes (shadcn/ui dependency) | `^2` |
-| `tailwind-merge` | Merge Tailwind classes (shadcn/ui dependency) | `^2` |
-| `@tailwindcss/typography` | Prose styling for markdown content | `^0.5` |
+| Package                              | Purpose                                            | Version  |
+| ------------------------------------ | -------------------------------------------------- | -------- |
+| `@tanstack/react-router`             | File-based routing with typed search params        | `^1`     |
+| `@tanstack/react-router-vite-plugin` | Vite plugin for file-based route generation        | `^1`     |
+| `@tanstack/zod-adapter`              | Zod validation for route search params             | `^1`     |
+| `@tanstack/react-query`              | Data fetching, caching, polling                    | `^5`     |
+| `@tanstack/react-query-devtools`     | Dev tools for query debugging                      | `^5`     |
+| `@tanstack/react-table`              | Headless table with sorting, filtering, pagination | `^8`     |
+| `ky`                                 | Lightweight fetch wrapper (4KB)                    | `^1`     |
+| `zod`                                | Schema validation for search params and API types  | `^3`     |
+| `react-markdown`                     | Markdown rendering                                 | `^9`     |
+| `remark-gfm`                         | GitHub Flavored Markdown support                   | `^4`     |
+| `rehype-pretty-code`                 | Syntax highlighting (Shiki-powered)                | `^0.14`  |
+| `recharts`                           | Charts for Prompt Health sparklines                | `^2`     |
+| `lucide-react`                       | Icons (included with shadcn/ui)                    | `^0.460` |
+| `class-variance-authority`           | Component variants (shadcn/ui dependency)          | `^0.7`   |
+| `clsx`                               | Conditional classes (shadcn/ui dependency)         | `^2`     |
+| `tailwind-merge`                     | Merge Tailwind classes (shadcn/ui dependency)      | `^2`     |
+| `@tailwindcss/typography`            | Prose styling for markdown content                 | `^0.5`   |
 
 ### New Dependencies (`apps/api/`)
 
-| Package | Purpose | Version |
-|---------|---------|---------|
-| `@hono/cors` | CORS middleware for Hono | `^1` |
+| Package      | Purpose                  | Version |
+| ------------ | ------------------------ | ------- |
+| `@hono/cors` | CORS middleware for Hono | `^1`    |
 
 ### Existing Dependencies (already installed)
 
@@ -169,7 +169,7 @@ apps/app/src/
 A typed `ky` instance with the API base URL and auth header pre-configured:
 
 ```typescript
-import ky from 'ky'
+import ky from 'ky';
 
 export const api = ky.create({
   prefixUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:4242',
@@ -180,26 +180,25 @@ export const api = ky.create({
     afterResponse: [
       async (_request, _options, response) => {
         if (!response.ok) {
-          const body = await response.json().catch(() => ({}))
-          throw new Error(body.error ?? `API error: ${response.status}`)
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.error ?? `API error: ${response.status}`);
         }
       },
     ],
   },
-})
+});
 ```
 
 Resource-specific helpers provide typed responses:
 
 ```typescript
-import type { Issue, PaginatedResponse } from '@/types/issues'
+import type { Issue, PaginatedResponse } from '@/types/issues';
 
 export const issuesApi = {
   list: (params?: Record<string, string>) =>
     api.get('api/issues', { searchParams: params }).json<PaginatedResponse<Issue>>(),
-  get: (id: string) =>
-    api.get(`api/issues/${id}`).json<{ data: Issue }>(),
-}
+  get: (id: string) => api.get(`api/issues/${id}`).json<{ data: Issue }>(),
+};
 ```
 
 ### Query Key Factory (`lib/query-keys.ts`)
@@ -211,8 +210,7 @@ export const queryKeys = {
   issues: {
     all: ['issues'] as const,
     lists: () => [...queryKeys.issues.all, 'list'] as const,
-    list: (filters: Record<string, unknown>) =>
-      [...queryKeys.issues.lists(), filters] as const,
+    list: (filters: Record<string, unknown>) => [...queryKeys.issues.lists(), filters] as const,
     details: () => [...queryKeys.issues.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.issues.details(), id] as const,
   },
@@ -240,7 +238,7 @@ export const queryKeys = {
     activity: ['dashboard', 'activity'] as const,
     prompts: ['dashboard', 'prompts'] as const,
   },
-} as const
+} as const;
 ```
 
 ### Query Options (`lib/queries/`)
@@ -248,36 +246,36 @@ export const queryKeys = {
 Each resource module exports `queryOptions()` definitions:
 
 ```typescript
-import { queryOptions } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/react-query';
 
 export const issueListOptions = (filters: Record<string, string>) =>
   queryOptions({
     queryKey: queryKeys.issues.list(filters),
     queryFn: () => issuesApi.list(filters),
     staleTime: 30_000,
-  })
+  });
 
 export const issueDetailOptions = (id: string) =>
   queryOptions({
     queryKey: queryKeys.issues.detail(id),
     queryFn: () => issuesApi.get(id).then((r) => r.data),
     staleTime: 30_000,
-  })
+  });
 ```
 
 Cache tuning per resource:
 
-| Resource | `staleTime` | `refetchInterval` | Rationale |
-|----------|-------------|-------------------|-----------|
-| Issue list | 30s | — | Changes frequently as agents work |
-| Issue detail | 30s | — | Agent updates arrive regularly |
-| Projects | 5min | — | Rarely changes |
-| Goals | 5min | — | Updated by agents periodically |
-| Labels | 10min | — | Almost never changes |
-| Templates | 5min | — | Rarely changes |
-| Dashboard stats | 30s | — | Reflects overall system state |
-| Dashboard activity | 30s | 15s | Polling for live activity feed |
-| Dashboard prompts | 5min | — | Prompt quality changes slowly |
+| Resource           | `staleTime` | `refetchInterval` | Rationale                         |
+| ------------------ | ----------- | ----------------- | --------------------------------- |
+| Issue list         | 30s         | —                 | Changes frequently as agents work |
+| Issue detail       | 30s         | —                 | Agent updates arrive regularly    |
+| Projects           | 5min        | —                 | Rarely changes                    |
+| Goals              | 5min        | —                 | Updated by agents periodically    |
+| Labels             | 10min       | —                 | Almost never changes              |
+| Templates          | 5min        | —                 | Rarely changes                    |
+| Dashboard stats    | 30s         | —                 | Reflects overall system state     |
+| Dashboard activity | 30s         | 15s               | Polling for live activity feed    |
+| Dashboard prompts  | 5min        | —                 | Prompt quality changes slowly     |
 
 ### Routing
 
@@ -285,12 +283,12 @@ TanStack Router v1 with the Vite plugin for file-based route generation. Vite co
 
 ```typescript
 // vite.config.ts
-import { TanStackRouterVite } from '@tanstack/react-router-vite-plugin'
+import { TanStackRouterVite } from '@tanstack/react-router-vite-plugin';
 
 export default defineConfig({
   plugins: [TanStackRouterVite(), react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
-})
+});
 ```
 
 **Root route** (`__root.tsx`): Wraps the entire app with `QueryClientProvider` and renders `<Outlet />`. Query devtools included in development.
@@ -300,9 +298,9 @@ export default defineConfig({
 **Issue List search params** validated with Zod via `@tanstack/zod-adapter`:
 
 ```typescript
-import { createFileRoute } from '@tanstack/react-router'
-import { zodValidator, fallback } from '@tanstack/zod-adapter'
-import { z } from 'zod'
+import { createFileRoute } from '@tanstack/react-router';
+import { zodValidator, fallback } from '@tanstack/zod-adapter';
+import { z } from 'zod';
 
 const issueSearchSchema = z.object({
   status: z.string().optional(),
@@ -312,11 +310,11 @@ const issueSearchSchema = z.object({
   priority: fallback(z.coerce.number(), undefined).optional(),
   page: fallback(z.coerce.number(), 1).default(1),
   limit: fallback(z.coerce.number(), 50).default(50),
-})
+});
 
 export const Route = createFileRoute('/_dashboard/issues/')({
   validateSearch: zodValidator(issueSearchSchema),
-})
+});
 ```
 
 This gives fully typed, URL-persisted filter state. Navigation via `<Link>` with `search` prop updates filters and triggers TanStack Query refetches automatically.
@@ -334,19 +332,19 @@ Returns overall system health metrics for the sidebar or header:
 {
   data: {
     issues: {
-      total: number
-      byStatus: Record<IssueStatus, number>
-      byType: Record<IssueType, number>
+      total: number;
+      byStatus: Record<IssueStatus, number>;
+      byType: Record<IssueType, number>;
     }
     goals: {
-      total: number
-      active: number
-      achieved: number
+      total: number;
+      active: number;
+      achieved: number;
     }
     dispatch: {
-      queueDepth: number          // Issues in todo/backlog eligible for dispatch
-      activeCount: number         // Issues currently in_progress
-      completedLast24h: number    // Issues moved to done in last 24 hours
+      queueDepth: number; // Issues in todo/backlog eligible for dispatch
+      activeCount: number; // Issues currently in_progress
+      completedLast24h: number; // Issues moved to done in last 24 hours
     }
   }
 }
@@ -364,18 +362,19 @@ Query params: `?limit=20` (number of chains, default 20)
 // Response shape
 {
   data: Array<{
-    root: Issue                   // The signal or top-level issue
+    root: Issue; // The signal or top-level issue
     children: Array<{
-      issue: Issue
-      relations: IssueRelation[]  // blocking/blocked-by within the chain
-    }>
-    latestActivity: string        // ISO timestamp of most recent update in chain
-  }>
-  total: number
+      issue: Issue;
+      relations: IssueRelation[]; // blocking/blocked-by within the chain
+    }>;
+    latestActivity: string; // ISO timestamp of most recent update in chain
+  }>;
+  total: number;
 }
 ```
 
 **Implementation:**
+
 1. Query root issues (parentId IS NULL) ordered by `updatedAt DESC`, limit to N
 2. For each root, query children (`parentId = root.id`) with their relations
 3. Assemble chains in application code
@@ -391,18 +390,18 @@ Returns prompt template health data with version history and review scores:
 // Response shape
 {
   data: Array<{
-    template: PromptTemplate
-    activeVersion: PromptVersion | null
-    recentVersions: PromptVersion[]  // Last 5 versions with scores
+    template: PromptTemplate;
+    activeVersion: PromptVersion | null;
+    recentVersions: PromptVersion[]; // Last 5 versions with scores
     reviewSummary: {
-      totalReviews: number
-      avgClarity: number | null
-      avgCompleteness: number | null
-      avgRelevance: number | null
-      compositeScore: number | null  // EWMA score from active version
-    }
-    needsAttention: boolean          // compositeScore < 3.0 or completionRate < 0.5
-  }>
+      totalReviews: number;
+      avgClarity: number | null;
+      avgCompleteness: number | null;
+      avgRelevance: number | null;
+      compositeScore: number | null; // EWMA score from active version
+    };
+    needsAttention: boolean; // compositeScore < 3.0 or completionRate < 0.5
+  }>;
 }
 ```
 
@@ -413,17 +412,17 @@ Returns prompt template health data with version history and review scores:
 Add CORS to the Hono API in `apps/api/src/app.ts`:
 
 ```typescript
-import { cors } from 'hono/cors'
+import { cors } from 'hono/cors';
 
-app.use('*', cors({
-  origin: [
-    'http://localhost:3000',
-    'https://app.looped.me',
-  ],
-  allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Authorization', 'Content-Type'],
-  maxAge: 86400,
-}))
+app.use(
+  '*',
+  cors({
+    origin: ['http://localhost:3000', 'https://app.looped.me'],
+    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Authorization', 'Content-Type'],
+    maxAge: 86400,
+  })
+);
 ```
 
 Note: Hono includes a built-in `cors` middleware — no extra package needed.
@@ -438,37 +437,37 @@ Note: Hono includes a built-in `cors` middleware — no extra package needed.
 
 **Table:** TanStack Table v8 in manual/server-side mode. Column definitions in a separate `columns.tsx` file:
 
-| Column | Width | Content |
-|--------|-------|---------|
-| Number | 80px | `#${number}` monospace |
-| Title | flex | Title text, truncated with tooltip |
-| Type | 100px | `<Badge>` with icon + color per type |
-| Status | 120px | `<Badge>` with status color |
-| Priority | 80px | Priority indicator (P0-P4) |
-| Project | 140px | Project name or "—" |
-| Labels | 160px | Up to 2 label badges, "+N" overflow |
-| Updated | 120px | Relative time ("2h ago") |
+| Column   | Width | Content                              |
+| -------- | ----- | ------------------------------------ |
+| Number   | 80px  | `#${number}` monospace               |
+| Title    | flex  | Title text, truncated with tooltip   |
+| Type     | 100px | `<Badge>` with icon + color per type |
+| Status   | 120px | `<Badge>` with status color          |
+| Priority | 80px  | Priority indicator (P0-P4)           |
+| Project  | 140px | Project name or "—"                  |
+| Labels   | 160px | Up to 2 label badges, "+N" overflow  |
+| Updated  | 120px | Relative time ("2h ago")             |
 
 **Type badge colors:**
 
-| Type | Color | Icon |
-|------|-------|------|
-| signal | amber | `Zap` |
-| hypothesis | violet | `Lightbulb` |
-| plan | blue | `Map` |
-| task | emerald | `CheckSquare` |
-| monitor | cyan | `Eye` |
+| Type       | Color   | Icon          |
+| ---------- | ------- | ------------- |
+| signal     | amber   | `Zap`         |
+| hypothesis | violet  | `Lightbulb`   |
+| plan       | blue    | `Map`         |
+| task       | emerald | `CheckSquare` |
+| monitor    | cyan    | `Eye`         |
 
 **Status badge colors:**
 
-| Status | Color |
-|--------|-------|
-| triage | yellow |
-| backlog | slate |
-| todo | blue |
+| Status      | Color  |
+| ----------- | ------ |
+| triage      | yellow |
+| backlog     | slate  |
+| todo        | blue   |
 | in_progress | indigo |
-| done | green |
-| canceled | red |
+| done        | green  |
+| canceled    | red    |
 
 **Pagination:** Bottom bar with page info ("Showing 1-50 of 234") and Previous/Next buttons. Controlled via `page` and `limit` search params.
 
@@ -534,6 +533,7 @@ Note: Hono includes a built-in `cors` middleware — no extra package needed.
 ```
 
 **CSS implementation:** Vertical `<ol>` with `border-l border-neutral-700`. Each node is an `<li>` with:
+
 - Absolutely positioned dot/icon aligned to the border
 - Type-colored icon (same colors as Issue List type badges)
 - Issue title, number, and relative timestamp
@@ -549,6 +549,7 @@ Note: Hono includes a built-in `cors` middleware — no extra package needed.
 **Layout:** Grid of goal cards (2 columns on desktop, 1 on mobile).
 
 **Goal card** (`<GoalCard>`):
+
 - Title (bold)
 - Metric label + unit (e.g., "Conversion Rate (%)")
 - Progress bar: `currentValue / targetValue` as percentage, colored by progress (green > 75%, yellow 25-75%, red < 25%)
@@ -569,27 +570,32 @@ Note: Hono includes a built-in `cors` middleware — no extra package needed.
 **Template card** (`<PromptCard>`):
 
 **Header row:**
+
 - Template name + slug
 - Active version number badge
 - "Needs attention" warning badge (if `compositeScore < 3.0` or `completionRate < 0.5`)
 
 **Metrics row** (4 metrics in a horizontal grid):
+
 - Usage count (number with label)
 - Completion rate (percentage with color coding)
 - Composite score (number/5 with color coding)
 - Total reviews (number)
 
 **Score breakdown:**
+
 - Clarity / Completeness / Relevance as individual scores (1-5)
 - Each with a subtle inline bar indicator
 
 **Sparkline chart** (`<ScoreSparkline>`):
+
 - shadcn/ui `<ChartContainer>` with Recharts `<AreaChart>`
 - Shows composite score trend across the last 5 versions
 - X-axis: version numbers, Y-axis: score (1-5)
 - Gradient fill matching the score color (green above 3.5, amber 2.5-3.5, red below 2.5)
 
 **Version history** (collapsible):
+
 - Last 5 versions in a compact list
 - Version number, status badge, changelog text, author
 - Usage count and completion rate per version
@@ -617,6 +623,7 @@ Uses shadcn/ui `Sidebar` component system:
 ```
 
 **Behavior:**
+
 - Desktop: `icon` collapsible mode — collapses to icon strip, expands on hover or toggle
 - Mobile: `offcanvas` mode — slides in as a sheet overlay
 - Keyboard shortcut: `Cmd+B` to toggle
@@ -679,91 +686,91 @@ Frontend types mirror the API response shapes. These are manually maintained for
 
 ```typescript
 // types/issues.ts
-export type IssueType = 'signal' | 'hypothesis' | 'plan' | 'task' | 'monitor'
-export type IssueStatus = 'triage' | 'backlog' | 'todo' | 'in_progress' | 'done' | 'canceled'
-export type RelationType = 'blocks' | 'blocked_by' | 'related' | 'duplicate'
-export type AuthorType = 'human' | 'agent'
+export type IssueType = 'signal' | 'hypothesis' | 'plan' | 'task' | 'monitor';
+export type IssueStatus = 'triage' | 'backlog' | 'todo' | 'in_progress' | 'done' | 'canceled';
+export type RelationType = 'blocks' | 'blocked_by' | 'related' | 'duplicate';
+export type AuthorType = 'human' | 'agent';
 
 export interface Issue {
-  id: string
-  number: number
-  title: string
-  description: string | null
-  type: IssueType
-  status: IssueStatus
-  priority: number
-  parentId: string | null
-  projectId: string | null
-  signalSource: string | null
-  signalPayload: Record<string, unknown> | null
-  hypothesis: HypothesisData | null
-  agentSessionId: string | null
-  agentSummary: string | null
-  commits: CommitRef[] | null
-  pullRequests: PullRequestRef[] | null
-  completedAt: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  number: number;
+  title: string;
+  description: string | null;
+  type: IssueType;
+  status: IssueStatus;
+  priority: number;
+  parentId: string | null;
+  projectId: string | null;
+  signalSource: string | null;
+  signalPayload: Record<string, unknown> | null;
+  hypothesis: HypothesisData | null;
+  agentSessionId: string | null;
+  agentSummary: string | null;
+  commits: CommitRef[] | null;
+  pullRequests: PullRequestRef[] | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
   // Populated on detail endpoint
-  labels?: Label[]
-  relations?: IssueRelation[]
-  comments?: Comment[]
-  children?: Issue[]
-  parent?: Issue | null
+  labels?: Label[];
+  relations?: IssueRelation[];
+  comments?: Comment[];
+  children?: Issue[];
+  parent?: Issue | null;
 }
 
 export interface HypothesisData {
-  statement: string
-  confidence: number
-  evidence: string[]
-  validationCriteria: string
-  prediction?: string
+  statement: string;
+  confidence: number;
+  evidence: string[];
+  validationCriteria: string;
+  prediction?: string;
 }
 
 export interface CommitRef {
-  sha: string
-  message: string
-  url: string
-  author: string
-  timestamp: string
+  sha: string;
+  message: string;
+  url: string;
+  author: string;
+  timestamp: string;
 }
 
 export interface PullRequestRef {
-  number: number
-  title: string
-  url: string
-  state: string
-  mergedAt: string | null
+  number: number;
+  title: string;
+  url: string;
+  state: string;
+  mergedAt: string | null;
 }
 
 export interface Label {
-  id: string
-  name: string
-  color: string
+  id: string;
+  name: string;
+  color: string;
 }
 
 export interface IssueRelation {
-  id: string
-  type: RelationType
-  issueId: string
-  relatedIssueId: string
-  relatedIssue?: Issue
+  id: string;
+  type: RelationType;
+  issueId: string;
+  relatedIssueId: string;
+  relatedIssue?: Issue;
 }
 
 export interface Comment {
-  id: string
-  body: string
-  issueId: string
-  authorName: string
-  authorType: AuthorType
-  parentId: string | null
-  createdAt: string
-  children?: Comment[]
+  id: string;
+  body: string;
+  issueId: string;
+  authorName: string;
+  authorType: AuthorType;
+  parentId: string | null;
+  createdAt: string;
+  children?: Comment[];
 }
 
 export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
+  data: T[];
+  total: number;
 }
 ```
 
@@ -837,10 +844,10 @@ No `rehype-raw` plugin — prevents XSS from untrusted markdown content.
 
 ### Responsive Behavior
 
-| Breakpoint | Sidebar | Layout |
-|------------|---------|--------|
-| >= 1024px (lg) | Icon strip (collapsible) | Full sidebar + main content |
-| < 1024px | Hidden, offcanvas on toggle | Full-width main content |
+| Breakpoint     | Sidebar                     | Layout                      |
+| -------------- | --------------------------- | --------------------------- |
+| >= 1024px (lg) | Icon strip (collapsible)    | Full sidebar + main content |
+| < 1024px       | Hidden, offcanvas on toggle | Full-width main content     |
 
 ### Loading States
 
@@ -851,9 +858,9 @@ No `rehype-raw` plugin — prevents XSS from untrusted markdown content.
 
 ### Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Cmd+B` | Toggle sidebar |
+| Shortcut | Action         |
+| -------- | -------------- |
+| `Cmd+B`  | Toggle sidebar |
 
 ---
 
@@ -862,6 +869,7 @@ No `rehype-raw` plugin — prevents XSS from untrusted markdown content.
 ### Unit Tests
 
 **API route tests** (`apps/api/src/__tests__/dashboard.test.ts`):
+
 - Test each dashboard endpoint returns correct response shape
 - Test stats aggregation produces accurate counts
 - Test activity chains are correctly assembled (parent-child grouping)
@@ -870,6 +878,7 @@ No `rehype-raw` plugin — prevents XSS from untrusted markdown content.
 - Use existing `withTestDb()` PGlite infrastructure
 
 **Frontend component tests** (Vitest + Testing Library):
+
 - `issue-table/columns.tsx`: Column definitions render correct cell content for each type/status/priority
 - `activity-timeline.tsx`: Timeline renders chain nodes in correct order
 - `goal-card.tsx`: Progress bar calculates correct percentage, trend arrows display correctly
@@ -899,15 +908,15 @@ All route components use `createLazyFileRoute` for route-level code splitting. T
 
 ### Bundle Size Budget
 
-| Chunk | Estimated Size (gzipped) |
-|-------|--------------------------|
-| Core (React + Router + Query + ky) | ~50KB |
-| shadcn/ui components | ~20KB |
-| Route: Issues List | ~15KB |
-| Route: Issue Detail (includes markdown) | ~25KB |
-| Route: Activity | ~8KB |
-| Route: Goals | ~8KB |
-| Route: Prompts (includes Recharts) | ~50KB |
+| Chunk                                   | Estimated Size (gzipped) |
+| --------------------------------------- | ------------------------ |
+| Core (React + Router + Query + ky)      | ~50KB                    |
+| shadcn/ui components                    | ~20KB                    |
+| Route: Issues List                      | ~15KB                    |
+| Route: Issue Detail (includes markdown) | ~25KB                    |
+| Route: Activity                         | ~8KB                     |
+| Route: Goals                            | ~8KB                     |
+| Route: Prompts (includes Recharts)      | ~50KB                    |
 
 ### Query Optimization
 
@@ -1007,20 +1016,20 @@ All route components use `createLazyFileRoute` for route-level code splitting. T
 
 ## Open Questions
 
-*None — all clarifications resolved during ideation.*
+_None — all clarifications resolved during ideation._
 
 ---
 
 ## Related ADRs
 
-| ADR | Title | Relevance |
-|-----|-------|-----------|
-| ADR-001 | Use Hono over Express | Dashboard calls this Hono API |
-| ADR-002 | Deploy as two Vercel projects | Dashboard deploys to `app.looped.me` as separate Vercel project |
-| ADR-004 | Use Drizzle ORM | Schema types inform frontend type definitions |
-| ADR-006 | Use soft delete | API handles filtering — dashboard doesn't need to |
-| ADR-008 | Use Handlebars for prompt hydration | Dashboard displays template content (Handlebars syntax) |
-| ADR-010 | Use EWMA for review scoring | Dashboard displays EWMA scores and trends |
+| ADR     | Title                               | Relevance                                                       |
+| ------- | ----------------------------------- | --------------------------------------------------------------- |
+| ADR-001 | Use Hono over Express               | Dashboard calls this Hono API                                   |
+| ADR-002 | Deploy as two Vercel projects       | Dashboard deploys to `app.looped.me` as separate Vercel project |
+| ADR-004 | Use Drizzle ORM                     | Schema types inform frontend type definitions                   |
+| ADR-006 | Use soft delete                     | API handles filtering — dashboard doesn't need to               |
+| ADR-008 | Use Handlebars for prompt hydration | Dashboard displays template content (Handlebars syntax)         |
+| ADR-010 | Use EWMA for review scoring         | Dashboard displays EWMA scores and trends                       |
 
 ---
 

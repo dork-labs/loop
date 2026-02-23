@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { motion } from 'motion/react'
-import { REVEAL, STAGGER, VIEWPORT } from '../lib/motion-variants'
+import Link from 'next/link';
+import { motion } from 'motion/react';
+import { REVEAL, STAGGER, VIEWPORT } from '../lib/motion-variants';
 
 const CLI_COMMANDS = [
   'npm install -g looped',
   'looped config set url https://your-loop-instance.com',
   'looped config set token tok_your_api_key',
   'looped list',
-] as const
+] as const;
 
 /**
  * Quick start section — terminal-style CLI onboarding for the marketing page.
@@ -20,9 +20,9 @@ const CLI_COMMANDS = [
  */
 export function QuickStartSection() {
   return (
-    <section id="get-started" className="py-24 px-8 bg-cream-tertiary">
+    <section id="get-started" className="bg-cream-tertiary px-8 py-24">
       <motion.div
-        className="max-w-2xl mx-auto"
+        className="mx-auto max-w-2xl"
         initial="hidden"
         whileInView="visible"
         viewport={VIEWPORT}
@@ -30,30 +30,30 @@ export function QuickStartSection() {
       >
         <motion.span
           variants={REVEAL}
-          className="font-mono text-2xs tracking-[0.15em] uppercase text-brand-orange block text-center mb-10"
+          className="text-2xs text-brand-orange mb-10 block text-center font-mono tracking-[0.15em] uppercase"
         >
           Get started
         </motion.span>
 
         <motion.h2
           variants={REVEAL}
-          className="text-charcoal font-medium text-2xl md:text-3xl tracking-[-0.02em] text-center mb-10"
+          className="text-charcoal mb-10 text-center text-2xl font-medium tracking-[-0.02em] md:text-3xl"
         >
           Up and running in 60 seconds.
         </motion.h2>
 
         {/* Static code block — no animation to prevent CLS */}
-        <div className="bg-charcoal rounded-lg p-6 mb-6 overflow-x-auto">
-          <ol className="space-y-3 list-none">
+        <div className="bg-charcoal mb-6 overflow-x-auto rounded-lg p-6">
+          <ol className="list-none space-y-3">
             {CLI_COMMANDS.map((cmd) => (
               <li key={cmd} className="flex items-start gap-3">
                 <span
-                  className="font-mono text-sm text-warm-gray-light select-none shrink-0"
+                  className="text-warm-gray-light shrink-0 font-mono text-sm select-none"
                   aria-hidden="true"
                 >
                   $
                 </span>
-                <code className="font-mono text-sm text-cream-primary bg-transparent p-0 break-all">
+                <code className="text-cream-primary bg-transparent p-0 font-mono text-sm break-all">
                   {cmd}
                 </code>
               </li>
@@ -61,10 +61,7 @@ export function QuickStartSection() {
           </ol>
         </div>
 
-        <motion.p
-          variants={REVEAL}
-          className="text-center text-sm text-warm-gray"
-        >
+        <motion.p variants={REVEAL} className="text-warm-gray text-center text-sm">
           Read the{' '}
           <Link
             href="/docs/getting-started/quickstart"
@@ -76,5 +73,5 @@ export function QuickStartSection() {
         </motion.p>
       </motion.div>
     </section>
-  )
+  );
 }

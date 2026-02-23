@@ -25,6 +25,7 @@ The primary activation event is receiving the first issue via the API. Everythin
 When a new user opens the Loop dashboard for the first time, they see empty pages with no guidance on what to do next. The issues page shows "No issues found — Try adjusting your filters," which is incorrect (there are no filters to adjust — there's no data). Goals shows "No goals defined yet" with no explanation of what goals are. Activity says "The loop is waiting for signals" but doesn't explain how to send signals.
 
 This is the critical drop-off point. Users who don't connect their AI agent in the first session rarely come back. The FTUE must:
+
 1. Explain what Loop does (warm framing)
 2. Give copy-paste instructions to send the first issue (activation)
 3. Confirm the connection worked (validation)
@@ -50,11 +51,11 @@ This is the critical drop-off point. Users who don't connect their AI agent in t
 
 ## Technical Dependencies
 
-| Dependency | Version | Purpose |
-|---|---|---|
-| `canvas-confetti` | latest | Celebration animation (4.4KB, zero deps) |
-| `@shadcn/ui` Dialog | - | Welcome modal (needs installation) |
-| `@shadcn/ui` Tabs | - | Code snippet language tabs (needs installation) |
+| Dependency          | Version | Purpose                                         |
+| ------------------- | ------- | ----------------------------------------------- |
+| `canvas-confetti`   | latest  | Celebration animation (4.4KB, zero deps)        |
+| `@shadcn/ui` Dialog | -       | Welcome modal (needs installation)              |
+| `@shadcn/ui` Tabs   | -       | Code snippet language tabs (needs installation) |
 
 **Existing dependencies used:** React 19, TanStack Query v5, TanStack Router, ky, Lucide React, Tailwind CSS v4, Zod
 
@@ -120,23 +121,23 @@ IssueListPage (issues/index.lazy.tsx)
 
 ### New Files
 
-| File | Purpose |
-|---|---|
-| `components/welcome-modal.tsx` | One-time welcome dialog |
-| `components/setup-checklist.tsx` | Main FTUE checklist (4 steps) |
-| `components/setup-code-snippet.tsx` | Tabbed code block with copy button |
-| `hooks/use-onboarding.ts` | Onboarding state management (localStorage + polling detection) |
+| File                                | Purpose                                                        |
+| ----------------------------------- | -------------------------------------------------------------- |
+| `components/welcome-modal.tsx`      | One-time welcome dialog                                        |
+| `components/setup-checklist.tsx`    | Main FTUE checklist (4 steps)                                  |
+| `components/setup-code-snippet.tsx` | Tabbed code block with copy button                             |
+| `hooks/use-onboarding.ts`           | Onboarding state management (localStorage + polling detection) |
 
 ### Modified Files
 
-| File | Change |
-|---|---|
-| `routes/_dashboard/issues/index.lazy.tsx` | Conditional render: FTUE checklist vs. data table when empty |
-| `components/issue-table/data-table.tsx` | Remove internal empty state (moved to page level) |
-| `routes/_dashboard/activity/index.lazy.tsx` | Update empty state copy |
-| `routes/_dashboard/goals/index.lazy.tsx` | Update empty state copy |
-| `routes/_dashboard/prompts/index.lazy.tsx` | Update empty state copy |
-| `lib/queries/issues.ts` | Add conditional `refetchInterval` to `issueListOptions` |
+| File                                        | Change                                                       |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| `routes/_dashboard/issues/index.lazy.tsx`   | Conditional render: FTUE checklist vs. data table when empty |
+| `components/issue-table/data-table.tsx`     | Remove internal empty state (moved to page level)            |
+| `routes/_dashboard/activity/index.lazy.tsx` | Update empty state copy                                      |
+| `routes/_dashboard/goals/index.lazy.tsx`    | Update empty state copy                                      |
+| `routes/_dashboard/prompts/index.lazy.tsx`  | Update empty state copy                                      |
+| `lib/queries/issues.ts`                     | Add conditional `refetchInterval` to `issueListOptions`      |
 
 ### Component Specifications
 
@@ -144,19 +145,20 @@ IssueListPage (issues/index.lazy.tsx)
 
 ```typescript
 interface OnboardingState {
-  welcomed: boolean
-  completedAt: string | null
+  welcomed: boolean;
+  completedAt: string | null;
 }
 
 interface UseOnboardingReturn {
-  state: OnboardingState
-  isOnboarding: boolean       // welcomed && !completedAt && no issues
-  markWelcomed: () => void
-  markComplete: () => void
+  state: OnboardingState;
+  isOnboarding: boolean; // welcomed && !completedAt && no issues
+  markWelcomed: () => void;
+  markComplete: () => void;
 }
 ```
 
 **Behavior:**
+
 - Reads/writes localStorage key `loop:onboarding`
 - `isOnboarding` is true when: `welcomed === true` AND `completedAt === null` AND issue count is 0
 - `markWelcomed()` sets `welcomed: true` in localStorage
@@ -165,6 +167,7 @@ interface UseOnboardingReturn {
 - Does NOT use React state for the localStorage values — reads synchronously on mount, writes on action
 
 **Step completion tracking:**
+
 - Steps 1-3 (copy actions) are tracked in component-local state, not localStorage
 - Step 4 (first issue) is derived from query data, not stored
 - No need to persist step completion — if user refreshes, steps reset but the checklist still shows
@@ -174,11 +177,13 @@ interface UseOnboardingReturn {
 **Props:** `{ open: boolean; onClose: () => void }`
 
 **Design:**
+
 - Uses shadcn/ui `Dialog` component
 - Non-dismissible via backdrop click (user must click CTA)
 - Single screen, no multi-step
 
 **Content:**
+
 ```
 ┌─────────────────────────────────────────────┐
 │                                             │
@@ -198,6 +203,7 @@ interface UseOnboardingReturn {
 ```
 
 **Styling:**
+
 - Container: `max-w-md` centered
 - Heading: `text-2xl font-bold`
 - Body: `text-muted-foreground text-base leading-relaxed`
@@ -208,12 +214,14 @@ interface UseOnboardingReturn {
 **Props:** `{ onComplete: () => void; issueCount: number }`
 
 **Design:**
+
 - Replaces the issues page empty state
 - Uses the existing empty state container pattern: `rounded-lg border border-border bg-card`
 - 4 sequential steps with checkmarks
 - No dismiss/skip button — auto-hides when `issueCount > 0`
 
 **Step layout:**
+
 ```
 ┌──────────────────────────────────────────────────────┐
 │                                                      │
@@ -248,11 +256,13 @@ interface UseOnboardingReturn {
 ```
 
 **Step states:**
+
 - `pending` — circle outline (`○`), muted text
 - `active` — circle outline, normal text, expanded content
 - `complete` — green checkmark (`✓`), muted text, content collapsed or minimal
 
 **Step progression logic:**
+
 - Steps 1 and 2 start as `active` (both visible with copy buttons)
 - Step 3 starts as `active` (code snippet always visible — it's the main action)
 - Step 4 starts as `active` with animated spinner (polling is always on)
@@ -261,11 +271,13 @@ interface UseOnboardingReturn {
 - Steps don't block each other — user can copy in any order
 
 **API Key display:**
+
 - Masked by default: `sk-••••••••••••` (show first 3 chars + dots)
 - Toggle reveal via eye icon button
 - Copy button copies the full key regardless of mask state
 
 **Copy button behavior:**
+
 - Default state: clipboard icon
 - After copy: checkmark icon with "Copied!" tooltip, reverts after 2 seconds
 - Uses `navigator.clipboard.writeText()`
@@ -275,6 +287,7 @@ interface UseOnboardingReturn {
 **Props:** `{ apiUrl: string; apiKey: string }`
 
 **Design:**
+
 - Uses shadcn/ui `Tabs` component with 3 tabs: curl, JavaScript, Python
 - Each tab shows a pre-formatted code block with the real API URL and key injected
 - Copy button in the top-right corner of the code block
@@ -283,6 +296,7 @@ interface UseOnboardingReturn {
 **Code snippets:**
 
 **curl:**
+
 ```bash
 curl -X POST {API_URL}/api/issues \
   -H "Authorization: Bearer {API_KEY}" \
@@ -295,17 +309,18 @@ curl -X POST {API_URL}/api/issues \
 ```
 
 **JavaScript:**
+
 ```javascript
-const response = await fetch("{API_URL}/api/issues", {
-  method: "POST",
+const response = await fetch('{API_URL}/api/issues', {
+  method: 'POST',
   headers: {
-    "Authorization": "Bearer {API_KEY}",
-    "Content-Type": "application/json",
+    Authorization: 'Bearer {API_KEY}',
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    title: "My first issue",
-    type: "task",
-    status: "todo",
+    title: 'My first issue',
+    type: 'task',
+    status: 'todo',
   }),
 });
 
@@ -314,6 +329,7 @@ console.log(data);
 ```
 
 **Python:**
+
 ```python
 import requests
 
@@ -334,6 +350,7 @@ print(response.json())
 ```
 
 **Styling:**
+
 - Tab triggers: `text-sm` with underline active indicator
 - Code block container: `relative rounded-md bg-muted p-4 font-mono text-sm`
 - Copy button: `absolute right-2 top-2` ghost button with clipboard/check icon
@@ -342,16 +359,19 @@ print(response.json())
 #### 5. Celebration (in `setup-checklist.tsx` or `issues/index.lazy.tsx`)
 
 **Trigger conditions:**
+
 1. `issueCount` transitions from `0` to `> 0`
 2. `document.visibilityState === 'visible'`
 
 **If tab is NOT visible when issue arrives:**
+
 - Store a flag: `pendingCelebration = true`
 - Add `visibilitychange` event listener
 - When tab becomes visible and `pendingCelebration === true`: fire celebration
 - Clean up listener after firing
 
 **Celebration sequence:**
+
 1. Fire `confetti()` burst from `canvas-confetti` (default settings, 2-3 seconds)
 2. Show success UI replacing the checklist:
 
@@ -390,11 +410,11 @@ export const issueListOptions = (
     staleTime: 30_000,
     refetchInterval: options?.polling
       ? (query) => {
-          const hasData = (query.state.data?.data?.length ?? 0) > 0
-          return hasData ? false : 3000
+          const hasData = (query.state.data?.data?.length ?? 0) > 0;
+          return hasData ? false : 3000;
         }
       : undefined,
-  })
+  });
 ```
 
 In `issues/index.lazy.tsx`, pass `{ polling: true }` when onboarding is active:
@@ -404,7 +424,7 @@ const { data, isFetching, error } = useQuery(
   issueListOptions(filters, {
     polling: onboarding.isOnboarding,
   })
-)
+);
 ```
 
 ### Improved Empty States
@@ -412,6 +432,7 @@ const { data, isFetching, error } = useQuery(
 These changes apply to the empty states shown when data is empty but onboarding is already complete (user has previously connected and the data was deleted, or they're viewing a page that's naturally empty).
 
 **Goals page** (`goals/index.lazy.tsx`):
+
 ```
 Before: "No goals defined yet"
 After:  "No goals defined yet"
@@ -419,6 +440,7 @@ After:  "No goals defined yet"
 ```
 
 **Activity page** (`activity/index.lazy.tsx`):
+
 ```
 Before: "No activity yet" / "The loop is waiting for signals"
 After:  "No activity yet"
@@ -426,6 +448,7 @@ After:  "No activity yet"
 ```
 
 **Prompts page** (`prompts/index.lazy.tsx`):
+
 ```
 Before: "No prompt templates yet" / "Templates are created when the dispatch engine first runs"
 After:  "No prompt templates yet"
@@ -433,6 +456,7 @@ After:  "No prompt templates yet"
 ```
 
 **Issues page (post-onboarding empty state):**
+
 ```
 Before: "No issues found" / "Try adjusting your filters to see more results."
 After:  "No issues found"
@@ -481,21 +505,22 @@ User clears localStorage:
 
 ### Edge Cases
 
-| Scenario | Behavior |
-|---|---|
-| User refreshes during setup | Checklist reappears (step completion resets, but that's fine — steps are instant to re-complete) |
-| User navigates to Goals/Activity during setup | Other pages show their improved empty states. Returning to Issues shows the checklist. |
-| First issue arrives while tab is backgrounded | Celebration queues and fires when tab becomes visible |
-| User sends multiple issues before seeing celebration | Celebration fires once for the transition from 0 to >0 |
-| API key is invalid | The curl command will fail on the user's end. The checklist keeps polling. No special error handling in the dashboard — the issue list query will keep returning empty. |
-| User has already sent issues (e.g., via API before opening dashboard) | Welcome modal shows, user clicks "Get Started", checklist immediately detects existing issues, celebration fires |
-| User clears browser localStorage | Onboarding resets to welcome modal. If issues exist, celebration fires immediately after "Get Started" |
+| Scenario                                                              | Behavior                                                                                                                                                                |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User refreshes during setup                                           | Checklist reappears (step completion resets, but that's fine — steps are instant to re-complete)                                                                        |
+| User navigates to Goals/Activity during setup                         | Other pages show their improved empty states. Returning to Issues shows the checklist.                                                                                  |
+| First issue arrives while tab is backgrounded                         | Celebration queues and fires when tab becomes visible                                                                                                                   |
+| User sends multiple issues before seeing celebration                  | Celebration fires once for the transition from 0 to >0                                                                                                                  |
+| API key is invalid                                                    | The curl command will fail on the user's end. The checklist keeps polling. No special error handling in the dashboard — the issue list query will keep returning empty. |
+| User has already sent issues (e.g., via API before opening dashboard) | Welcome modal shows, user clicks "Get Started", checklist immediately detects existing issues, celebration fires                                                        |
+| User clears browser localStorage                                      | Onboarding resets to welcome modal. If issues exist, celebration fires immediately after "Get Started"                                                                  |
 
 ## Testing Strategy
 
 ### Unit Tests
 
 **`__tests__/hooks/use-onboarding.test.ts`**
+
 - Returns `{ welcomed: false, completedAt: null }` when localStorage is empty
 - Returns stored state when localStorage has data
 - `markWelcomed()` sets `welcomed: true`
@@ -507,6 +532,7 @@ User clears localStorage:
 **Purpose:** Validates the core state machine that drives all FTUE behavior.
 
 **`__tests__/components/setup-code-snippet.test.tsx`**
+
 - Renders all three tabs (curl, JavaScript, Python)
 - Injects API URL and API key into snippet content
 - Copy button calls `navigator.clipboard.writeText` with correct content
@@ -515,6 +541,7 @@ User clears localStorage:
 **Purpose:** The code snippets with pre-injected keys are the highest-impact activation element. Must verify real values are injected, not placeholders.
 
 **`__tests__/components/setup-checklist.test.tsx`**
+
 - Renders all 4 steps
 - Steps 1-3 mark as complete when copy buttons are clicked
 - Step 4 shows animated spinner
@@ -523,6 +550,7 @@ User clears localStorage:
 **Purpose:** Validates the complete checklist interaction flow.
 
 **`__tests__/components/welcome-modal.test.tsx`**
+
 - Renders when `open={true}`
 - Calls `onClose` when "Get Started" is clicked
 - Does not render when `open={false}`
@@ -532,6 +560,7 @@ User clears localStorage:
 ### Integration Tests
 
 **Issues page FTUE flow:**
+
 - When no issues exist and localStorage is empty: welcome modal shows
 - After welcome modal dismissed: setup checklist shows instead of "No issues found"
 - When issues exist: normal table renders (no checklist, no modal)
@@ -548,17 +577,18 @@ User clears localStorage:
 
 ## Performance Considerations
 
-| Concern | Impact | Mitigation |
-|---|---|---|
-| Polling at 3s interval | Negligible — single `GET /api/issues?limit=50` per 3s | Stops immediately when data arrives |
-| canvas-confetti bundle size | 4.4KB gzipped | Zero deps, one-time use, can lazy-import |
-| localStorage reads | Synchronous but < 1ms | Single read on mount, writes only on user action |
-| Dialog + Tabs shadcn components | Small addition to bundle | Tree-shaken, only loaded on issues page |
+| Concern                         | Impact                                                | Mitigation                                       |
+| ------------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
+| Polling at 3s interval          | Negligible — single `GET /api/issues?limit=50` per 3s | Stops immediately when data arrives              |
+| canvas-confetti bundle size     | 4.4KB gzipped                                         | Zero deps, one-time use, can lazy-import         |
+| localStorage reads              | Synchronous but < 1ms                                 | Single read on mount, writes only on user action |
+| Dialog + Tabs shadcn components | Small addition to bundle                              | Tree-shaken, only loaded on issues page          |
 
 **Lazy loading confetti:** Import `canvas-confetti` dynamically only when celebration triggers:
+
 ```typescript
-const confetti = (await import('canvas-confetti')).default
-confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })
+const confetti = (await import('canvas-confetti')).default;
+confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
 ```
 
 ## Security Considerations

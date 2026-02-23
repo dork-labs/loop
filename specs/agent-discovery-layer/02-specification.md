@@ -53,12 +53,12 @@ Products shipping the full stack (Stripe, Langfuse, DevCycle) see significantly 
 
 ## 5. Technical Dependencies
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| `next` | ^16 | Route handler for llms.txt in apps/web |
-| `openskills` | latest | SKILL.md distribution mechanism |
-| `tsup` | latest | Build/bundle for npm publishing |
-| `typescript` | ^5 | Type-checking |
+| Dependency   | Version | Purpose                                |
+| ------------ | ------- | -------------------------------------- |
+| `next`       | ^16     | Route handler for llms.txt in apps/web |
+| `openskills` | latest  | SKILL.md distribution mechanism        |
+| `tsup`       | latest  | Build/bundle for npm publishing        |
+| `typescript` | ^5      | Type-checking                          |
 
 **No runtime dependencies** for the `@dork-labs/loop` package — it's a pure markdown/content package with no executable code.
 
@@ -85,6 +85,7 @@ apps/web/
 ```
 
 Additionally, Loop's own repo receives dogfood copies:
+
 ```
 AGENTS.md                           # Copy of templates/AGENTS.md
 .cursor/rules/loop.mdc              # Copy of templates/loop.mdc
@@ -104,7 +105,7 @@ export async function GET() {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'public, max-age=3600, s-maxage=86400',
     },
-  })
+  });
 }
 ```
 
@@ -167,6 +168,7 @@ export async function GET() {
 ```
 
 **Notes:**
+
 - Doc page URLs are forward-references — they point to where docs _will_ live once Feature 7 ships
 - The content is an inline string constant, not a file read, for zero-latency serving
 - Cache headers: 1h browser cache, 24h CDN cache
@@ -178,7 +180,7 @@ export async function GET() {
 **Standard:** [agentskills.io](https://agentskills.io/specification)
 **Distribution:** `npx openskills install @dork-labs/loop`
 
-```markdown
+````markdown
 ---
 name: loop
 description: >
@@ -192,7 +194,7 @@ license: MIT
 compatibility: Requires internet access to reach https://app.looped.me
 metadata:
   author: dork-labs
-  version: "1.0"
+  version: '1.0'
 ---
 
 # Loop
@@ -208,6 +210,7 @@ Set before making API calls:
 ```bash
 export LOOP_API_KEY=loop_...
 ```
+````
 
 Base URL: `https://app.looped.me/api`
 All `/api/*` endpoints require: `Authorization: Bearer $LOOP_API_KEY`
@@ -288,7 +291,8 @@ curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
 
 1. Fetch the docs index: `curl -s https://www.looped.me/llms.txt`
 2. Full endpoint reference: see [references/api.md](references/api.md)
-```
+
+````
 
 ### 6.4 Artifact 2b: API Reference (references/api.md)
 
@@ -340,14 +344,15 @@ curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
 # Dashboard stats
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
   https://app.looped.me/api/dashboard/stats
-```
+````
 
 ### Docs
 
 - Full API: https://www.looped.me/docs
 - Machine-readable: https://www.looped.me/llms.txt
 - Agent Skill: `npx openskills install @dork-labs/loop`
-```
+
+````
 
 ### 6.6 Artifact 4: Cursor Rules (loop.mdc)
 
@@ -371,7 +376,7 @@ alwaysApply: false
 
 ```bash
 export LOOP_API_KEY=loop_...
-```
+````
 
 All `/api/*` endpoints: `Authorization: Bearer $LOOP_API_KEY`
 
@@ -407,7 +412,8 @@ curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
 
 Full API: https://www.looped.me/docs
 Machine-readable: https://www.looped.me/llms.txt
-```
+
+````
 
 ### 6.7 Artifact 5: OpenHands Microagent
 
@@ -436,9 +442,11 @@ prompt templates in an autonomous development workflow.
 
 ## API Base URL
 
-```
+````
+
 https://app.looped.me/api
-```
+
+````
 
 All protected endpoints require: `Authorization: Bearer $LOOP_API_KEY`
 
@@ -464,7 +472,7 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"title":"Fix login flow","type":"bug"}' \
   https://app.looped.me/api/issues
-```
+````
 
 ## Ingest a Signal
 
@@ -480,7 +488,8 @@ curl -X POST \
 
 Full docs: https://www.looped.me/docs
 Machine-readable index: https://www.looped.me/llms.txt
-```
+
+````
 
 ### 6.8 Token Budgets
 
@@ -547,9 +556,10 @@ Each artifact renders this nucleus differently for its consumption context.
   },
   "homepage": "https://looped.me"
 }
-```
+````
 
 **Notes:**
+
 - No `main`, `bin`, or `exports` — this is a content-only package
 - `files` explicitly lists what gets published (no build step needed)
 - The `openskills` installer looks for `SKILL.md` at the package root
@@ -558,11 +568,11 @@ Each artifact renders this nucleus differently for its consumption context.
 
 Copy template files to Loop's own repo root for dogfooding:
 
-| Source | Destination | Purpose |
-|--------|-------------|---------|
-| `packages/loop-skill/templates/AGENTS.md` | `./AGENTS.md` | Agents working on Loop itself can use the API |
-| `packages/loop-skill/templates/loop.mdc` | `./.cursor/rules/loop.mdc` | Cursor users working on Loop |
-| `packages/loop-skill/templates/openhands-loop.md` | `./.openhands/microagents/loop.md` | OpenHands users working on Loop |
+| Source                                            | Destination                        | Purpose                                       |
+| ------------------------------------------------- | ---------------------------------- | --------------------------------------------- |
+| `packages/loop-skill/templates/AGENTS.md`         | `./AGENTS.md`                      | Agents working on Loop itself can use the API |
+| `packages/loop-skill/templates/loop.mdc`          | `./.cursor/rules/loop.mdc`         | Cursor users working on Loop                  |
+| `packages/loop-skill/templates/openhands-loop.md` | `./.openhands/microagents/loop.md` | OpenHands users working on Loop               |
 
 These are maintained copies, not symlinks, since the repo-root files serve as "living examples" and may diverge slightly (e.g., using `localhost:5667` instead of production URLs for local dev context).
 
@@ -629,14 +639,14 @@ test('GET /llms.txt returns markdown with correct content-type', async () => {
   // Assert body starts with "# Loop"
   // Assert body contains "## Getting Started" section
   // Assert body contains "## Agent Integration" section
-})
+});
 
 // Purpose: Verify llms.txt contains all required sections
 test('llms.txt contains all spec-required sections', async () => {
   // Parse response body
   // Assert H2 sections: Getting Started, Issues, Signals, Agent Dispatch,
   //   Projects and Goals, Prompt Templates, Agent Integration, Optional
-})
+});
 ```
 
 ### SKILL.md Validation
@@ -660,18 +670,18 @@ npx skills-ref validate packages/loop-skill/
 test('SKILL.md description is under 1024 characters', async () => {
   // Parse YAML frontmatter from SKILL.md
   // Assert description.length <= 1024
-})
+});
 
 test('SKILL.md body is under 5000 tokens', async () => {
   // Read SKILL.md, strip frontmatter
   // Estimate tokens (chars / 4 as rough approximation)
   // Assert < 5000 tokens
-})
+});
 
 test('AGENTS.md snippet is under 600 tokens', async () => {
   // Read templates/AGENTS.md
   // Assert < 600 tokens
-})
+});
 ```
 
 ### Content Consistency
@@ -681,14 +691,14 @@ test('AGENTS.md snippet is under 600 tokens', async () => {
 test('all artifacts use consistent API base URL', async () => {
   // Read all 5 artifact files
   // Assert each contains 'https://app.looped.me/api'
-})
+});
 
 // Purpose: Verify all artifacts reference the same auth mechanism
 test('all artifacts use consistent auth pattern', async () => {
   // Read all 5 artifact files
   // Assert each contains 'LOOP_API_KEY'
   // Assert each contains 'Authorization: Bearer'
-})
+});
 ```
 
 ## 9. Performance Considerations
@@ -765,14 +775,14 @@ Copy templates to Loop's own repo and add tests:
 
 ## 13. Open Questions
 
-*All clarifications from ideation have been resolved. No remaining open questions.*
+_All clarifications from ideation have been resolved. No remaining open questions._
 
 ## 14. Related ADRs
 
-| # | Title | Relevance |
-|---|-------|-----------|
-| 23 | Use `loop_` prefix for API keys | Auth examples in all artifacts use the `loop_` prefix |
-| 24 | Use env hints for actionable errors | SKILL.md error handling section follows this pattern |
+| #   | Title                               | Relevance                                             |
+| --- | ----------------------------------- | ----------------------------------------------------- |
+| 23  | Use `loop_` prefix for API keys     | Auth examples in all artifacts use the `loop_` prefix |
+| 24  | Use env hints for actionable errors | SKILL.md error handling section follows this pattern  |
 
 ## 15. References
 

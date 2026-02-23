@@ -8,7 +8,9 @@
   "bin": {
     "loop-mcp": "./dist/stdio.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -35,7 +37,9 @@
     "hono": "^4"
   },
   "peerDependenciesMeta": {
-    "hono": { "optional": true }
+    "hono": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@hono/mcp": "latest",

@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { z } from 'zod';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-import type { ApiClient } from '../types.js'
-import { handleToolCall } from './error-handler.js'
+import type { ApiClient } from '../types.js';
+import { handleToolCall } from './error-handler.js';
 
 /**
  * Register the `loop_complete_task` tool on the MCP server.
@@ -30,32 +30,26 @@ export function registerCompleteTask(server: McpServer, client: ApiClient): void
         // 1. Mark the issue as done
         const issueRes = await client
           .patch(`api/issues/${issueId}`, { json: { status: 'done' } })
-          .json<{ data: Record<string, unknown> }>()
-        const issue = issueRes.data
+          .json<{ data: Record<string, unknown> }>();
+        const issue = issueRes.data;
 
         // 2. Post an outcome comment
         const commentRes = await client
           .post(`api/issues/${issueId}/comments`, {
             json: { body: outcome, authorName: 'agent', authorType: 'agent' },
           })
-          .json<{ data: Record<string, unknown> }>()
-        const comment = commentRes.data
+          .json<{ data: Record<string, unknown> }>();
+        const comment = commentRes.data;
 
         // 3. Find issues that were blocked by this one
         const todoIssues = await client
           .get('api/issues', { searchParams: { status: 'todo' } })
-          .json<{ data: Array<Record<string, unknown>> }>()
+          .json<{ data: Array<Record<string, unknown>> }>();
 
-        const unblockedIssues = todoIssues.data.filter(
-          (i: Record<string, unknown>) => {
-            const relations = i.relations as
-              | Array<Record<string, unknown>>
-              | undefined
-            return relations?.some(
-              (r) => r.type === 'blocked_by' && r.targetId === issueId,
-            )
-          },
-        )
+        const unblockedIssues = todoIssues.data.filter((i: Record<string, unknown>) => {
+          const relations = i.relations as Array<Record<string, unknown>> | undefined;
+          return relations?.some((r) => r.type === 'blocked_by' && r.targetId === issueId);
+        });
 
         return {
           content: [
@@ -64,8 +58,8 @@ export function registerCompleteTask(server: McpServer, client: ApiClient): void
               text: JSON.stringify({ issue, comment, unblockedIssues }, null, 2),
             },
           ],
-        }
-      })
-    },
-  )
+        };
+      });
+    }
+  );
 }

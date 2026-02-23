@@ -101,23 +101,23 @@ Full research documented in `research/20260219_data-layer-core-api.md` (18 searc
 
 ### Key Decisions
 
-| Decision | Recommendation | Rationale |
-|----------|---------------|-----------|
-| PostgreSQL hosting | **Neon** | Serverless-first, powers Vercel Postgres natively, database branching, free tier sufficient for MVP |
-| Local dev DB | **Docker Compose** or **PGLite** | Docker with Neon WS proxy for full fidelity, or PGLite for zero-infra local dev |
-| Connection driver | **Neon HTTP** for CRUD, **Pool/WS** for transactions | HTTP avoids handshake overhead for single queries; Pool needed for multi-table atomic writes |
-| Drizzle integration | **Module-scope client** + **Hono context variables** | Warm instance reuse on Vercel; type-safe `c.set('db', db)` / `c.get('db')` pattern |
-| Schema organisation | **Per-domain-group files** with barrel export | `schema/issues.ts`, `schema/projects.ts`, `schema/signals.ts`, `schema/prompts.ts` + `schema/_helpers.ts` + `schema/index.ts` |
-| Primary keys | **Text CUID2** everywhere | Simpler for MVP, URL-safe, no sequential enumeration risk |
-| Enums | **`pgEnum` + `as const` arrays** | Single source of truth for both Drizzle columns and Zod validation schemas |
-| JSONB typing | **`.$type<T>()`** on jsonb columns | Type-safe JSONB with GIN indexes for queryable fields |
-| Migrations | **`drizzle-kit generate`** + **programmatic `migrate()` in build step** | Versioned SQL files, applied via `tsx src/db/migrate.ts` before build |
-| Request validation | **`@hono/zod-validator`** per-route | Type-safe validated bodies, 422 errors with details |
-| API key auth | **SHA-256 hash** + `crypto.timingSafeEqual` | High-entropy keys don't need bcrypt cost; constant-time comparison prevents timing attacks |
-| Webhook verification | **Per-provider middleware factory** | GitHub (HMAC-SHA256 on raw body), Sentry (HMAC-SHA256 on serialized JSON), PostHog (shared secret header — no HMAC support) |
-| Testing DB | **PGLite in-memory** per test file | Real WASM Postgres, no Docker, schema wipe between tests, full SQL fidelity |
-| Test pattern | **`app.request()`** (Hono native) | No HTTP server needed, direct request/response testing |
-| Error handling | **Global `app.onError()`** + per-route Zod | HTTPException → status + message, ZodError → 422 + details, catch-all → 500 |
+| Decision             | Recommendation                                                          | Rationale                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| PostgreSQL hosting   | **Neon**                                                                | Serverless-first, powers Vercel Postgres natively, database branching, free tier sufficient for MVP                           |
+| Local dev DB         | **Docker Compose** or **PGLite**                                        | Docker with Neon WS proxy for full fidelity, or PGLite for zero-infra local dev                                               |
+| Connection driver    | **Neon HTTP** for CRUD, **Pool/WS** for transactions                    | HTTP avoids handshake overhead for single queries; Pool needed for multi-table atomic writes                                  |
+| Drizzle integration  | **Module-scope client** + **Hono context variables**                    | Warm instance reuse on Vercel; type-safe `c.set('db', db)` / `c.get('db')` pattern                                            |
+| Schema organisation  | **Per-domain-group files** with barrel export                           | `schema/issues.ts`, `schema/projects.ts`, `schema/signals.ts`, `schema/prompts.ts` + `schema/_helpers.ts` + `schema/index.ts` |
+| Primary keys         | **Text CUID2** everywhere                                               | Simpler for MVP, URL-safe, no sequential enumeration risk                                                                     |
+| Enums                | **`pgEnum` + `as const` arrays**                                        | Single source of truth for both Drizzle columns and Zod validation schemas                                                    |
+| JSONB typing         | **`.$type<T>()`** on jsonb columns                                      | Type-safe JSONB with GIN indexes for queryable fields                                                                         |
+| Migrations           | **`drizzle-kit generate`** + **programmatic `migrate()` in build step** | Versioned SQL files, applied via `tsx src/db/migrate.ts` before build                                                         |
+| Request validation   | **`@hono/zod-validator`** per-route                                     | Type-safe validated bodies, 422 errors with details                                                                           |
+| API key auth         | **SHA-256 hash** + `crypto.timingSafeEqual`                             | High-entropy keys don't need bcrypt cost; constant-time comparison prevents timing attacks                                    |
+| Webhook verification | **Per-provider middleware factory**                                     | GitHub (HMAC-SHA256 on raw body), Sentry (HMAC-SHA256 on serialized JSON), PostHog (shared secret header — no HMAC support)   |
+| Testing DB           | **PGLite in-memory** per test file                                      | Real WASM Postgres, no Docker, schema wipe between tests, full SQL fidelity                                                   |
+| Test pattern         | **`app.request()`** (Hono native)                                       | No HTTP server needed, direct request/response testing                                                                        |
+| Error handling       | **Global `app.onError()`** + per-route Zod                              | HTTPException → status + message, ZodError → 422 + details, catch-all → 500                                                   |
 
 ### Security Considerations
 

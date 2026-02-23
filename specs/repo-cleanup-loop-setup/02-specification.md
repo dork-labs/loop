@@ -61,16 +61,16 @@ This repo was copied from the DorkOS project (a web interface for Claude Code). 
 
 ## Technical Dependencies
 
-| Dependency | Version | Purpose |
-|---|---|---|
-| Hono | latest | API framework for `apps/api` |
-| @hono/node-server | latest | Local dev server for Hono |
-| React | 19.x | Frontend framework (already in repo) |
-| Vite | 6.x | Build tool for `apps/app` |
-| @tailwindcss/vite | 4.x | Tailwind CSS integration for Vite |
-| Tailwind CSS | 4.x | Styling (already in repo) |
-| Next.js | 16.x | Marketing site (already in repo) |
-| Turborepo | 2.x | Monorepo orchestration (already in repo) |
+| Dependency        | Version | Purpose                                  |
+| ----------------- | ------- | ---------------------------------------- |
+| Hono              | latest  | API framework for `apps/api`             |
+| @hono/node-server | latest  | Local dev server for Hono                |
+| React             | 19.x    | Frontend framework (already in repo)     |
+| Vite              | 6.x     | Build tool for `apps/app`                |
+| @tailwindcss/vite | 4.x     | Tailwind CSS integration for Vite        |
+| Tailwind CSS      | 4.x     | Styling (already in repo)                |
+| Next.js           | 16.x    | Marketing site (already in repo)         |
+| Turborepo         | 2.x     | Monorepo orchestration (already in repo) |
 
 ---
 
@@ -80,19 +80,20 @@ This repo was copied from the DorkOS project (a web interface for Claude Code). 
 
 **Delete stale content:**
 
-| Target | Action |
-|---|---|
-| `packages/` directory | Already empty — delete the directory itself |
-| `docs/` content | Delete all `.mdx` files and subdirectories. Keep `meta.json` (Fumadocs needs it) |
-| `contributing/` content | Delete all `.md` files. Keep directory |
-| `decisions/` content | Delete `TEMPLATE.md` and `archive/`. Keep `manifest.json` (already reset to nextNumber: 1) |
+| Target                   | Action                                                                                                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/` directory    | Already empty — delete the directory itself                                                                                                                             |
+| `docs/` content          | Delete all `.mdx` files and subdirectories. Keep `meta.json` (Fumadocs needs it)                                                                                        |
+| `contributing/` content  | Delete all `.md` files. Keep directory                                                                                                                                  |
+| `decisions/` content     | Delete `TEMPLATE.md` and `archive/`. Keep `manifest.json` (already reset to nextNumber: 1)                                                                              |
 | `research/` DorkOS files | Delete `mcp-tool-injection-patterns.md`, `20260218_roadmap-app-best-practices.md`. Keep `README.md`, `fumadocs-blog-research.md`, `20260218_repo-cleanup-loop-setup.md` |
-| `scripts/` | Delete `export-openapi.ts` and any DorkOS-specific scripts |
-| `blog/` | Delete if it contains DorkOS content |
+| `scripts/`               | Delete `export-openapi.ts` and any DorkOS-specific scripts                                                                                                              |
+| `blog/`                  | Delete if it contains DorkOS content                                                                                                                                    |
 
 **Clear DorkOS environment config:**
 
 `.env.example` — replace with Loop variables:
+
 ```bash
 # Loop Environment Variables
 # Copy this file to .env and fill in your values:
@@ -113,11 +114,11 @@ This repo was copied from the DorkOS project (a web interface for Claude Code). 
 
 **Package renames:**
 
-| File | Change |
-|---|---|
-| `package.json` | `"name": "dorkos"` → `"name": "loop"`, `"version": "0.1.0"` |
-| `apps/web/package.json` | `"name": "@dorkos/web"` → `"name": "@loop/web"` |
-| `VERSION` | `0.3.0` → `0.1.0` |
+| File                    | Change                                                      |
+| ----------------------- | ----------------------------------------------------------- |
+| `package.json`          | `"name": "dorkos"` → `"name": "loop"`, `"version": "0.1.0"` |
+| `apps/web/package.json` | `"name": "@dorkos/web"` → `"name": "@loop/web"`             |
+| `VERSION`               | `0.3.0` → `0.1.0`                                           |
 
 **Root `package.json` script updates:**
 
@@ -166,12 +167,13 @@ npm run dev
 ## Structure
 
 apps/
-  api/     # Hono API (app.looped.me)
-  app/     # React dashboard (app.looped.me)
-  web/     # Marketing site (www.looped.me)
+api/ # Hono API (app.looped.me)
+app/ # React dashboard (app.looped.me)
+web/ # Marketing site (www.looped.me)
 ```
 
 **CLAUDE.md** — rewrite for Loop's architecture. Key sections:
+
 - What This Is (Loop product description)
 - Monorepo Structure (apps/api, apps/app, apps/web)
 - Commands (dev, build, test, typecheck, lint)
@@ -226,10 +228,7 @@ Changes: Remove `generate:api-docs` dependency, remove `dist-server/**` and `dis
 ```typescript
 import { defineWorkspace } from 'vitest/config';
 
-export default defineWorkspace([
-  'apps/api',
-  'apps/app',
-]);
+export default defineWorkspace(['apps/api', 'apps/app']);
 ```
 
 **`tsconfig.json` (root):**
@@ -244,11 +243,7 @@ export default defineWorkspace([
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "references": [
-    { "path": "./apps/api" },
-    { "path": "./apps/app" },
-    { "path": "./apps/web" }
-  ],
+  "references": [{ "path": "./apps/api" }, { "path": "./apps/app" }, { "path": "./apps/web" }],
   "exclude": ["node_modules"]
 }
 ```
@@ -260,6 +255,7 @@ export default defineWorkspace([
 #### `apps/api/` — Hono API
 
 **File structure:**
+
 ```
 apps/api/
 ├── package.json
@@ -269,6 +265,7 @@ apps/api/
 ```
 
 **`apps/api/package.json`:**
+
 ```json
 {
   "name": "@loop/api",
@@ -295,32 +292,34 @@ apps/api/
 Note: For local dev, we use `@hono/node-server`. On Vercel, Hono auto-detects and deploys as Vercel Functions with zero config.
 
 **`apps/api/src/index.ts`:**
-```typescript
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
 
-const app = new Hono()
+```typescript
+import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
+
+const app = new Hono();
 
 app.get('/health', (c) => {
-  return c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() })
-})
+  return c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() });
+});
 
 app.get('/', (c) => {
-  return c.json({ name: 'Loop API', version: '0.1.0' })
-})
+  return c.json({ name: 'Loop API', version: '0.1.0' });
+});
 
 // Local dev server (Vercel uses the default export)
 if (process.env.NODE_ENV !== 'production') {
-  const port = parseInt(process.env.PORT || '4242', 10)
+  const port = parseInt(process.env.PORT || '4242', 10);
   serve({ fetch: app.fetch, port }, (info) => {
-    console.log(`Loop API running at http://localhost:${info.port}`)
-  })
+    console.log(`Loop API running at http://localhost:${info.port}`);
+  });
 }
 
-export default app
+export default app;
 ```
 
 **`apps/api/tsconfig.json`:**
+
 ```json
 {
   "compilerOptions": {
@@ -345,6 +344,7 @@ export default app
 #### `apps/app/` — React 19 + Vite
 
 **File structure:**
+
 ```
 apps/app/
 ├── package.json
@@ -358,6 +358,7 @@ apps/app/
 ```
 
 **`apps/app/package.json`:**
+
 ```json
 {
   "name": "@loop/app",
@@ -388,11 +389,12 @@ apps/app/
 ```
 
 **`apps/app/vite.config.ts`:**
+
 ```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -401,10 +403,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-})
+});
 ```
 
 **`apps/app/index.html`:**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -421,20 +424,22 @@ export default defineConfig({
 ```
 
 **`apps/app/src/main.tsx`:**
+
 ```tsx
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { App } from './App'
-import './index.css'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>
-)
+);
 ```
 
 **`apps/app/src/App.tsx`:**
+
 ```tsx
 export function App() {
   return (
@@ -444,16 +449,18 @@ export function App() {
         <p className="mt-2 text-neutral-400">The Autonomous Improvement Engine</p>
       </div>
     </div>
-  )
+  );
 }
 ```
 
 **`apps/app/src/index.css`:**
+
 ```css
 @import 'tailwindcss';
 ```
 
 **`apps/app/tsconfig.json`:**
+
 ```json
 {
   "compilerOptions": {
@@ -482,31 +489,27 @@ export default function HomePage() {
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center px-4">
       <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-          Loop
-        </h1>
-        <p className="mt-4 text-xl text-muted-foreground">
-          The Autonomous Improvement Engine
+        <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">Loop</h1>
+        <p className="text-muted-foreground mt-4 text-xl">The Autonomous Improvement Engine</p>
+        <p className="text-muted-foreground/80 mt-6 text-lg">
+          An open-source data layer and prompt engine that collects signals, organizes work into
+          issues, and tells AI agents exactly what to do next.
         </p>
-        <p className="mt-6 text-lg text-muted-foreground/80">
-          An open-source data layer and prompt engine that collects signals,
-          organizes work into issues, and tells AI agents exactly what to do next.
-        </p>
-        <p className="mt-8 text-sm text-muted-foreground/60">
-          Coming Soon
-        </p>
+        <p className="text-muted-foreground/60 mt-8 text-sm">Coming Soon</p>
       </div>
     </main>
-  )
+  );
 }
 ```
 
 **`apps/web/src/app/layout.tsx`** — Update metadata:
+
 - `title`: "Loop — The Autonomous Improvement Engine"
 - `description`: "An open-source data layer and prompt engine that closes the feedback loop for AI-powered development."
 - Update any DorkOS references in the layout
 
 **Other web app updates:**
+
 - Delete `apps/web/.vercel/project.json` (create fresh Vercel project)
 - Clear blog content if DorkOS-specific
 - Update `apps/web/src/app/robots.ts` and `sitemap.ts` to reference `looped.me`
@@ -555,6 +558,7 @@ After this spec is implemented:
 **This spec explicitly defers testing.** The starter apps are minimal scaffolding. Tests will be added as domain logic is implemented in subsequent specs.
 
 **Verification is manual:**
+
 - `npm run typecheck` passes
 - `npm run build` succeeds for all apps
 - `npm run lint` passes
@@ -590,24 +594,31 @@ No performance concerns — this is scaffolding. The starter apps are minimal an
 ## Implementation Phases
 
 ### Phase 1: Delete & Clean (no dependencies)
+
 Delete stale content, empty directories, DorkOS-specific files. Clear docs/, contributing/, research/.
 
 ### Phase 2: Rename & Rebrand (depends on Phase 1)
+
 Update package names, README, CLAUDE.md, .env.example, VERSION.
 
 ### Phase 3: Config Cleanup (depends on Phase 2)
+
 Fix turbo.json, eslint.config.js, vitest.workspace.ts, tsconfig.json. Regenerate lockfile.
 
 ### Phase 4: Create Starter Apps (depends on Phase 3)
+
 Scaffold apps/api (Hono) and apps/app (React + Vite). Install dependencies.
 
 ### Phase 5: Update Marketing Site (can run parallel with Phase 4)
+
 Update apps/web with Loop content, metadata, clean up DorkOS references.
 
 ### Phase 6: .claude/ Audit (can run parallel with Phases 4-5)
+
 Interactive review with user. Ask before removing each item.
 
 ### Phase 7: Verify & Ship (depends on all previous phases)
+
 Run typecheck, build, lint. Initialize git. Push to GitHub. Configure Vercel.
 
 ```
@@ -627,6 +638,7 @@ None — all clarifications resolved during ideation.
 ## Related ADRs
 
 No existing ADRs. This spec will generate draft ADRs for:
+
 - Use Hono over Express for the Loop API
 - Deploy as two Vercel projects from one monorepo
 

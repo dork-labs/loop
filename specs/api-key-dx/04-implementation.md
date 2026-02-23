@@ -18,8 +18,8 @@
 - Task #3: [P1] Update .env.example files with generation command comments
 - Task #4: [P2] Add ENV_HINTS to API env.ts for actionable error messages
 - Task #5: [P2] Add ENV_HINTS to App env.ts for actionable error messages
-- Task #6: [P2] Fix FTUE key masking to show loop_ prefix (slice 0-5)
-- Task #7: [P3] Update environment docs to use loop_ prefix instead of tok_
+- Task #6: [P2] Fix FTUE key masking to show loop\_ prefix (slice 0-5)
+- Task #7: [P3] Update environment docs to use loop* prefix instead of tok*
 - Task #8: [P3] Standardize test files to use loop_test-api-key format
 - Task #9: [P4] Full test suite and manual verification
 
@@ -35,10 +35,10 @@
 - `apps/api/src/env.ts` — Added ENV_HINTS map, updated error handler, changed test default
 - `apps/app/src/env.ts` — Added ENV_HINTS map, updated error handler
 - `apps/app/src/components/setup-checklist.tsx` — Fixed masking (slice 0-5)
-- `docs/self-hosting/environment.mdx` — Replaced tok_ with loop_ (6 replacements)
-- `docs/self-hosting/deployment.mdx` — Replaced tok_ with loop_
-- `docs/cli/index.mdx` — Replaced tok_ with loop_
-- `docs/cli/signals.mdx` — Replaced tok_ with loop_
+- `docs/self-hosting/environment.mdx` — Replaced tok* with loop* (6 replacements)
+- `docs/self-hosting/deployment.mdx` — Replaced tok* with loop*
+- `docs/cli/index.mdx` — Replaced tok* with loop*
+- `docs/cli/signals.mdx` — Replaced tok* with loop*
 
 **Test files:**
 
@@ -62,6 +62,6 @@
 - Script uses ESM syntax (not CJS) because root package.json has `"type": "module"`
 - Fixed --force flag ordering bug from spec (moved force check before first exit)
 - Added `/* global console, process */` for ESLint compatibility
-- Docs agent found additional tok_ references in deployment.mdx, cli/index.mdx, cli/signals.mdx beyond what was in the spec
+- Docs agent found additional tok\_ references in deployment.mdx, cli/index.mdx, cli/signals.mdx beyond what was in the spec
 - All 329 API tests pass, 5/5 packages typecheck clean
 - No remaining `tok_` references in docs, no remaining `test-api-key` in apps

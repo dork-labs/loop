@@ -79,6 +79,7 @@ N/A — this is a feature, not a bug fix.
 ### Potential Solutions
 
 **1. Full-Page Wizard (Blocked UI)**
+
 - Description: Dedicated `/onboarding` route that blocks access to the dashboard until complete. Multi-step form with progress indicator.
 - Pros:
   - Focused attention — nothing else to click
@@ -92,6 +93,7 @@ N/A — this is a feature, not a bug fix.
 - Maintenance: Medium
 
 **2. Inline Empty States Only**
+
 - Description: Replace each page's empty state with contextual guidance — issues page explains how to create issues, goals page explains goals, etc.
 - Pros:
   - Contextual — guidance appears where it's relevant
@@ -106,6 +108,7 @@ N/A — this is a feature, not a bug fix.
 - Maintenance: Low
 
 **3. Sidebar Checklist (Persistent)**
+
 - Description: Non-modal checklist card (like Linear/Notion) that persists alongside the real UI. Steps check off as completed. Collapsible.
 - Pros:
   - Never blocks the UI — user can explore freely
@@ -119,6 +122,7 @@ N/A — this is a feature, not a bug fix.
 - Maintenance: Low
 
 **4. Modal Overlay Only**
+
 - Description: Welcome modal with steps, dismissible. Appears on first load.
 - Pros:
   - Immediate attention capture
@@ -131,6 +135,7 @@ N/A — this is a feature, not a bug fix.
 - Maintenance: Low
 
 **5. Hybrid: Welcome Modal → Persistent Checklist → Polling → Celebration (RECOMMENDED)**
+
 - Description: Four-phase approach combining the best of each pattern:
   1. **Welcome modal** — one screen, 2 sentences, single CTA. Fires once. Sets framing.
   2. **Persistent checklist** — non-modal card on the issues page, 4 steps, never blocks dashboard. Shows API endpoint, API key, pre-populated curl command.
@@ -150,10 +155,12 @@ N/A — this is a feature, not a bug fix.
 - Maintenance: Low
 
 ### Security Considerations
+
 - API key is already in the client env vars (`VITE_LOOP_API_KEY`); displaying it in the setup guide is not a new exposure
 - Curl snippet should use the dashboard's own API URL, not hardcoded
 
 ### Performance Considerations
+
 - Polling at 3-second interval on `/api/issues?limit=1` is negligible load
 - `canvas-confetti` is 4.4KB gzipped, zero dependencies
 - localStorage reads are synchronous but fast for single boolean checks
@@ -165,6 +172,7 @@ N/A — this is a feature, not a bug fix.
 **Rationale:** This approach maps perfectly to Loop's activation event (first issue arriving via API). The pre-injected curl command eliminates the biggest friction point in developer onboarding (Stripe proved this). TanStack Query polling requires zero new infrastructure. The celebration moment creates an emotional anchor that converts "setup task" into "product experience."
 
 **Caveats:**
+
 - The welcome modal must be truly minimal (2 sentences max) to avoid modal fatigue
 - Onboarding state should be stored in localStorage, not server-side — keeps it simple and avoids API changes
 - The curl snippet must inject the real API key and API URL from env vars — placeholder keys kill activation rates
@@ -172,14 +180,16 @@ N/A — this is a feature, not a bug fix.
 ### Technical Implementation Details
 
 **Polling mechanism:** Use TanStack Query's `refetchInterval` as a function:
+
 ```tsx
 refetchInterval: (query) => {
   // Stop polling once we have data
-  return query.state.data?.data?.length > 0 ? false : 3000
-}
+  return query.state.data?.data?.length > 0 ? false : 3000;
+};
 ```
 
 **Onboarding state:** localStorage key `loop:onboarding` with shape:
+
 ```json
 {
   "welcomed": true,
@@ -191,6 +201,7 @@ refetchInterval: (query) => {
 **Confetti:** `canvas-confetti` package — the ecosystem standard for this moment. Single burst, 2-3 seconds, auto-cleans.
 
 **Pre-populated curl command:**
+
 ```bash
 curl -X POST ${API_URL}/api/issues \
   -H "Authorization: Bearer ${API_KEY}" \

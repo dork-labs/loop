@@ -19,16 +19,17 @@ This document extends the prior onboarding patterns research with concrete, impl
 
 **Industry pattern**: Every major API-first company now uses structured prefixes on externally-shared keys. The format `<product>_<random>` is the clear convention:
 
-| Product | Format | Notes |
-|---------|--------|-------|
-| Stripe | `sk_live_...` / `sk_test_...` | Underscore separator, environment encoded |
-| Supabase (2024+) | `sb_publishable_...` / `sb_secret_...` | Full word prefix |
-| Resend | `re_...` | Two-letter prefix only |
-| Anthropic | `sk-ant-...` | Hyphen separator |
-| Unkey | `uk_...` | Two-letter prefix |
-| GitHub PAT | `ghp_...` | Two-letter company + one-letter type |
+| Product          | Format                                 | Notes                                     |
+| ---------------- | -------------------------------------- | ----------------------------------------- |
+| Stripe           | `sk_live_...` / `sk_test_...`          | Underscore separator, environment encoded |
+| Supabase (2024+) | `sb_publishable_...` / `sb_secret_...` | Full word prefix                          |
+| Resend           | `re_...`                               | Two-letter prefix only                    |
+| Anthropic        | `sk-ant-...`                           | Hyphen separator                          |
+| Unkey            | `uk_...`                               | Two-letter prefix                         |
+| GitHub PAT       | `ghp_...`                              | Two-letter company + one-letter type      |
 
 **Why prefixes matter**:
+
 - GitHub secret scanning can detect a prefixed key with a false-positive rate approaching 0.5% (vs. ~15-40% for unprefixed random strings). The prefix makes the regex `loop_[a-f0-9]{64}` unambiguous.
 - Developers can identify at a glance what a string is, even in logs or error messages.
 - Secret rotation tools (Doppler, Infisical, 1Password Secrets) can scope their scans by prefix.
@@ -42,19 +43,21 @@ This document extends the prior onboarding patterns research with concrete, impl
 
 Three encodings are in common use for the random portion of API keys:
 
-| Encoding | Command | 32-byte output length | Characters | Notes |
-|----------|---------|----------------------|------------|-------|
-| **Hex** | `crypto.randomBytes(32).toString('hex')` | 64 chars | `[0-9a-f]` | Unambiguous, no URL-encoding issues, easily regex-matched, universally supported |
-| **Base64url** | `crypto.randomBytes(32).toString('base64url')` | 43 chars | `[A-Za-z0-9\-_]` | 33% shorter, URL-safe, but mixed-case makes regex harder and copy-paste more error-prone |
-| **Base64** | `crypto.randomBytes(32).toString('base64')` | 44 chars | `[A-Za-z0-9+/=]` | `+` and `/` break URLs, `=` padding confuses some parsers — avoid for API keys |
-| **Nanoid** (21 chars) | `nanoid()` | 21 chars | `[A-Za-z0-9_-]` | Requires a dependency, designed for IDs not secrets, 126-bit entropy (sufficient but not 256-bit) |
+| Encoding              | Command                                        | 32-byte output length | Characters       | Notes                                                                                             |
+| --------------------- | ---------------------------------------------- | --------------------- | ---------------- | ------------------------------------------------------------------------------------------------- |
+| **Hex**               | `crypto.randomBytes(32).toString('hex')`       | 64 chars              | `[0-9a-f]`       | Unambiguous, no URL-encoding issues, easily regex-matched, universally supported                  |
+| **Base64url**         | `crypto.randomBytes(32).toString('base64url')` | 43 chars              | `[A-Za-z0-9\-_]` | 33% shorter, URL-safe, but mixed-case makes regex harder and copy-paste more error-prone          |
+| **Base64**            | `crypto.randomBytes(32).toString('base64')`    | 44 chars              | `[A-Za-z0-9+/=]` | `+` and `/` break URLs, `=` padding confuses some parsers — avoid for API keys                    |
+| **Nanoid** (21 chars) | `nanoid()`                                     | 21 chars              | `[A-Za-z0-9_-]`  | Requires a dependency, designed for IDs not secrets, 126-bit entropy (sufficient but not 256-bit) |
 
 **Entropy analysis**:
+
 - `crypto.randomBytes(32)` = 256 bits of OS-sourced cryptographic randomness, regardless of encoding.
 - Nanoid's default 21-char output = ~126 bits. Sufficient for practical security (equivalent to UUID v4) but lower than the 256-bit standard.
 - The encoding is purely cosmetic — all formats carry the same underlying randomness when derived from the same `randomBytes(32)` call.
 
 **Winner: Hex**
+
 - Regex `loop_[a-f0-9]{64}` is clean, unambiguous, and trivially validated.
 - No uppercase ambiguity (no confusing `O`/`0`, `I`/`l`).
 - All major API docs and secret scanning tools expect hex or alphanumeric; hex is the most universally parseable.
@@ -70,26 +73,28 @@ Three encodings are in common use for the random portion of API keys:
 **Current state**: `scripts/setup.sh` copies `.env.example` to `.env` if `.env` does not already exist (line 59). It does not generate a key — it just copies the placeholder value `loop-dev-api-key-insecure` from `.env.example`.
 
 **Industry precedent for auto-generation**:
+
 - **Auth.js** (`npx auth secret`): Generates crypto-secure random value, writes `AUTH_SECRET=<value>` to `.env.local`. Single command, zero friction.
 - **Strapi** (`npx create-strapi-app`): Generates `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET` using `crypto.randomBytes` and writes them to `.env` during scaffolding.
 - **Medusa** (`npx create-medusa-app`): Auto-generates and injects `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` into the Next.js starter's `.env`.
 
 **The implementation pattern** (from Auth.js, adapted):
+
 ```js
 // scripts/generate-api-key.js
-import { randomBytes } from 'crypto'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { randomBytes } from 'crypto';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
-const key = `loop_${randomBytes(32).toString('hex')}`
-const envPath = 'apps/api/.env'
+const key = `loop_${randomBytes(32).toString('hex')}`;
+const envPath = 'apps/api/.env';
 
 // Read file, replace placeholder line or append
-const content = existsSync(envPath) ? readFileSync(envPath, 'utf8') : ''
+const content = existsSync(envPath) ? readFileSync(envPath, 'utf8') : '';
 const updated = content.includes('LOOP_API_KEY=')
   ? content.replace(/^LOOP_API_KEY=.*/m, `LOOP_API_KEY=${key}`)
-  : content + `\nLOOP_API_KEY=${key}\n`
+  : content + `\nLOOP_API_KEY=${key}\n`;
 
-writeFileSync(envPath, updated)
+writeFileSync(envPath, updated);
 ```
 
 **Key design decisions**:
@@ -105,6 +110,7 @@ writeFileSync(envPath, updated)
 5. **Console output**: After writing, print the key prominently. The developer needs to know what it is — they may want to use it in curl commands or configure external services. Print it once, clearly, with a reminder that `.env` is gitignored.
 
 **Recommended flow in setup.sh** (additions to existing script):
+
 ```bash
 # After copying .env.example files, generate the API key
 echo ""
@@ -117,18 +123,18 @@ node scripts/generate-api-key.js
 ### 4. Zod Custom Error Messages
 
 **Current state** (`apps/api/src/env.ts` lines 37-43):
+
 ```ts
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
-  result.error.issues.forEach((i) =>
-    console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
-  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n')
-  process.exit(1)
+  console.error('\n  Missing or invalid environment variables:\n');
+  result.error.issues.forEach((i) => console.error(`  - ${i.path.join('.')}: ${i.message}`));
+  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n');
+  process.exit(1);
 }
 ```
 
 The issue: for `LOOP_API_KEY`, the error prints:
+
 ```
   - LOOP_API_KEY: Required
 ```
@@ -136,17 +142,18 @@ The issue: for `LOOP_API_KEY`, the error prints:
 This is technically correct but tells the developer nothing about how to fix it.
 
 **Zod's error customization API** (Zod v3):
+
 ```ts
 // Option A: inline string message
-LOOP_API_KEY: z.string().min(1, 'Generate with: node -e "..."')
+LOOP_API_KEY: z.string().min(1, 'Generate with: node -e "..."');
 
 // Option B: error map function (most powerful — can branch on issue code)
 LOOP_API_KEY: z.string({
   error: (iss) =>
     iss.input === undefined
       ? 'LOOP_API_KEY is not set. Run: npm run setup'
-      : 'LOOP_API_KEY must be a non-empty string'
-})
+      : 'LOOP_API_KEY must be a non-empty string',
+});
 ```
 
 **Zod v4 (2025) note**: Zod v4's error API changed slightly. The `invalid_type_error`/`required_error` shorthand was replaced with a unified `error` param that accepts a string or function. Both work: `z.string({ error: "message" })` or `z.string({ error: (iss) => ... })`. The repo's `zod` version should be checked; the pattern works in both v3 and v4.
@@ -157,24 +164,26 @@ Rather than baking the hint into the Zod schema (which couples the schema to ope
 
 ```ts
 const ENV_HINTS: Partial<Record<keyof typeof apiEnvSchema.shape, string>> = {
-  LOOP_API_KEY: 'Run: npm run setup  (or: node -e "console.log(\'loop_\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))")',
+  LOOP_API_KEY:
+    "Run: npm run setup  (or: node -e \"console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))\")",
   DATABASE_URL: 'See apps/api/.env.example for the local Docker connection string',
-}
+};
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
+  console.error('\n  Missing or invalid environment variables:\n');
   result.error.issues.forEach((i) => {
-    const field = i.path.join('.')
-    console.error(`  - ${field}: ${i.message}`)
-    const hint = ENV_HINTS[field as keyof typeof ENV_HINTS]
-    if (hint) console.error(`    Fix: ${hint}`)
-  })
-  console.error('\n  See apps/api/.env.example for all required variables.\n')
-  process.exit(1)
+    const field = i.path.join('.');
+    console.error(`  - ${field}: ${i.message}`);
+    const hint = ENV_HINTS[field as keyof typeof ENV_HINTS];
+    if (hint) console.error(`    Fix: ${hint}`);
+  });
+  console.error('\n  See apps/api/.env.example for all required variables.\n');
+  process.exit(1);
 }
 ```
 
 This produces:
+
 ```
   Missing or invalid environment variables:
 
@@ -185,6 +194,7 @@ This produces:
 ```
 
 **Why the `HINTS` map approach over inline Zod messages**:
+
 - Keeps the schema declarative — the schema describes the shape, not the operational runbook.
 - Easy to add or update hints without touching validation logic.
 - Allows multi-line hints without polluting the Zod chain.
@@ -196,6 +206,7 @@ This produces:
 
 **Industry standard** (from Inngest, NextAuth, Strapi patterns in prior research):
 Every required variable should have:
+
 1. A comment explaining what it is
 2. The format it must follow
 3. The command to generate it (if generatable)
@@ -205,6 +216,7 @@ Every required variable should have:
 **Decision: placeholder value vs. empty value**
 
 Two camps exist:
+
 - **Placeholder approach** (current): `LOOP_API_KEY=loop-dev-api-key-insecure` — works immediately for local dev, zero friction, but ships a non-prefixed insecure value.
 - **Empty with generation comment**: `LOOP_API_KEY=` with `# Generate with: ...` comment above — forces the developer to run a command, but prevents the insecure placeholder from being used in any environment.
 
@@ -218,6 +230,7 @@ LOOP_API_KEY=loop_replace_this_with_npm_run_setup
 ```
 
 For the app `.env.example`:
+
 ```bash
 # API key — must match LOOP_API_KEY in apps/api/.env
 # Auto-generated by: npm run setup
@@ -225,6 +238,7 @@ VITE_LOOP_API_KEY=loop_replace_this_with_npm_run_setup
 ```
 
 This approach:
+
 - Makes the format immediately clear (`loop_` prefix visible)
 - Makes the placeholder obviously a placeholder (not mistakable for a real key)
 - Documents both the automatic path (`npm run setup`) and the manual path
@@ -237,24 +251,28 @@ This approach:
 ### 6. FTUE Checklist Key Masking
 
 **Current state** (`apps/app/src/components/setup-checklist.tsx` line 24):
+
 ```ts
-const maskedKey = `${apiKey.slice(0, 3)}${'•'.repeat(Math.max(apiKey.length - 3, 8))}`
+const maskedKey = `${apiKey.slice(0, 3)}${'•'.repeat(Math.max(apiKey.length - 3, 8))}`;
 ```
 
 With the current `loop-dev-api-key-insecure` key:
+
 - Shows first 3 chars: `loo`
 - Masks the rest: `loo••••••••`
 
 With the new `loop_<64-hex-chars>` format (69 chars total):
+
 - Shows first 3 chars: `loo` — still doesn't reveal the prefix
 - Better would be to show the prefix: `loop_••••••••...••`
 
 **Recommended change**:
+
 ```ts
-const PREFIX = 'loop_'
+const PREFIX = 'loop_';
 const maskedKey = apiKey.startsWith(PREFIX)
   ? `${PREFIX}${'•'.repeat(Math.max(apiKey.length - PREFIX.length, 8))}`
-  : `${apiKey.slice(0, 4)}${'•'.repeat(Math.max(apiKey.length - 4, 8))}`
+  : `${apiKey.slice(0, 4)}${'•'.repeat(Math.max(apiKey.length - 4, 8))}`;
 ```
 
 This shows `loop_••••••••••••••` — the prefix is visible (not secret, it's a structural prefix like `sk_live_`), and the random portion is masked. This is consistent with how Stripe masks keys in their dashboard (`sk_live_••••••••••••••••••••••••••••••`).
@@ -288,6 +306,7 @@ Replace `scripts/setup.sh` with `scripts/setup.js` (or `setup.mjs`), handling al
 ### Solution C: Dedicated CLI Command (`npm run generate-key`)
 
 Add a standalone npm script: `"generate-key": "node scripts/generate-api-key.js"`. This script can be called:
+
 - By `setup.sh` during initial setup
 - Independently when rotating the key
 - From the error message in `env.ts`
@@ -309,9 +328,11 @@ This is slightly better than Solution A because the script is independently usab
 ### Does the Prefix Leak Information?
 
 No. The prefix (`loop_`) identifies:
+
 - The product the key belongs to (Loop)
 
 It does NOT identify:
+
 - Which project the key grants access to
 - What permissions the key has
 - The key rotation date or version
@@ -325,6 +346,7 @@ The key is stored in `.env` (gitignored) on the developer's machine. In producti
 ### Key Reuse Across .env Files
 
 `LOOP_API_KEY` (API server) and `VITE_LOOP_API_KEY` (frontend dashboard) share the same value. This is intentional and correct — the dashboard is the authorized caller of the API. The key is bundled into the Vite frontend build, which means it will appear in the compiled JS output. This is acceptable for a self-hosted tool where:
+
 - The dashboard is only accessible to authorized users of the deployment
 - The `.env` file is not committed to git
 - The key is rotatable via `npm run generate-key`
@@ -355,60 +377,61 @@ Implement **Solution A + Solution C combined**:
 // apps/api/.env and apps/app/.env. Safe to re-run — skips generation if a
 // valid loop_-prefixed key already exists.
 
-import { randomBytes } from 'crypto'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { randomBytes } from 'crypto';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
-const PLACEHOLDER_PATTERN = /^loop_replace_this/
-const KEY_PREFIX = 'loop_'
+const PLACEHOLDER_PATTERN = /^loop_replace_this/;
+const KEY_PREFIX = 'loop_';
 
 function isPlaceholder(value) {
-  return !value || PLACEHOLDER_PATTERN.test(value) || !value.startsWith(KEY_PREFIX)
+  return !value || PLACEHOLDER_PATTERN.test(value) || !value.startsWith(KEY_PREFIX);
 }
 
 function readEnvValue(filePath, varName) {
-  if (!existsSync(filePath)) return undefined
-  const content = readFileSync(filePath, 'utf8')
-  const match = content.match(new RegExp(`^${varName}=(.*)$`, 'm'))
-  return match?.[1]?.trim()
+  if (!existsSync(filePath)) return undefined;
+  const content = readFileSync(filePath, 'utf8');
+  const match = content.match(new RegExp(`^${varName}=(.*)$`, 'm'));
+  return match?.[1]?.trim();
 }
 
 function writeEnvVar(filePath, varName, value) {
-  if (!existsSync(filePath)) return
-  const content = readFileSync(filePath, 'utf8')
+  if (!existsSync(filePath)) return;
+  const content = readFileSync(filePath, 'utf8');
   const updated = content.includes(`${varName}=`)
     ? content.replace(new RegExp(`^${varName}=.*$`, 'm'), `${varName}=${value}`)
-    : content + `\n${varName}=${value}\n`
-  writeFileSync(filePath, updated, 'utf8')
+    : content + `\n${varName}=${value}\n`;
+  writeFileSync(filePath, updated, 'utf8');
 }
 
-const apiEnvPath = 'apps/api/.env'
-const appEnvPath = 'apps/app/.env'
+const apiEnvPath = 'apps/api/.env';
+const appEnvPath = 'apps/app/.env';
 
-const existingKey = readEnvValue(apiEnvPath, 'LOOP_API_KEY')
+const existingKey = readEnvValue(apiEnvPath, 'LOOP_API_KEY');
 
 if (!isPlaceholder(existingKey)) {
-  console.log('  LOOP_API_KEY already set — skipping generation')
-  process.exit(0)
+  console.log('  LOOP_API_KEY already set — skipping generation');
+  process.exit(0);
 }
 
-const key = `${KEY_PREFIX}${randomBytes(32).toString('hex')}`
+const key = `${KEY_PREFIX}${randomBytes(32).toString('hex')}`;
 
-writeEnvVar(apiEnvPath, 'LOOP_API_KEY', key)
-writeEnvVar(appEnvPath, 'VITE_LOOP_API_KEY', key)
+writeEnvVar(apiEnvPath, 'LOOP_API_KEY', key);
+writeEnvVar(appEnvPath, 'VITE_LOOP_API_KEY', key);
 
-console.log('')
-console.log('  Generated LOOP_API_KEY:')
-console.log(`  ${key}`)
-console.log('')
-console.log('  Written to: apps/api/.env and apps/app/.env')
-console.log('  Use this as your Bearer token:')
-console.log(`  Authorization: Bearer ${key}`)
-console.log('')
+console.log('');
+console.log('  Generated LOOP_API_KEY:');
+console.log(`  ${key}`);
+console.log('');
+console.log('  Written to: apps/api/.env and apps/app/.env');
+console.log('  Use this as your Bearer token:');
+console.log(`  Authorization: Bearer ${key}`);
+console.log('');
 ```
 
 ### 2. Update `package.json` scripts
 
 Add:
+
 ```json
 "generate-key": "node scripts/generate-api-key.js"
 ```
@@ -416,6 +439,7 @@ Add:
 ### 3. Update `scripts/setup.sh`
 
 Add after the `copy_env` block:
+
 ```bash
 echo ""
 echo "Generating API key..."
@@ -428,28 +452,27 @@ Add `ENV_HINTS` map and update the error formatter:
 
 ```ts
 const ENV_HINTS: Partial<Record<string, string>> = {
-  LOOP_API_KEY:
-    'Run: npm run setup  (or: npm run generate-key)',
-  DATABASE_URL:
-    'See apps/api/.env.example for the local Docker connection string',
-}
+  LOOP_API_KEY: 'Run: npm run setup  (or: npm run generate-key)',
+  DATABASE_URL: 'See apps/api/.env.example for the local Docker connection string',
+};
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
+  console.error('\n  Missing or invalid environment variables:\n');
   result.error.issues.forEach((i) => {
-    const field = i.path.join('.')
-    console.error(`  - ${field}: ${i.message}`)
-    const hint = ENV_HINTS[field]
-    if (hint) console.error(`    Fix: ${hint}`)
-  })
-  console.error('\n  See apps/api/.env.example for all required variables.\n')
-  process.exit(1)
+    const field = i.path.join('.');
+    console.error(`  - ${field}: ${i.message}`);
+    const hint = ENV_HINTS[field];
+    if (hint) console.error(`    Fix: ${hint}`);
+  });
+  console.error('\n  See apps/api/.env.example for all required variables.\n');
+  process.exit(1);
 }
 ```
 
 ### 5. Update `.env.example` files
 
 `apps/api/.env.example`:
+
 ```bash
 # Loop API Server
 # Run `npm run setup` to auto-generate all secrets and start the database.
@@ -470,6 +493,7 @@ LOOP_API_KEY=loop_replace_this_with_npm_run_setup
 ```
 
 `apps/app/.env.example`:
+
 ```bash
 # Loop Dashboard
 # Run `npm run setup` to auto-generate all secrets.
@@ -485,15 +509,16 @@ VITE_LOOP_API_KEY=loop_replace_this_with_npm_run_setup
 ### 6. Update `setup-checklist.tsx`
 
 Replace line 24:
+
 ```ts
 // Before:
-const maskedKey = `${apiKey.slice(0, 3)}${'•'.repeat(Math.max(apiKey.length - 3, 8))}`
+const maskedKey = `${apiKey.slice(0, 3)}${'•'.repeat(Math.max(apiKey.length - 3, 8))}`;
 
 // After:
-const LOOP_KEY_PREFIX = 'loop_'
+const LOOP_KEY_PREFIX = 'loop_';
 const maskedKey = apiKey.startsWith(LOOP_KEY_PREFIX)
   ? `${LOOP_KEY_PREFIX}${'•'.repeat(Math.max(apiKey.length - LOOP_KEY_PREFIX.length, 8))}`
-  : `${apiKey.slice(0, 4)}${'•'.repeat(Math.max(apiKey.length - 4, 8))}`
+  : `${apiKey.slice(0, 4)}${'•'.repeat(Math.max(apiKey.length - 4, 8))}`;
 ```
 
 ---

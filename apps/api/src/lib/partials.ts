@@ -87,4 +87,4 @@ Progress: {{goal.currentValue}}{{goal.unit}} / {{goal.targetValue}}{{goal.unit}}
 Status: {{goal.status}}
 {{/if}}
 {{/if}}`,
-}
+};

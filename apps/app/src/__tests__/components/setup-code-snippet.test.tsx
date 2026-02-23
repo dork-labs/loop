@@ -38,13 +38,7 @@ describe('SetupCodeSnippet', () => {
   it('copies the snippet to clipboard and calls onCopy', async () => {
     const onCopy = vi.fn();
 
-    render(
-      <SetupCodeSnippet
-        apiUrl={TEST_API_URL}
-        apiKey={TEST_API_KEY}
-        onCopy={onCopy}
-      />,
-    );
+    render(<SetupCodeSnippet apiUrl={TEST_API_URL} apiKey={TEST_API_KEY} onCopy={onCopy} />);
 
     // Click the copy button in the active curl tab panel using fireEvent
     // to avoid userEvent clipboard interception

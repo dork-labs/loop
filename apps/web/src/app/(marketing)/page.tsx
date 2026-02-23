@@ -1,4 +1,4 @@
-import { siteConfig } from '@/config/site'
+import { siteConfig } from '@/config/site';
 import {
   ContactSection,
   MarketingNav,
@@ -9,7 +9,7 @@ import {
   HowItWorksFlow,
   LoopValueProps,
   QuickStartSection,
-} from '@/layers/features/marketing'
+} from '@/layers/features/marketing';
 
 const navLinks = [
   { label: 'how it works', href: '#how-it-works' },
@@ -17,7 +17,7 @@ const navLinks = [
   { label: 'get started', href: '#get-started' },
   { label: 'contact', href: '#contact' },
   { label: 'docs', href: '/docs' },
-]
+];
 
 const socialLinks = [
   {
@@ -29,7 +29,7 @@ const socialLinks = [
       </svg>
     ),
   },
-]
+];
 
 export default function HomePage() {
   return (
@@ -53,12 +53,9 @@ export default function HomePage() {
         />
       </main>
 
-      <MarketingFooter
-        email={siteConfig.contactEmail}
-        socialLinks={socialLinks}
-      />
+      <MarketingFooter email={siteConfig.contactEmail} socialLinks={socialLinks} />
 
       <MarketingNav links={navLinks} />
     </>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { zValidator } from '@hono/zod-validator'
-import { eq, isNull, and, count, inArray } from 'drizzle-orm'
-import { HTTPException } from 'hono/http-exception'
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
+import { eq, isNull, and, count, inArray } from 'drizzle-orm';
+import { HTTPException } from 'hono/http-exception';
 import {
   issues,
   issueTypeValues,
@@ -10,8 +10,8 @@ import {
   issueLabels,
   labels,
   issueRelations,
-} from '../db/schema'
-import type { AppEnv } from '../types'
+} from '../db/schema';
+import type { AppEnv } from '../types';
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ const createIssueSchema = z.object({
     })
     .optional(),
   labelIds: z.array(z.string()).optional(),
-})
+});
 
 const updateIssueSchema = z.object({
   title: z.string().min(1).max(500).optional(),
@@ -57,7 +57,7 @@ const updateIssueSchema = z.object({
     })
     .nullable()
     .optional(),
-})
+});
 
 const listIssuesSchema = z.object({
   status: z.string().optional(),
@@ -68,40 +68,40 @@ const listIssuesSchema = z.object({
   parentId: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
-})
+});
 
 // ─── Route handler ───────────────────────────────────────────────────────────
 
 /** Issues CRUD routes — mounted at `/issues` under the authenticated API group. */
-export const issueRoutes = new Hono<AppEnv>()
+export const issueRoutes = new Hono<AppEnv>();
 
 /** GET / — List issues with filtering and pagination, excluding soft-deleted. */
 issueRoutes.get('/', zValidator('query', listIssuesSchema), async (c) => {
-  const db = c.get('db')
+  const db = c.get('db');
   const { status, type, projectId, labelId, priority, parentId, limit, offset } =
-    c.req.valid('query')
+    c.req.valid('query');
 
-  const conditions = [isNull(issues.deletedAt)]
+  const conditions = [isNull(issues.deletedAt)];
 
   if (status) {
-    const statuses = status.split(',') as (typeof issueStatusValues)[number][]
-    conditions.push(inArray(issues.status, statuses))
+    const statuses = status.split(',') as (typeof issueStatusValues)[number][];
+    conditions.push(inArray(issues.status, statuses));
   }
   if (type) {
-    const types = type.split(',') as (typeof issueTypeValues)[number][]
-    conditions.push(inArray(issues.type, types))
+    const types = type.split(',') as (typeof issueTypeValues)[number][];
+    conditions.push(inArray(issues.type, types));
   }
   if (projectId) {
-    conditions.push(eq(issues.projectId, projectId))
+    conditions.push(eq(issues.projectId, projectId));
   }
   if (priority !== undefined) {
-    conditions.push(eq(issues.priority, priority))
+    conditions.push(eq(issues.priority, priority));
   }
   if (parentId) {
-    conditions.push(eq(issues.parentId, parentId))
+    conditions.push(eq(issues.parentId, parentId));
   }
 
-  const whereClause = and(...conditions)
+  const whereClause = and(...conditions);
 
   // When filtering by label, join through the issue_labels table
   if (labelId) {
@@ -140,9 +140,9 @@ issueRoutes.get('/', zValidator('query', listIssuesSchema), async (c) => {
         .from(issues)
         .innerJoin(issueLabels, eq(issues.id, issueLabels.issueId))
         .where(and(whereClause, eq(issueLabels.labelId, labelId))),
-    ])
+    ]);
 
-    return c.json({ data, total: totalResult[0].count })
+    return c.json({ data, total: totalResult[0].count });
   }
 
   const [data, totalResult] = await Promise.all([
@@ -154,59 +154,59 @@ issueRoutes.get('/', zValidator('query', listIssuesSchema), async (c) => {
       .offset(offset)
       .orderBy(issues.createdAt),
     db.select({ count: count() }).from(issues).where(whereClause),
-  ])
+  ]);
 
-  return c.json({ data, total: totalResult[0].count })
-})
+  return c.json({ data, total: totalResult[0].count });
+});
 
 /** POST / — Create a new issue with optional label associations. */
 issueRoutes.post('/', zValidator('json', createIssueSchema), async (c) => {
-  const db = c.get('db')
-  const { labelIds, ...body } = c.req.valid('json')
+  const db = c.get('db');
+  const { labelIds, ...body } = c.req.valid('json');
 
   // Enforce 1-level hierarchy: reject if parent already has a parent
   if (body.parentId) {
     const [parent] = await db
       .select({ id: issues.id, parentId: issues.parentId })
       .from(issues)
-      .where(and(eq(issues.id, body.parentId), isNull(issues.deletedAt)))
+      .where(and(eq(issues.id, body.parentId), isNull(issues.deletedAt)));
 
     if (!parent) {
-      throw new HTTPException(422, { message: 'Parent issue not found' })
+      throw new HTTPException(422, { message: 'Parent issue not found' });
     }
 
     if (parent.parentId) {
       throw new HTTPException(422, {
         message:
           'Cannot create a child of an issue that already has a parent (1-level hierarchy limit)',
-      })
+      });
     }
   }
 
-  const [issue] = await db.insert(issues).values(body).returning()
+  const [issue] = await db.insert(issues).values(body).returning();
 
   // Associate labels if provided
   if (labelIds && labelIds.length > 0) {
     await db
       .insert(issueLabels)
-      .values(labelIds.map((labelId) => ({ issueId: issue.id, labelId })))
+      .values(labelIds.map((labelId) => ({ issueId: issue.id, labelId })));
   }
 
-  return c.json({ data: issue }, 201)
-})
+  return c.json({ data: issue }, 201);
+});
 
 /** GET /:id — Get a single issue with parent, children, labels, and relations. */
 issueRoutes.get('/:id', async (c) => {
-  const db = c.get('db')
-  const id = c.req.param('id')
+  const db = c.get('db');
+  const id = c.req.param('id');
 
   const [issue] = await db
     .select()
     .from(issues)
-    .where(and(eq(issues.id, id), isNull(issues.deletedAt)))
+    .where(and(eq(issues.id, id), isNull(issues.deletedAt)));
 
   if (!issue) {
-    throw new HTTPException(404, { message: 'Issue not found' })
+    throw new HTTPException(404, { message: 'Issue not found' });
   }
 
   // Fetch related data in parallel
@@ -228,7 +228,7 @@ issueRoutes.get('/:id', async (c) => {
       .innerJoin(issueLabels, eq(labels.id, issueLabels.labelId))
       .where(and(eq(issueLabels.issueId, id), isNull(labels.deletedAt))),
     db.select().from(issueRelations).where(eq(issueRelations.issueId, id)),
-  ])
+  ]);
 
   return c.json({
     data: {
@@ -238,51 +238,44 @@ issueRoutes.get('/:id', async (c) => {
       labels: labelRows,
       relations: relationRows,
     },
-  })
-})
+  });
+});
 
 /** PATCH /:id — Partially update an issue. */
 issueRoutes.patch('/:id', zValidator('json', updateIssueSchema), async (c) => {
-  const db = c.get('db')
-  const id = c.req.param('id')
-  const body = c.req.valid('json')
+  const db = c.get('db');
+  const id = c.req.param('id');
+  const body = c.req.valid('json');
 
   const [existing] = await db
     .select({ id: issues.id })
     .from(issues)
-    .where(and(eq(issues.id, id), isNull(issues.deletedAt)))
+    .where(and(eq(issues.id, id), isNull(issues.deletedAt)));
 
   if (!existing) {
-    throw new HTTPException(404, { message: 'Issue not found' })
+    throw new HTTPException(404, { message: 'Issue not found' });
   }
 
-  const [updated] = await db
-    .update(issues)
-    .set(body)
-    .where(eq(issues.id, id))
-    .returning()
+  const [updated] = await db.update(issues).set(body).where(eq(issues.id, id)).returning();
 
-  return c.json({ data: updated })
-})
+  return c.json({ data: updated });
+});
 
 /** DELETE /:id — Soft-delete an issue. */
 issueRoutes.delete('/:id', async (c) => {
-  const db = c.get('db')
-  const id = c.req.param('id')
+  const db = c.get('db');
+  const id = c.req.param('id');
 
   const [existing] = await db
     .select({ id: issues.id })
     .from(issues)
-    .where(and(eq(issues.id, id), isNull(issues.deletedAt)))
+    .where(and(eq(issues.id, id), isNull(issues.deletedAt)));
 
   if (!existing) {
-    throw new HTTPException(404, { message: 'Issue not found' })
+    throw new HTTPException(404, { message: 'Issue not found' });
   }
 
-  await db
-    .update(issues)
-    .set({ deletedAt: new Date() })
-    .where(eq(issues.id, id))
+  await db.update(issues).set({ deletedAt: new Date() }).where(eq(issues.id, id));
 
-  return c.body(null, 204)
-})
+  return c.body(null, 204);
+});

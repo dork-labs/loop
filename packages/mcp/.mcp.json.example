@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "loop": {
+      "command": "npx",
+      "args": ["-y", "@dork-labs/loop-mcp"],
+      "env": {
+        "LOOP_API_KEY": "<your-api-key>",
+        "LOOP_API_URL": "http://localhost:5667"
+      }
+    }
+  }
+}

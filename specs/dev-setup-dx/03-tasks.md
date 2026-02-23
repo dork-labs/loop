@@ -15,6 +15,7 @@ last_decompose: 2026-02-21
 Create `docker-compose.dev.yml` at repository root and add npm scripts for managing the local database.
 
 **Files to create/modify:**
+
 - Create `docker-compose.dev.yml` (new file)
 - Modify root `package.json` (add scripts)
 
@@ -31,11 +32,11 @@ services:
       POSTGRES_PASSWORD: loop
       POSTGRES_DB: loop
     ports:
-      - "54320:5432"
+      - '54320:5432'
     volumes:
       - loop_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U loop -d loop"]
+      test: ['CMD-SHELL', 'pg_isready -U loop -d loop']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -54,6 +55,7 @@ volumes:
 ```
 
 **Acceptance Criteria:**
+
 - [ ] `docker-compose.dev.yml` exists at repository root
 - [ ] Port 54320 maps to container port 5432
 - [ ] Credentials are `loop:loop` with database `loop`
@@ -76,6 +78,7 @@ npm install --save-dev pg @types/pg
 ```
 
 **Acceptance Criteria:**
+
 - [ ] `pg` appears in `apps/api/package.json` devDependencies as `^8.x`
 - [ ] `@types/pg` appears in `apps/api/package.json` devDependencies as `^8.x`
 - [ ] `npm install` succeeds with no errors
@@ -90,7 +93,7 @@ Create Zod-based environment validation for the API app. Export both the schema 
 **File to create:** `apps/api/src/env.ts`
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const apiEnvSchema = z.object({
   DATABASE_URL: z.string().url(),
@@ -101,24 +104,23 @@ export const apiEnvSchema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_CLIENT_SECRET: z.string().optional(),
   POSTHOG_WEBHOOK_SECRET: z.string().optional(),
-})
+});
 
-const result = apiEnvSchema.safeParse(process.env)
+const result = apiEnvSchema.safeParse(process.env);
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
-  result.error.issues.forEach((i) =>
-    console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
-  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n')
-  process.exit(1)
+  console.error('\n  Missing or invalid environment variables:\n');
+  result.error.issues.forEach((i) => console.error(`  - ${i.path.join('.')}: ${i.message}`));
+  console.error('\n  Copy apps/api/.env.example to apps/api/.env\n');
+  process.exit(1);
 }
 
-export const env = result.data
-export type Env = z.infer<typeof apiEnvSchema>
+export const env = result.data;
+export type Env = z.infer<typeof apiEnvSchema>;
 ```
 
 **Key decisions:**
+
 - Export `apiEnvSchema` so tests can call `safeParse` directly without triggering `process.exit`
 - `DATABASE_URL` validates as URL format
 - `PORT` coerces from string (env vars are always strings) to number
@@ -126,6 +128,7 @@ export type Env = z.infer<typeof apiEnvSchema>
 - `LOOP_URL` defaults to `http://localhost:4242` for local dev
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `apps/api/src/env.ts`
 - [ ] Exports `apiEnvSchema` for direct testing
 - [ ] Exports typed `env` object and `Env` type
@@ -141,35 +144,37 @@ Create Zod v3 environment validation for the frontend app.
 **File to create:** `apps/app/src/env.ts`
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const appEnvSchema = z.object({
   VITE_API_URL: z.string().url().default('http://localhost:4242'),
   VITE_LOOP_API_KEY: z.string().min(1),
-})
+});
 
-const result = appEnvSchema.safeParse(import.meta.env)
+const result = appEnvSchema.safeParse(import.meta.env);
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
+  console.error('\n  Missing or invalid environment variables:\n');
   result.error.issues.forEach((i: z.ZodIssue) =>
     console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
-  console.error('\n  Copy apps/app/.env.example to apps/app/.env\n')
-  throw new Error('Invalid environment variables')
+  );
+  console.error('\n  Copy apps/app/.env.example to apps/app/.env\n');
+  throw new Error('Invalid environment variables');
 }
 
-export const env = result.data
-export type Env = z.infer<typeof appEnvSchema>
+export const env = result.data;
+export type Env = z.infer<typeof appEnvSchema>;
 ```
 
 **Key decisions:**
+
 - Uses `import.meta.env` (Vite convention) instead of `process.env`
 - Uses `throw` instead of `process.exit` since this runs in the browser build pipeline
 - Zod v3 syntax (the app uses Zod v3)
 - `VITE_API_URL` defaults to localhost for local dev
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `apps/app/src/env.ts`
 - [ ] Uses `import.meta.env` (not `process.env`)
 - [ ] Exports `appEnvSchema` for testing
@@ -184,35 +189,35 @@ Create Zod v4 environment validation for the marketing/docs site.
 **File to create:** `apps/web/src/env.ts`
 
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const webEnvSchema = z.object({
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-})
+});
 
-const result = webEnvSchema.safeParse(process.env)
+const result = webEnvSchema.safeParse(process.env);
 
 if (!result.success) {
-  console.error('\n  Missing or invalid environment variables:\n')
-  result.error.issues.forEach((i) =>
-    console.error(`  - ${i.path.join('.')}: ${i.message}`)
-  )
-  console.error('\n  Copy apps/web/.env.example to apps/web/.env\n')
-  process.exit(1)
+  console.error('\n  Missing or invalid environment variables:\n');
+  result.error.issues.forEach((i) => console.error(`  - ${i.path.join('.')}: ${i.message}`));
+  console.error('\n  Copy apps/web/.env.example to apps/web/.env\n');
+  process.exit(1);
 }
 
-export const env = result.data
-export type Env = z.infer<typeof webEnvSchema>
+export const env = result.data;
+export type Env = z.infer<typeof webEnvSchema>;
 ```
 
 **Key decisions:**
+
 - All PostHog vars are optional (web app works without analytics)
 - `NODE_ENV` has a default of `development`
 - Uses `process.env` (Next.js convention)
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `apps/web/src/env.ts`
 - [ ] All PostHog variables are optional
 - [ ] Exports `webEnvSchema` for testing
@@ -227,42 +232,43 @@ Rewrite `apps/api/src/db/index.ts` to use the Neon HTTP driver in production and
 **Current file (`apps/api/src/db/index.ts`):**
 
 ```typescript
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-import * as schema from './schema'
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema';
 
-const sql = neon(process.env.DATABASE_URL!)
-export const db = drizzle(sql, { schema })
-export type Database = typeof db
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql, { schema });
+export type Database = typeof db;
 ```
 
 **New file (`apps/api/src/db/index.ts`):**
 
 ```typescript
-import * as schema from './schema'
-import { env } from '../env'
+import * as schema from './schema';
+import { env } from '../env';
 
-type NeonHttpDatabase = import('drizzle-orm/neon-http').NeonHttpDatabase<typeof schema>
-type NodePgDatabase = import('drizzle-orm/node-postgres').NodePgDatabase<typeof schema>
+type NeonHttpDatabase = import('drizzle-orm/neon-http').NeonHttpDatabase<typeof schema>;
+type NodePgDatabase = import('drizzle-orm/node-postgres').NodePgDatabase<typeof schema>;
 
-export type Database = NeonHttpDatabase | NodePgDatabase
+export type Database = NeonHttpDatabase | NodePgDatabase;
 
-let db: Database
+let db: Database;
 
 if (env.NODE_ENV === 'production') {
-  const { neon } = await import('@neondatabase/serverless')
-  const { drizzle } = await import('drizzle-orm/neon-http')
-  db = drizzle(neon(env.DATABASE_URL), { schema })
+  const { neon } = await import('@neondatabase/serverless');
+  const { drizzle } = await import('drizzle-orm/neon-http');
+  db = drizzle(neon(env.DATABASE_URL), { schema });
 } else {
-  const { Pool } = await import('pg')
-  const { drizzle } = await import('drizzle-orm/node-postgres')
-  db = drizzle(new Pool({ connectionString: env.DATABASE_URL }), { schema })
+  const { Pool } = await import('pg');
+  const { drizzle } = await import('drizzle-orm/node-postgres');
+  db = drizzle(new Pool({ connectionString: env.DATABASE_URL }), { schema });
 }
 
-export { db }
+export { db };
 ```
 
 **Key decisions:**
+
 - Top-level `await` with dynamic `import()` — valid because `apps/api` uses `"type": "module"`
 - `NODE_ENV === 'production'` gate: only production uses Neon. Development and any other value uses `pg`
 - `Database` type is a union; both Drizzle adapters expose the same query API
@@ -270,6 +276,7 @@ export { db }
 - Tests use PGlite via `withTestDb()` and never touch `db/index.ts` — unaffected
 
 **Acceptance Criteria:**
+
 - [ ] Production uses `@neondatabase/serverless` + `drizzle-orm/neon-http`
 - [ ] Non-production uses `pg` + `drizzle-orm/node-postgres`
 - [ ] `Database` type is a union of both adapter types
@@ -285,51 +292,53 @@ Apply the same conditional driver pattern to `apps/api/src/db/migrate.ts`.
 **Current file (`apps/api/src/db/migrate.ts`):**
 
 ```typescript
-import 'dotenv/config'
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-import { migrate } from 'drizzle-orm/neon-http/migrator'
+import 'dotenv/config';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { migrate } from 'drizzle-orm/neon-http/migrator';
 
-const sql = neon(process.env.DATABASE_URL!)
-const db = drizzle(sql)
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql);
 
-await migrate(db, { migrationsFolder: './drizzle/migrations' })
-console.log('Migrations complete')
-process.exit(0)
+await migrate(db, { migrationsFolder: './drizzle/migrations' });
+console.log('Migrations complete');
+process.exit(0);
 ```
 
 **New file (`apps/api/src/db/migrate.ts`):**
 
 ```typescript
-import 'dotenv/config'
-import { env } from '../env'
+import 'dotenv/config';
+import { env } from '../env';
 
 if (env.NODE_ENV === 'production') {
-  const { neon } = await import('@neondatabase/serverless')
-  const { drizzle } = await import('drizzle-orm/neon-http')
-  const { migrate } = await import('drizzle-orm/neon-http/migrator')
-  const db = drizzle(neon(env.DATABASE_URL))
-  await migrate(db, { migrationsFolder: './drizzle/migrations' })
+  const { neon } = await import('@neondatabase/serverless');
+  const { drizzle } = await import('drizzle-orm/neon-http');
+  const { migrate } = await import('drizzle-orm/neon-http/migrator');
+  const db = drizzle(neon(env.DATABASE_URL));
+  await migrate(db, { migrationsFolder: './drizzle/migrations' });
 } else {
-  const { Pool } = await import('pg')
-  const { drizzle } = await import('drizzle-orm/node-postgres')
-  const { migrate } = await import('drizzle-orm/node-postgres/migrator')
-  const pool = new Pool({ connectionString: env.DATABASE_URL })
-  const db = drizzle(pool)
-  await migrate(db, { migrationsFolder: './drizzle/migrations' })
-  await pool.end()
+  const { Pool } = await import('pg');
+  const { drizzle } = await import('drizzle-orm/node-postgres');
+  const { migrate } = await import('drizzle-orm/node-postgres/migrator');
+  const pool = new Pool({ connectionString: env.DATABASE_URL });
+  const db = drizzle(pool);
+  await migrate(db, { migrationsFolder: './drizzle/migrations' });
+  await pool.end();
 }
 
-console.log('Migrations complete')
-process.exit(0)
+console.log('Migrations complete');
+process.exit(0);
 ```
 
 **Key decisions:**
+
 - Retains `import 'dotenv/config'` so env vars are loaded before validation
 - Pool is properly closed in the local path (`await pool.end()`)
 - Uses `env.DATABASE_URL` and `env.NODE_ENV` from validated env
 
 **Acceptance Criteria:**
+
 - [ ] Production path uses Neon HTTP driver and migrator
 - [ ] Local path uses pg Pool and node-postgres migrator
 - [ ] Pool is closed after migration in local path
@@ -344,43 +353,45 @@ Replace raw `process.env` access in `apps/api/src/index.ts` with typed `env` imp
 **Current file (`apps/api/src/index.ts`):**
 
 ```typescript
-import { serve } from '@hono/node-server'
-import { app } from './app'
+import { serve } from '@hono/node-server';
+import { app } from './app';
 
 // Local dev server (Vercel uses the default export)
 if (process.env.NODE_ENV !== 'production') {
-  const port = parseInt(process.env.PORT || '4242', 10)
+  const port = parseInt(process.env.PORT || '4242', 10);
   serve({ fetch: app.fetch, port }, (info) => {
-    console.log(`Loop API running at http://localhost:${info.port}`)
-  })
+    console.log(`Loop API running at http://localhost:${info.port}`);
+  });
 }
 
-export default app
+export default app;
 ```
 
 **New file (`apps/api/src/index.ts`):**
 
 ```typescript
-import { serve } from '@hono/node-server'
-import { app } from './app'
-import { env } from './env'
+import { serve } from '@hono/node-server';
+import { app } from './app';
+import { env } from './env';
 
 // Local dev server (Vercel uses the default export)
 if (env.NODE_ENV !== 'production') {
   serve({ fetch: app.fetch, port: env.PORT }, (info) => {
-    console.log(`Loop API running at http://localhost:${info.port}`)
-  })
+    console.log(`Loop API running at http://localhost:${info.port}`);
+  });
 }
 
-export default app
+export default app;
 ```
 
 **Changes:**
+
 - Import `env` from `./env`
 - Replace `process.env.NODE_ENV` with `env.NODE_ENV`
 - Replace `parseInt(process.env.PORT || '4242', 10)` with `env.PORT` (already coerced to number by Zod)
 
 **Acceptance Criteria:**
+
 - [ ] No raw `process.env` access remains in this file
 - [ ] `env.PORT` used directly (no parseInt needed — Zod coerces)
 - [ ] `env.NODE_ENV` used for production check
@@ -391,62 +402,63 @@ export default app
 Replace raw `process.env.LOOP_API_KEY` in `apps/api/src/middleware/auth.ts`.
 
 **Current code (line 16):**
+
 ```typescript
-const expected = process.env.LOOP_API_KEY
+const expected = process.env.LOOP_API_KEY;
 ```
 
 **New code:**
+
 ```typescript
-import { env } from '../env'
+import { env } from '../env';
 // ... (at line 16)
-const expected = env.LOOP_API_KEY
+const expected = env.LOOP_API_KEY;
 ```
 
 Also remove the null check on line 18-20 since `env.LOOP_API_KEY` is guaranteed to be a non-empty string by Zod validation:
 
 **Remove this block:**
+
 ```typescript
 if (!expected) {
-  throw new HTTPException(500, { message: 'LOOP_API_KEY not configured' })
+  throw new HTTPException(500, { message: 'LOOP_API_KEY not configured' });
 }
 ```
 
 **Full new file (`apps/api/src/middleware/auth.ts`):**
 
 ```typescript
-import { createMiddleware } from 'hono/factory'
-import { HTTPException } from 'hono/http-exception'
-import { timingSafeEqual } from 'node:crypto'
-import type { AppEnv } from '../types'
-import { env } from '../env'
+import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
+import { timingSafeEqual } from 'node:crypto';
+import type { AppEnv } from '../types';
+import { env } from '../env';
 
 /** Bearer token auth middleware that validates requests against LOOP_API_KEY. */
 export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const authHeader = c.req.header('Authorization')
+  const authHeader = c.req.header('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     throw new HTTPException(401, {
       message: 'Missing or malformed Authorization header',
-    })
+    });
   }
 
-  const token = authHeader.slice(7)
-  const expected = env.LOOP_API_KEY
+  const token = authHeader.slice(7);
+  const expected = env.LOOP_API_KEY;
 
-  const tokenBuf = Buffer.from(token)
-  const expectedBuf = Buffer.from(expected)
+  const tokenBuf = Buffer.from(token);
+  const expectedBuf = Buffer.from(expected);
 
-  if (
-    tokenBuf.length !== expectedBuf.length ||
-    !timingSafeEqual(tokenBuf, expectedBuf)
-  ) {
-    throw new HTTPException(401, { message: 'Invalid API key' })
+  if (tokenBuf.length !== expectedBuf.length || !timingSafeEqual(tokenBuf, expectedBuf)) {
+    throw new HTTPException(401, { message: 'Invalid API key' });
   }
 
-  await next()
-})
+  await next();
+});
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Import `env` from `../env`
 - [ ] `env.LOOP_API_KEY` replaces `process.env.LOOP_API_KEY`
 - [ ] Null check removed (Zod guarantees non-empty string)
@@ -464,13 +476,15 @@ Replace raw `process.env` access in `apps/api/src/middleware/webhooks.ts` for al
 3. Line 97: `const secret = process.env.POSTHOG_WEBHOOK_SECRET` becomes `const secret = env.POSTHOG_WEBHOOK_SECRET`
 
 Add import at top of file:
+
 ```typescript
-import { env } from '../env'
+import { env } from '../env';
 ```
 
 **Important:** Keep the null checks (`if (!secret)`) because these env vars are marked as `z.string().optional()` in the schema. The app starts without them, but the middleware must still throw 500 if the secret is missing when the webhook route is actually hit.
 
 **Acceptance Criteria:**
+
 - [ ] Import `env` from `../env`
 - [ ] All three `process.env.*` accesses replaced with `env.*`
 - [ ] Null checks retained (secrets are optional in schema)
@@ -482,25 +496,29 @@ import { env } from '../env'
 Replace raw `process.env` access in `apps/api/src/lib/prompt-engine.ts`.
 
 **Current code (lines 276-277 in `buildHydrationContext`):**
+
 ```typescript
 loopUrl: process.env.LOOP_URL ?? 'http://localhost:4242',
 loopToken: process.env.LOOP_API_KEY ?? '',
 ```
 
 **New code:**
+
 ```typescript
 loopUrl: env.LOOP_URL,
 loopToken: env.LOOP_API_KEY,
 ```
 
 Add import at top of file:
+
 ```typescript
-import { env } from '../env'
+import { env } from '../env';
 ```
 
 **Key change:** The `?? 'http://localhost:4242'` fallback is no longer needed because `LOOP_URL` has a default in the Zod schema. Similarly, `LOOP_API_KEY` is guaranteed non-empty.
 
 **Acceptance Criteria:**
+
 - [ ] Import `env` from `../env`
 - [ ] `env.LOOP_URL` replaces `process.env.LOOP_URL ?? 'http://localhost:4242'`
 - [ ] `env.LOOP_API_KEY` replaces `process.env.LOOP_API_KEY ?? ''`
@@ -512,6 +530,7 @@ import { env } from '../env'
 Replace raw `import.meta.env` access in `apps/app/src/lib/api-client.ts`.
 
 **Current code (lines 8-10):**
+
 ```typescript
 export const api = ky.create({
   prefixUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:4242',
@@ -521,6 +540,7 @@ export const api = ky.create({
 ```
 
 **New code:**
+
 ```typescript
 import { env } from '@/env'
 
@@ -532,12 +552,14 @@ export const api = ky.create({
 ```
 
 **Changes:**
+
 - Import `env` from `@/env` (uses the path alias)
 - Replace `import.meta.env.VITE_API_URL ?? 'http://localhost:4242'` with `env.VITE_API_URL`
 - Replace `import.meta.env.VITE_LOOP_API_KEY` with `env.VITE_LOOP_API_KEY`
 - No fallback needed — Zod default handles `VITE_API_URL`
 
 **Acceptance Criteria:**
+
 - [ ] Import `env` from `@/env`
 - [ ] `env.VITE_API_URL` replaces `import.meta.env.VITE_API_URL`
 - [ ] `env.VITE_LOOP_API_KEY` replaces `import.meta.env.VITE_LOOP_API_KEY`
@@ -551,10 +573,11 @@ Replace raw `process.env` access in `apps/web/src/lib/posthog-server.ts` and `ap
 **File 1: `apps/web/src/lib/posthog-server.ts`**
 
 Current:
-```typescript
-import { PostHog } from 'posthog-node'
 
-let posthogClient: PostHog | null = null
+```typescript
+import { PostHog } from 'posthog-node';
+
+let posthogClient: PostHog | null = null;
 
 export function getPostHogClient() {
   if (!posthogClient) {
@@ -562,35 +585,36 @@ export function getPostHogClient() {
       host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
       flushAt: 1,
       flushInterval: 0,
-    })
+    });
   }
-  return posthogClient
+  return posthogClient;
 }
 ```
 
 New:
-```typescript
-import { PostHog } from 'posthog-node'
-import { env } from '../env'
 
-let posthogClient: PostHog | null = null
+```typescript
+import { PostHog } from 'posthog-node';
+import { env } from '../env';
+
+let posthogClient: PostHog | null = null;
 
 export function getPostHogClient() {
-  if (!env.NEXT_PUBLIC_POSTHOG_KEY) return null
+  if (!env.NEXT_PUBLIC_POSTHOG_KEY) return null;
 
   if (!posthogClient) {
     posthogClient = new PostHog(env.NEXT_PUBLIC_POSTHOG_KEY, {
       host: env.NEXT_PUBLIC_POSTHOG_HOST,
       flushAt: 1,
       flushInterval: 0,
-    })
+    });
   }
-  return posthogClient
+  return posthogClient;
 }
 
 export async function shutdownPostHog() {
   if (posthogClient) {
-    await posthogClient.shutdown()
+    await posthogClient.shutdown();
   }
 }
 ```
@@ -598,8 +622,9 @@ export async function shutdownPostHog() {
 **File 2: `apps/web/instrumentation-client.ts`**
 
 Current:
+
 ```typescript
-import posthog from 'posthog-js'
+import posthog from 'posthog-js';
 
 posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
   api_host: '/ingest',
@@ -607,13 +632,14 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
   defaults: '2025-11-30',
   capture_exceptions: true,
   debug: process.env.NODE_ENV === 'development',
-})
+});
 ```
 
 New:
+
 ```typescript
-import posthog from 'posthog-js'
-import { env } from './src/env'
+import posthog from 'posthog-js';
+import { env } from './src/env';
 
 if (env.NEXT_PUBLIC_POSTHOG_KEY) {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
@@ -622,16 +648,18 @@ if (env.NEXT_PUBLIC_POSTHOG_KEY) {
     defaults: '2025-11-30',
     capture_exceptions: true,
     debug: env.NODE_ENV === 'development',
-  })
+  });
 }
 ```
 
 **Key changes:**
+
 - Both files add optional guards since `NEXT_PUBLIC_POSTHOG_KEY` is optional in the schema
 - Removes non-null assertions (`!`) — replaced by optional guard
 - `getPostHogClient()` returns `null` when no key is configured (callers must handle this)
 
 **Acceptance Criteria:**
+
 - [ ] Both files import `env` from the web env module
 - [ ] Optional guard wraps PostHog initialization (no crash without key)
 - [ ] Non-null assertions removed
@@ -648,6 +676,7 @@ Update both `.env.example` files so `cp .env.example .env` requires zero editing
 **File 1: `apps/api/.env.example`**
 
 Replace entire contents with:
+
 ```env
 # Loop API Server
 # Copy to .env: cp .env.example .env
@@ -668,6 +697,7 @@ LOOP_API_KEY=loop-dev-api-key-insecure
 **File 2: `apps/app/.env.example`**
 
 Replace entire contents with:
+
 ```env
 # Loop Dashboard
 # Copy to .env: cp .env.example .env
@@ -681,11 +711,13 @@ VITE_LOOP_API_KEY=loop-dev-api-key-insecure
 ```
 
 **Key changes:**
+
 - `DATABASE_URL` now points to Docker postgres (`localhost:54320`)
 - `LOOP_API_KEY` and `VITE_LOOP_API_KEY` use matching dev key `loop-dev-api-key-insecure`
 - Comments clearly state no editing needed
 
 **Acceptance Criteria:**
+
 - [ ] `apps/api/.env.example` has `DATABASE_URL=postgresql://loop:loop@localhost:54320/loop`
 - [ ] `apps/api/.env.example` has `LOOP_API_KEY=loop-dev-api-key-insecure`
 - [ ] `apps/app/.env.example` has `VITE_LOOP_API_KEY=loop-dev-api-key-insecure`
@@ -770,11 +802,13 @@ echo "  Website:   http://localhost:3001"
 ```
 
 **Post-creation step:** Make the script executable:
+
 ```bash
 chmod +x scripts/setup.sh
 ```
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `scripts/setup.sh`
 - [ ] Script is executable (`chmod +x`)
 - [ ] Checks for Node.js 20+
@@ -796,74 +830,74 @@ Create tests for the env schemas. Test the schemas directly (via `safeParse`) ra
 **File to create:** `apps/api/src/__tests__/env.test.ts`
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { apiEnvSchema } from '../env'
+import { describe, it, expect } from 'vitest';
+import { apiEnvSchema } from '../env';
 
 describe('API env schema', () => {
   it('accepts valid config with all required fields', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(true)
-  })
+    });
+    expect(result.success).toBe(true);
+  });
 
   it('rejects missing DATABASE_URL', () => {
     const result = apiEnvSchema.safeParse({
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(false)
-  })
+    });
+    expect(result.success).toBe(false);
+  });
 
   it('rejects invalid DATABASE_URL format', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'not-a-url',
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(false)
-  })
+    });
+    expect(result.success).toBe(false);
+  });
 
   it('rejects empty LOOP_API_KEY', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: '',
-    })
-    expect(result.success).toBe(false)
-  })
+    });
+    expect(result.success).toBe(false);
+  });
 
   it('applies defaults for optional fields', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
-    })
-    expect(result.success).toBe(true)
+    });
+    expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.NODE_ENV).toBe('development')
-      expect(result.data.PORT).toBe(4242)
-      expect(result.data.LOOP_URL).toBe('http://localhost:4242')
+      expect(result.data.NODE_ENV).toBe('development');
+      expect(result.data.PORT).toBe(4242);
+      expect(result.data.LOOP_URL).toBe('http://localhost:4242');
     }
-  })
+  });
 
   it('coerces PORT from string to number', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
       PORT: '3000',
-    })
-    expect(result.success).toBe(true)
+    });
+    expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.PORT).toBe(3000)
+      expect(result.data.PORT).toBe(3000);
     }
-  })
+  });
 
   it('rejects PORT outside valid range', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
       PORT: '99999',
-    })
-    expect(result.success).toBe(false)
-  })
+    });
+    expect(result.success).toBe(false);
+  });
 
   it('accepts optional webhook secrets', () => {
     const result = apiEnvSchema.safeParse({
@@ -872,29 +906,30 @@ describe('API env schema', () => {
       GITHUB_WEBHOOK_SECRET: 'gh-secret',
       SENTRY_CLIENT_SECRET: 'sentry-secret',
       POSTHOG_WEBHOOK_SECRET: 'posthog-secret',
-    })
-    expect(result.success).toBe(true)
+    });
+    expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.GITHUB_WEBHOOK_SECRET).toBe('gh-secret')
-      expect(result.data.SENTRY_CLIENT_SECRET).toBe('sentry-secret')
-      expect(result.data.POSTHOG_WEBHOOK_SECRET).toBe('posthog-secret')
+      expect(result.data.GITHUB_WEBHOOK_SECRET).toBe('gh-secret');
+      expect(result.data.SENTRY_CLIENT_SECRET).toBe('sentry-secret');
+      expect(result.data.POSTHOG_WEBHOOK_SECRET).toBe('posthog-secret');
     }
-  })
+  });
 
   it('rejects invalid NODE_ENV value', () => {
     const result = apiEnvSchema.safeParse({
       DATABASE_URL: 'postgresql://loop:loop@localhost:54320/loop',
       LOOP_API_KEY: 'test-key',
       NODE_ENV: 'staging',
-    })
-    expect(result.success).toBe(false)
-  })
-})
+    });
+    expect(result.success).toBe(false);
+  });
+});
 ```
 
 **Important note:** These tests import `apiEnvSchema` directly — the exported schema allows calling `safeParse` without triggering the module-level `process.exit` side effect. This is why Task 2.1 exports the schema separately.
 
 **Acceptance Criteria:**
+
 - [ ] File exists at `apps/api/src/__tests__/env.test.ts`
 - [ ] Tests valid config acceptance
 - [ ] Tests missing required fields rejection
@@ -911,18 +946,21 @@ describe('API env schema', () => {
 Run full test suite and type-check to ensure no regressions from env and driver changes.
 
 **Commands to run:**
+
 ```bash
 npm test                 # All tests across api + app
 npm run typecheck        # TypeScript compilation check
 ```
 
 **What to verify:**
+
 - All existing tests in `apps/api/src/__tests__/` still pass (they use PGlite via `withTestDb()`, not the production `db/index.ts`)
 - TypeScript compilation succeeds with the new `Database` union type
 - No type errors from the `env.*` replacements
 - The new env test passes
 
 **Acceptance Criteria:**
+
 - [ ] `npm test` passes with zero failures
 - [ ] `npm run typecheck` passes with zero errors
 - [ ] No regressions in existing test files
@@ -957,6 +995,7 @@ npm run dev
 ```
 
 **Acceptance Criteria:**
+
 - [ ] `dx`, `dx:down`, `dx:reset`, `setup` appear in CLAUDE.md Commands section
 - [ ] Description for each new command is clear
 - [ ] First-time setup flow is documented
@@ -966,25 +1005,30 @@ npm run dev
 Update external documentation files for the new Docker-based setup flow.
 
 **File 1: `docs/getting-started/index.mdx`** (installation)
+
 - Add Docker as a prerequisite
 - Document `npm run setup` as the recommended setup path
 - Document manual setup as an alternative
 
 **File 2: `docs/getting-started/quickstart.mdx`**
+
 - Update quick-start to include `npm run dx` step
 - Show the 4-command setup: clone, setup, dev, open
 
 **File 3: `docs/self-hosting/environment.mdx`**
+
 - Update environment variable reference with new defaults
 - Note that `DATABASE_URL` defaults to Docker postgres in `.env.example`
 - Note that `LOOP_API_KEY` has a dev default
 
 **File 4: `docs/contributing/index.mdx`**
+
 - Add full developer setup guide with Docker flow
 - Document both automated (`npm run setup`) and manual paths
 - Include troubleshooting for common Docker issues
 
 **Acceptance Criteria:**
+
 - [ ] Docker listed as prerequisite in installation docs
 - [ ] `npm run setup` documented as primary setup path
 - [ ] Quick-start updated with Docker database step

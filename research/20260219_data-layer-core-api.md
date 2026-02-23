@@ -35,6 +35,7 @@ This report covers best practices for integrating PostgreSQL + Drizzle ORM into 
 ### 1. PostgreSQL Hosting: Neon vs Supabase vs Docker
 
 #### Neon
+
 - Serverless-first architecture: compute and storage are separated; compute scales to zero when idle.
 - Ships `@neondatabase/serverless` — a purpose-built driver for HTTP and WebSocket connections from serverless/edge runtimes.
 - Powers Vercel Postgres natively (Vercel Postgres = Neon under the hood).
@@ -44,6 +45,7 @@ This report covers best practices for integrating PostgreSQL + Drizzle ORM into 
 - **Best fit for Loop's Vercel Functions deployment.**
 
 #### Supabase
+
 - BaaS platform: Postgres + Auth + Storage + Edge Functions + Realtime.
 - Uses PgBouncer (transaction mode) for connection pooling.
 - Permanent free tier (500 MB DB, 50K monthly active users).
@@ -51,6 +53,7 @@ This report covers best practices for integrating PostgreSQL + Drizzle ORM into 
 - Slightly heavier integration story; supabase-js client is not needed if using Drizzle.
 
 #### Docker (local dev only)
+
 - Use Docker Compose for local development alongside Neon for staging/prod.
 - Run `postgres:16` + `@neondatabase/serverless`'s WebSocket proxy on port 5433 to replicate the Neon connection behaviour locally.
 - Store connection strings separately: `LOCAL_DATABASE_URL` vs `DATABASE_URL`.
@@ -67,27 +70,27 @@ For Vercel Server Functions (Node.js runtime), initialise the Drizzle client **o
 
 ```typescript
 // src/db/index.ts
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-import * as schema from './schema'
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema';
 
-const sql = neon(process.env.DATABASE_URL!)
-export const db = drizzle(sql, { schema })
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql, { schema });
 ```
 
 For interactive transactions (multi-statement, with rollback), switch to the WebSocket driver:
 
 ```typescript
 // src/db/index.ts (WebSocket variant for transactions)
-import { Pool } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-serverless'
-import * as schema from './schema'
-import ws from 'ws'
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import * as schema from './schema';
+import ws from 'ws';
 
-neonConfig.webSocketConstructor = ws  // Node.js only
+neonConfig.webSocketConstructor = ws; // Node.js only
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-export const db = drizzle(pool, { schema })
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle(pool, { schema });
 ```
 
 **Decision**: Start with HTTP (`neon` + `drizzle-orm/neon-http`) for simple CRUD. Upgrade to Pool/WebSocket when interactive transactions are needed (e.g. signal ingestion that writes to multiple tables atomically).
@@ -98,23 +101,23 @@ Use Hono's type-safe context variables pattern. Define a `Variables` type and in
 
 ```typescript
 // src/types.ts
-import type { db as DbType } from './db'
+import type { db as DbType } from './db';
 
 export type AppVariables = {
-  db: typeof DbType
-}
+  db: typeof DbType;
+};
 
 // src/app.ts
-import { Hono } from 'hono'
-import type { AppVariables } from './types'
-import { db } from './db'
+import { Hono } from 'hono';
+import type { AppVariables } from './types';
+import { db } from './db';
 
-const app = new Hono<{ Variables: AppVariables }>()
+const app = new Hono<{ Variables: AppVariables }>();
 
 app.use('*', async (c, next) => {
-  c.set('db', db)
-  await next()
-})
+  c.set('db', db);
+  await next();
+});
 ```
 
 Handlers access via `const db = c.get('db')`. This pattern also makes testing trivial — inject a PGLite-backed `db` into the test context.
@@ -144,17 +147,17 @@ src/db/
 ```typescript
 export default defineConfig({
   dialect: 'postgresql',
-  schema: './src/db/schema',      // recursive discovery
+  schema: './src/db/schema', // recursive discovery
   out: './drizzle/migrations',
-  dbCredentials: { url: process.env.DATABASE_URL! }
-})
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});
 ```
 
 #### Shared Column Helpers
 
 ```typescript
 // src/db/schema/_helpers.ts
-import { timestamp } from 'drizzle-orm/pg-core'
+import { timestamp } from 'drizzle-orm/pg-core';
 
 export const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date', precision: 3 })
@@ -164,7 +167,7 @@ export const timestamps = {
     .defaultNow()
     .notNull()
     .$onUpdate(() => new Date()),
-}
+};
 ```
 
 #### Enums
@@ -173,19 +176,19 @@ Use `pgEnum` with TypeScript `as const` arrays to keep a single source of truth:
 
 ```typescript
 // src/db/schema/issues.ts
-import { pgEnum, pgTable, text, integer } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, text, integer } from 'drizzle-orm/pg-core';
 
-export const issueStatusValues = ['open', 'in_progress', 'resolved', 'closed'] as const
-export type IssueStatus = (typeof issueStatusValues)[number]
-export const issueStatusEnum = pgEnum('issue_status', issueStatusValues)
+export const issueStatusValues = ['open', 'in_progress', 'resolved', 'closed'] as const;
+export type IssueStatus = (typeof issueStatusValues)[number];
+export const issueStatusEnum = pgEnum('issue_status', issueStatusValues);
 
-export const issueTypeValues = ['bug', 'feature', 'task', 'improvement'] as const
-export type IssueType = (typeof issueTypeValues)[number]
-export const issueTypeEnum = pgEnum('issue_type', issueTypeValues)
+export const issueTypeValues = ['bug', 'feature', 'task', 'improvement'] as const;
+export type IssueType = (typeof issueTypeValues)[number];
+export const issueTypeEnum = pgEnum('issue_type', issueTypeValues);
 
-export const issuePriorityValues = ['critical', 'high', 'medium', 'low'] as const
-export type IssuePriority = (typeof issuePriorityValues)[number]
-export const issuePriorityEnum = pgEnum('issue_priority', issuePriorityValues)
+export const issuePriorityValues = ['critical', 'high', 'medium', 'low'] as const;
+export type IssuePriority = (typeof issuePriorityValues)[number];
+export const issuePriorityEnum = pgEnum('issue_priority', issuePriorityValues);
 ```
 
 Exporting both the `as const` array and the `pgEnum` lets you use the values in Zod schemas (`z.enum(issueStatusValues)`) and in Drizzle column definitions.
@@ -195,20 +198,22 @@ Exporting both the `as const` array and the `pgEnum` lets you use the values in 
 Type JSONB columns using `.$type<T>()`. Create GIN indexes for JSONB fields that will be queried:
 
 ```typescript
-import { jsonb, index } from 'drizzle-orm/pg-core'
+import { jsonb, index } from 'drizzle-orm/pg-core';
 
 export type SignalMetadata = {
-  source: string
-  rawPayload: Record<string, unknown>
-  tags?: string[]
-}
+  source: string;
+  rawPayload: Record<string, unknown>;
+  tags?: string[];
+};
 
-export const signals = pgTable('signals', {
-  // ...
-  metadata: jsonb('metadata').$type<SignalMetadata>().notNull(),
-}, (table) => [
-  index('signals_metadata_gin_idx').using('gin', table.metadata),
-])
+export const signals = pgTable(
+  'signals',
+  {
+    // ...
+    metadata: jsonb('metadata').$type<SignalMetadata>().notNull(),
+  },
+  (table) => [index('signals_metadata_gin_idx').using('gin', table.metadata)]
+);
 ```
 
 #### Primary Keys and IDs
@@ -216,20 +221,25 @@ export const signals = pgTable('signals', {
 Use `text` primary keys with `nanoid` or `cuid2` for external-facing IDs (URL-safe, no sequential enumeration). Use integer identity columns for internal relations:
 
 ```typescript
-import { pgTable, text, integer } from 'drizzle-orm/pg-core'
+import { pgTable, text, integer } from 'drizzle-orm/pg-core';
 
 // Option A: text CUID2 everywhere (simpler, safer for public IDs)
 export const projects = pgTable('projects', {
-  id: text('id').primaryKey().$defaultFn(() => createId()),  // cuid2
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()), // cuid2
   // ...
-})
+});
 
 // Option B: hybrid (integer PK internal + text publicId for API)
 export const projects = pgTable('projects', {
   id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
-  publicId: text('public_id').notNull().unique().$defaultFn(() => createId()),
+  publicId: text('public_id')
+    .notNull()
+    .unique()
+    .$defaultFn(() => createId()),
   // ...
-})
+});
 ```
 
 **Recommendation**: For Loop MVP, use text CUID2 primary keys everywhere for simplicity. Internal performance optimisation with integer PKs can come later.
@@ -270,16 +280,16 @@ Add a `db:migrate` npm script and call it in the Vercel build command:
 
 ```typescript
 // src/db/migrate.ts
-import { drizzle } from 'drizzle-orm/neon-http'
-import { migrate } from 'drizzle-orm/neon-http/migrator'
-import { neon } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http';
+import { migrate } from 'drizzle-orm/neon-http/migrator';
+import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!)
-const db = drizzle(sql)
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql);
 
-await migrate(db, { migrationsFolder: './drizzle/migrations' })
-console.log('Migrations complete')
-process.exit(0)
+await migrate(db, { migrationsFolder: './drizzle/migrations' });
+console.log('Migrations complete');
+process.exit(0);
 ```
 
 **Option B: Separate migration Vercel Function**
@@ -305,50 +315,48 @@ Using SHA-256 (fast) is appropriate for API keys (high-entropy, not passwords). 
 
 ```typescript
 // src/middleware/auth.ts
-import { createMiddleware } from 'hono/factory'
-import { HTTPException } from 'hono/http-exception'
-import { createHash, timingSafeEqual } from 'node:crypto'
-import type { AppVariables } from '../types'
+import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
+import { createHash, timingSafeEqual } from 'node:crypto';
+import type { AppVariables } from '../types';
 
-export const apiKeyAuth = createMiddleware<{ Variables: AppVariables }>(
-  async (c, next) => {
-    const authHeader = c.req.header('Authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new HTTPException(401, { message: 'Missing or malformed Authorization header' })
-    }
-
-    const token = authHeader.slice(7)
-    const db = c.get('db')
-
-    // Hash incoming token
-    const tokenHash = createHash('sha256').update(token).digest('hex')
-
-    // Lookup in DB
-    const keyRecord = await db.query.apiKeys.findFirst({
-      where: (keys, { eq }) => eq(keys.keyHash, tokenHash),
-    })
-
-    if (!keyRecord || !keyRecord.active) {
-      throw new HTTPException(401, { message: 'Invalid or inactive API key' })
-    }
-
-    // Constant-time comparison (double-check; hashing already ensures this, but belt-and-suspenders)
-    const storedHash = Buffer.from(keyRecord.keyHash, 'hex')
-    const incomingHash = Buffer.from(tokenHash, 'hex')
-    if (storedHash.length !== incomingHash.length || !timingSafeEqual(storedHash, incomingHash)) {
-      throw new HTTPException(401, { message: 'Invalid API key' })
-    }
-
-    c.set('projectId', keyRecord.projectId)
-    await next()
+export const apiKeyAuth = createMiddleware<{ Variables: AppVariables }>(async (c, next) => {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw new HTTPException(401, { message: 'Missing or malformed Authorization header' });
   }
-)
+
+  const token = authHeader.slice(7);
+  const db = c.get('db');
+
+  // Hash incoming token
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+
+  // Lookup in DB
+  const keyRecord = await db.query.apiKeys.findFirst({
+    where: (keys, { eq }) => eq(keys.keyHash, tokenHash),
+  });
+
+  if (!keyRecord || !keyRecord.active) {
+    throw new HTTPException(401, { message: 'Invalid or inactive API key' });
+  }
+
+  // Constant-time comparison (double-check; hashing already ensures this, but belt-and-suspenders)
+  const storedHash = Buffer.from(keyRecord.keyHash, 'hex');
+  const incomingHash = Buffer.from(tokenHash, 'hex');
+  if (storedHash.length !== incomingHash.length || !timingSafeEqual(storedHash, incomingHash)) {
+    throw new HTTPException(401, { message: 'Invalid API key' });
+  }
+
+  c.set('projectId', keyRecord.projectId);
+  await next();
+});
 ```
 
 Apply only to protected route groups:
 
 ```typescript
-app.use('/api/v1/*', apiKeyAuth)
+app.use('/api/v1/*', apiKeyAuth);
 ```
 
 ---
@@ -361,60 +369,52 @@ Each webhook provider has its own signing scheme. Build a middleware factory per
 
 ```typescript
 // src/middleware/webhooks.ts
-import { createMiddleware } from 'hono/factory'
-import { HTTPException } from 'hono/http-exception'
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 // ---- GitHub ----
 // Header: X-Hub-Signature-256 (value: "sha256=<hex>")
 // Signs: raw request body
 export const githubWebhookAuth = (secret: string) =>
   createMiddleware(async (c, next) => {
-    const signature = c.req.header('x-hub-signature-256')
-    if (!signature) throw new HTTPException(401, { message: 'Missing GitHub signature' })
+    const signature = c.req.header('x-hub-signature-256');
+    if (!signature) throw new HTTPException(401, { message: 'Missing GitHub signature' });
 
-    const body = await c.req.text()
-    const expected = 'sha256=' + createHmac('sha256', secret).update(body).digest('hex')
+    const body = await c.req.text();
+    const expected = 'sha256=' + createHmac('sha256', secret).update(body).digest('hex');
 
-    const expectedBuf = Buffer.from(expected)
-    const signatureBuf = Buffer.from(signature)
-    if (
-      expectedBuf.length !== signatureBuf.length ||
-      !timingSafeEqual(expectedBuf, signatureBuf)
-    ) {
-      throw new HTTPException(401, { message: 'Invalid GitHub signature' })
+    const expectedBuf = Buffer.from(expected);
+    const signatureBuf = Buffer.from(signature);
+    if (expectedBuf.length !== signatureBuf.length || !timingSafeEqual(expectedBuf, signatureBuf)) {
+      throw new HTTPException(401, { message: 'Invalid GitHub signature' });
     }
 
     // Re-parse body as JSON for the handler
-    c.set('webhookBody', JSON.parse(body))
-    await next()
-  })
+    c.set('webhookBody', JSON.parse(body));
+    await next();
+  });
 
 // ---- Sentry ----
 // Header: Sentry-Hook-Signature (value: "<hex>")
 // Signs: JSON.stringify(request.body) — note: signs the serialised body, not raw bytes
 export const sentryWebhookAuth = (clientSecret: string) =>
   createMiddleware(async (c, next) => {
-    const signature = c.req.header('sentry-hook-signature')
-    if (!signature) throw new HTTPException(401, { message: 'Missing Sentry signature' })
+    const signature = c.req.header('sentry-hook-signature');
+    if (!signature) throw new HTTPException(401, { message: 'Missing Sentry signature' });
 
-    const body = await c.req.json()
-    const expected = createHmac('sha256', clientSecret)
-      .update(JSON.stringify(body))
-      .digest('hex')
+    const body = await c.req.json();
+    const expected = createHmac('sha256', clientSecret).update(JSON.stringify(body)).digest('hex');
 
-    const expectedBuf = Buffer.from(expected)
-    const signatureBuf = Buffer.from(signature)
-    if (
-      expectedBuf.length !== signatureBuf.length ||
-      !timingSafeEqual(expectedBuf, signatureBuf)
-    ) {
-      throw new HTTPException(401, { message: 'Invalid Sentry signature' })
+    const expectedBuf = Buffer.from(expected);
+    const signatureBuf = Buffer.from(signature);
+    if (expectedBuf.length !== signatureBuf.length || !timingSafeEqual(expectedBuf, signatureBuf)) {
+      throw new HTTPException(401, { message: 'Invalid Sentry signature' });
     }
 
-    c.set('webhookBody', body)
-    await next()
-  })
+    c.set('webhookBody', body);
+    await next();
+  });
 
 // ---- PostHog ----
 // PostHog does not currently provide webhook payload signature verification
@@ -422,28 +422,37 @@ export const sentryWebhookAuth = (clientSecret: string) =>
 // Mitigation: require a secret query parameter or custom header set in the PostHog webhook config.
 export const postHogWebhookAuth = (secret: string) =>
   createMiddleware(async (c, next) => {
-    const incomingSecret = c.req.header('x-posthog-secret') ?? c.req.query('secret')
-    if (!incomingSecret) throw new HTTPException(401, { message: 'Missing PostHog secret' })
+    const incomingSecret = c.req.header('x-posthog-secret') ?? c.req.query('secret');
+    if (!incomingSecret) throw new HTTPException(401, { message: 'Missing PostHog secret' });
 
-    const secretBuf = Buffer.from(secret)
-    const incomingBuf = Buffer.from(incomingSecret)
-    if (
-      secretBuf.length !== incomingBuf.length ||
-      !timingSafeEqual(secretBuf, incomingBuf)
-    ) {
-      throw new HTTPException(401, { message: 'Invalid PostHog secret' })
+    const secretBuf = Buffer.from(secret);
+    const incomingBuf = Buffer.from(incomingSecret);
+    if (secretBuf.length !== incomingBuf.length || !timingSafeEqual(secretBuf, incomingBuf)) {
+      throw new HTTPException(401, { message: 'Invalid PostHog secret' });
     }
 
-    await next()
-  })
+    await next();
+  });
 ```
 
 Register on specific webhook routes only:
 
 ```typescript
-app.post('/webhooks/github', githubWebhookAuth(process.env.GITHUB_WEBHOOK_SECRET!), handleGithubWebhook)
-app.post('/webhooks/sentry', sentryWebhookAuth(process.env.SENTRY_CLIENT_SECRET!), handleSentryWebhook)
-app.post('/webhooks/posthog', postHogWebhookAuth(process.env.POSTHOG_WEBHOOK_SECRET!), handlePostHogWebhook)
+app.post(
+  '/webhooks/github',
+  githubWebhookAuth(process.env.GITHUB_WEBHOOK_SECRET!),
+  handleGithubWebhook
+);
+app.post(
+  '/webhooks/sentry',
+  sentryWebhookAuth(process.env.SENTRY_CLIENT_SECRET!),
+  handleSentryWebhook
+);
+app.post(
+  '/webhooks/posthog',
+  postHogWebhookAuth(process.env.POSTHOG_WEBHOOK_SECRET!),
+  handlePostHogWebhook
+);
 ```
 
 **Important note on raw body preservation**: GitHub signs the raw byte payload. Hono's `c.req.json()` parses and re-serialises, which may change whitespace. Always use `c.req.text()` for signature verification on raw-body-signed providers (GitHub), then `JSON.parse()` manually.
@@ -456,29 +465,29 @@ app.post('/webhooks/posthog', postHogWebhookAuth(process.env.POSTHOG_WEBHOOK_SEC
 
 ```typescript
 // src/app.ts
-import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { ZodError } from 'zod'
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { ZodError } from 'zod';
 
-const app = new Hono()
+const app = new Hono();
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    return c.json({ error: err.message }, err.status)
+    return c.json({ error: err.message }, err.status);
   }
   if (err instanceof ZodError) {
-    return c.json({ error: 'Validation error', details: err.flatten() }, 422)
+    return c.json({ error: 'Validation error', details: err.flatten() }, 422);
   }
-  console.error(err)
-  return c.json({ error: 'Internal server error' }, 500)
-})
+  console.error(err);
+  return c.json({ error: 'Internal server error' }, 500);
+});
 ```
 
 #### Request Validation with `@hono/zod-validator`
 
 ```typescript
-import { zValidator } from '@hono/zod-validator'
-import { z } from 'zod'
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
 
 const createIssueSchema = z.object({
   title: z.string().min(1).max(500),
@@ -486,22 +495,22 @@ const createIssueSchema = z.object({
   status: z.enum(issueStatusValues).default('open'),
   priority: z.enum(issuePriorityValues).default('medium'),
   projectId: z.string().cuid2(),
-})
+});
 
 app.post(
   '/api/v1/issues',
   apiKeyAuth,
   zValidator('json', createIssueSchema, (result, c) => {
     if (!result.success) {
-      return c.json({ error: 'Validation error', details: result.error.flatten() }, 422)
+      return c.json({ error: 'Validation error', details: result.error.flatten() }, 422);
     }
   }),
   async (c) => {
-    const body = c.req.valid('json')  // fully typed
-    const db = c.get('db')
+    const body = c.req.valid('json'); // fully typed
+    const db = c.get('db');
     // ...
   }
-)
+);
 ```
 
 **Key rule**: Do not apply `zValidator` via `app.use()` globally. It must be per-route to preserve Hono's type inference for `c.req.valid()`.
@@ -517,16 +526,16 @@ PGLite (`@electric-sql/pglite`) runs real WASM Postgres in-process. No Docker, n
 **Setup file** (`test/setup.ts`):
 
 ```typescript
-import { PGlite } from '@electric-sql/pglite'
-import { drizzle } from 'drizzle-orm/pglite'
-import { sql } from 'drizzle-orm'
-import { afterAll, afterEach, vi } from 'vitest'
-import * as schema from '../src/db/schema'
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
+import { sql } from 'drizzle-orm';
+import { afterAll, afterEach, vi } from 'vitest';
+import * as schema from '../src/db/schema';
 
 // Replace the real DB module with a PGLite instance
 vi.mock('../src/db', async (importOriginal) => {
-  const client = new PGlite()
-  const db = drizzle(client, { schema })
+  const client = new PGlite();
+  const db = drizzle(client, { schema });
 
   // Push schema (no migration files needed for tests)
   // Use drizzle-kit push or apply migrations programmatically
@@ -534,35 +543,35 @@ vi.mock('../src/db', async (importOriginal) => {
     ...(await importOriginal<typeof import('../src/db')>()),
     db,
     client,
-  }
-})
+  };
+});
 
 afterEach(async () => {
-  const { db } = await import('../src/db')
+  const { db } = await import('../src/db');
   // Wipe and recreate public schema between tests
-  await db.execute(sql`DROP SCHEMA IF EXISTS public CASCADE`)
-  await db.execute(sql`CREATE SCHEMA public`)
-})
+  await db.execute(sql`DROP SCHEMA IF EXISTS public CASCADE`);
+  await db.execute(sql`CREATE SCHEMA public`);
+});
 
 afterAll(async () => {
-  const { client } = await import('../src/db') as any
-  await client.close()
-})
+  const { client } = (await import('../src/db')) as any;
+  await client.close();
+});
 ```
 
 **Test pattern** (using Hono's `app.request()`):
 
 ```typescript
 // test/issues.test.ts
-import { describe, it, expect, beforeAll } from 'vitest'
-import { app } from '../src/app'
+import { describe, it, expect, beforeAll } from 'vitest';
+import { app } from '../src/app';
 
-const TEST_API_KEY = 'test-key-12345'
+const TEST_API_KEY = 'test-key-12345';
 
 describe('Issues API', () => {
   beforeAll(async () => {
     // Seed: create project and API key in the test DB
-  })
+  });
 
   it('POST /api/v1/issues creates an issue', async () => {
     const res = await app.request('/api/v1/issues', {
@@ -575,12 +584,12 @@ describe('Issues API', () => {
         title: 'Test issue',
         projectId: 'test-project-id',
       }),
-    })
+    });
 
-    expect(res.status).toBe(201)
-    const body = await res.json()
-    expect(body).toMatchObject({ title: 'Test issue' })
-  })
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body).toMatchObject({ title: 'Test issue' });
+  });
 
   it('POST /api/v1/issues returns 422 for invalid body', async () => {
     const res = await app.request('/api/v1/issues', {
@@ -589,17 +598,17 @@ describe('Issues API', () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${TEST_API_KEY}`,
       },
-      body: JSON.stringify({ title: '' }),  // fails min(1)
-    })
+      body: JSON.stringify({ title: '' }), // fails min(1)
+    });
 
-    expect(res.status).toBe(422)
-  })
+    expect(res.status).toBe(422);
+  });
 
   it('GET /api/v1/issues returns 401 without auth', async () => {
-    const res = await app.request('/api/v1/issues')
-    expect(res.status).toBe(401)
-  })
-})
+    const res = await app.request('/api/v1/issues');
+    expect(res.status).toBe(401);
+  });
+});
 ```
 
 #### Alternative: Transaction Savepoint Rollback (Real Database)
@@ -619,25 +628,27 @@ This is more complex to wire up (requires mocking `NodePgTransaction.prototype.e
 
 ## Potential Solutions Summary
 
-| Decision Point | Option A | Option B | Option C | Recommendation |
-|---|---|---|---|---|
-| PostgreSQL hosting | **Neon** (serverless, branching) | Supabase (BaaS) | Self-hosted Docker | **Neon** |
-| Local dev DB | Docker Compose + Neon WS proxy | Supabase local CLI | Plain `postgres` Docker | **Docker + Neon WS proxy** |
-| Connection driver | `@neondatabase/serverless` HTTP | `@neondatabase/serverless` Pool/WS | `pg` with pool | **HTTP for CRUD, Pool for transactions** |
-| Schema organisation | Single `schema.ts` | Per-entity files | **Per-domain-group files** | **Per-domain-group** |
-| Migration workflow | `drizzle-kit push` only | `drizzle-kit generate` + CLI | **generate + programmatic `migrate()`** | **generate + programmatic migrate in build step** |
-| Testing DB | **PGLite in-memory** | Real DB + transaction rollback | Mocks/stubs | **PGLite** |
-| Webhook verification | Single generic middleware | **Per-provider middleware factory** | Third-party library | **Per-provider middleware** |
-| API key storage | Plaintext | bcrypt hash | **SHA-256 hash** | **SHA-256** (keys are high-entropy, don't need bcrypt cost) |
+| Decision Point       | Option A                         | Option B                            | Option C                                | Recommendation                                              |
+| -------------------- | -------------------------------- | ----------------------------------- | --------------------------------------- | ----------------------------------------------------------- |
+| PostgreSQL hosting   | **Neon** (serverless, branching) | Supabase (BaaS)                     | Self-hosted Docker                      | **Neon**                                                    |
+| Local dev DB         | Docker Compose + Neon WS proxy   | Supabase local CLI                  | Plain `postgres` Docker                 | **Docker + Neon WS proxy**                                  |
+| Connection driver    | `@neondatabase/serverless` HTTP  | `@neondatabase/serverless` Pool/WS  | `pg` with pool                          | **HTTP for CRUD, Pool for transactions**                    |
+| Schema organisation  | Single `schema.ts`               | Per-entity files                    | **Per-domain-group files**              | **Per-domain-group**                                        |
+| Migration workflow   | `drizzle-kit push` only          | `drizzle-kit generate` + CLI        | **generate + programmatic `migrate()`** | **generate + programmatic migrate in build step**           |
+| Testing DB           | **PGLite in-memory**             | Real DB + transaction rollback      | Mocks/stubs                             | **PGLite**                                                  |
+| Webhook verification | Single generic middleware        | **Per-provider middleware factory** | Third-party library                     | **Per-provider middleware**                                 |
+| API key storage      | Plaintext                        | bcrypt hash                         | **SHA-256 hash**                        | **SHA-256** (keys are high-entropy, don't need bcrypt cost) |
 
 ---
 
 ## Security Considerations
 
 ### SQL Injection
+
 Drizzle ORM uses parameterised queries by default. All `db.select()`, `db.insert()`, `db.update()`, `db.delete()` calls are safe. The only risk surface is `db.execute(sql`...`)` with user input — always use tagged template literals (`sql` tag handles escaping) or parameterised `sql.placeholder`.
 
 ### API Key Storage
+
 - Never store plaintext API keys.
 - Store SHA-256 hash (for high-entropy keys, this is sufficient and avoids bcrypt overhead).
 - Return the plaintext key only once on creation (display + copy, never retrievable again).
@@ -645,6 +656,7 @@ Drizzle ORM uses parameterised queries by default. All `db.select()`, `db.insert
 - Rate-limit key creation and auth failure endpoints.
 
 ### Webhook Signature Verification
+
 - Always verify before processing payload.
 - Use `crypto.timingSafeEqual` — never `===` for signature comparison.
 - Validate `Content-Type` is `application/json` before parsing.
@@ -654,12 +666,14 @@ Drizzle ORM uses parameterised queries by default. All `db.select()`, `db.insert
 - For PostHog: no HMAC verification available; use a shared secret in a custom header.
 
 ### Environment Variables
+
 - Never hardcode secrets in source code.
 - Use `.env.local` (git-ignored) for local development.
 - Use Vercel environment variables UI for staging/production.
 - Scope secrets to environments (avoid production secrets in preview deployments).
 
 ### CORS and Route Protection
+
 - Apply `bearerAuth` / `apiKeyAuth` middleware to all `/api/v1/*` routes.
 - Webhook routes use their own verification middleware (different auth scheme).
 - Admin routes (e.g. `/admin/migrate`) protected by a separate strong secret.
@@ -669,6 +683,7 @@ Drizzle ORM uses parameterised queries by default. All `db.select()`, `db.insert
 ## Performance Considerations
 
 ### Connection Pooling in Serverless
+
 - With Vercel Fluid Compute (Node.js runtime), warm instances persist and connection can be reused across invocations.
 - Initialise `neon()` client **outside** the handler function at module scope.
 - For Neon HTTP driver: each call creates a new HTTP request over TCP, but TLS session resumption minimises overhead.
@@ -676,16 +691,19 @@ Drizzle ORM uses parameterised queries by default. All `db.select()`, `db.insert
 - **Do not double-pool**: do not use client-side pooling AND Neon's built-in connection pooler simultaneously.
 
 ### Prepared Statements
+
 - Drizzle supports prepared statements with `.prepare('name')`.
 - For frequently-called endpoints (list issues, get project), declare prepared statements at module scope for reuse across warm invocations.
 
 ### Index Strategy
+
 - Add B-tree indexes on all foreign keys (Drizzle does not auto-index FKs).
 - Add composite indexes for common query patterns: `(project_id, status)` on issues, `(project_id, created_at DESC)` for list queries.
 - Add GIN indexes on JSONB `metadata` columns in `signals`.
 - Add partial indexes where useful: `WHERE deleted_at IS NULL` for soft-delete patterns.
 
 ### Query Optimisation
+
 - Use `db.select({ id: table.id, title: table.title })` (column selection) instead of `db.select()` for list endpoints to reduce payload.
 - Use `db.query.*` (Relational API) for deeply nested data (single query with joins vs N+1).
 - Paginate all list endpoints — default limit 50, max 200.

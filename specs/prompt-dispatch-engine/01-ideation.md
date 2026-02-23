@@ -37,12 +37,14 @@ status: ideation
 ## 2) Pre-reading Log
 
 **Reference Documents:**
+
 - `meta/loop-mvp.md`: 1187-line MVP specification. Defines prompt selection algorithm (conditions-based matching with specificity), Handlebars hydration with full system state, priority scoring formula, dispatch endpoint response shape, 5 default templates, shared partials architecture. Key emphasis: "Loop has no AI" — it's a deterministic data system with a prompt layer.
 - `meta/loop-litepaper.md`: 282-line vision document. Pull-based architecture (agents poll for work), self-improving prompt layer concept, signal-to-outcome feedback loop.
 - `specs/mvp-build-plan.md`: 4-phase build plan. Phase 2 depends on Phase 1, Phases 3-4 depend on Phase 2 but are independent of each other.
 - `specs/data-layer-core-api/02-specification.md`: 1015-line Phase 1 spec. Documents all schema, migrations, CRUD endpoints, signal ingestion, webhook handlers, and PGlite test infrastructure.
 
 **Phase 1 Implementation (Complete):**
+
 - `apps/api/src/app.ts`: Hono app with global error handler, health check routes, authenticated `/api/*` middleware stack (apiKeyAuth + db injection), and unprotected webhook routes.
 - `apps/api/src/index.ts`: Entry point. Port 4242 (dev) or Vercel Functions (prod).
 - `apps/api/src/middleware/auth.ts`: Bearer token auth with `crypto.timingSafeEqual` against `LOOP_API_KEY`.
@@ -63,22 +65,23 @@ status: ideation
 
 **Primary Components/Modules:**
 
-| Path | Role |
-|------|------|
-| `apps/api/src/types.ts` | Shared `AppEnv` and `AnyDb` types — all routes and middleware import from here |
-| `apps/api/src/app.ts` | Hono app, middleware composition, route mounting (imports `AppEnv` from `./types`) |
-| `apps/api/src/middleware/auth.ts` | Bearer token auth middleware |
-| `apps/api/src/db/schema/prompts.ts` | PromptTemplates, PromptVersions, PromptReviews schemas |
-| `apps/api/src/db/schema/issues.ts` | Issues, Labels, Relations, Comments schemas |
-| `apps/api/src/db/schema/projects.ts` | Projects, Goals schemas |
-| `apps/api/src/db/schema/signals.ts` | Signals schema |
-| `apps/api/src/db/schema/_helpers.ts` | Shared column helpers (timestamps, softDelete, cuid2Id) |
-| `apps/api/src/routes/templates.ts` | Template/Version/Review CRUD (Phase 1) |
-| `apps/api/src/routes/issues.ts` | Issues CRUD with filtering and pagination |
-| `apps/api/src/routes/prompt-reviews.ts` | Prompt review submission |
-| `apps/api/src/__tests__/setup.ts` | PGlite test infrastructure (`TestAppEnv` deprecated, use `AppEnv` from `types.ts`) |
+| Path                                    | Role                                                                               |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| `apps/api/src/types.ts`                 | Shared `AppEnv` and `AnyDb` types — all routes and middleware import from here     |
+| `apps/api/src/app.ts`                   | Hono app, middleware composition, route mounting (imports `AppEnv` from `./types`) |
+| `apps/api/src/middleware/auth.ts`       | Bearer token auth middleware                                                       |
+| `apps/api/src/db/schema/prompts.ts`     | PromptTemplates, PromptVersions, PromptReviews schemas                             |
+| `apps/api/src/db/schema/issues.ts`      | Issues, Labels, Relations, Comments schemas                                        |
+| `apps/api/src/db/schema/projects.ts`    | Projects, Goals schemas                                                            |
+| `apps/api/src/db/schema/signals.ts`     | Signals schema                                                                     |
+| `apps/api/src/db/schema/_helpers.ts`    | Shared column helpers (timestamps, softDelete, cuid2Id)                            |
+| `apps/api/src/routes/templates.ts`      | Template/Version/Review CRUD (Phase 1)                                             |
+| `apps/api/src/routes/issues.ts`         | Issues CRUD with filtering and pagination                                          |
+| `apps/api/src/routes/prompt-reviews.ts` | Prompt review submission                                                           |
+| `apps/api/src/__tests__/setup.ts`       | PGlite test infrastructure (`TestAppEnv` deprecated, use `AppEnv` from `types.ts`) |
 
 **Shared Dependencies:**
+
 - `drizzle-orm` — ORM used in all route handlers via `c.get('db')`
 - `@neondatabase/serverless` — Neon HTTP driver (prod) + Pool driver (transactions)
 - `zod` + `@hono/zod-validator` — Request validation throughout
@@ -86,6 +89,7 @@ status: ideation
 - `@electric-sql/pglite` — In-memory Postgres for tests
 
 **Data Flow (Phase 2 — To Build):**
+
 ```
 Agent polls: GET /api/dispatch/next
   → Fetch all unblocked issues with status='todo'
@@ -102,11 +106,13 @@ Agent completes work, submits: POST /api/prompt-reviews
 ```
 
 **Feature Flags/Config:**
+
 - `DATABASE_URL`, `LOOP_API_KEY` (required)
 - Webhook secrets: `GITHUB_WEBHOOK_SECRET`, `SENTRY_CLIENT_SECRET`, `POSTHOG_WEBHOOK_SECRET` (optional)
 - No new env vars needed for Phase 2
 
 **Potential Blast Radius:**
+
 - **Modify:** `apps/api/package.json` (add handlebars), `apps/api/src/app.ts` (mount new routes)
 - **Create:** ~7 new files (dispatch routes, prompt engine lib, priority scoring lib, partials, tests, seed migration)
 - **Unchanged:** All existing routes, schema, middleware, tests
@@ -191,28 +197,29 @@ N/A — This is new feature work, not a bug fix.
 
 ### Security Considerations
 
-| Risk | Mitigation |
-|------|------------|
+| Risk                             | Mitigation                                                                  |
+| -------------------------------- | --------------------------------------------------------------------------- |
 | SSTI via user-authored templates | Templates authored by humans/agents in trusted DB, never from request input |
-| Triple-brace XSS | Ban `{{{` in template content validation |
-| Prototype pollution | Pin handlebars >= 4.6.0, never enable `allowProtoPropertiesByDefault` |
-| Race condition in dispatch | `FOR UPDATE SKIP LOCKED` eliminates at database level |
-| Condition schema injection | Validate conditions JSON with Zod `.strict()` on every insert/update |
-| Threshold manipulation | Thresholds are code constants, not DB-configurable |
+| Triple-brace XSS                 | Ban `{{{` in template content validation                                    |
+| Prototype pollution              | Pin handlebars >= 4.6.0, never enable `allowProtoPropertiesByDefault`       |
+| Race condition in dispatch       | `FOR UPDATE SKIP LOCKED` eliminates at database level                       |
+| Condition schema injection       | Validate conditions JSON with Zod `.strict()` on every insert/update        |
+| Threshold manipulation           | Thresholds are code constants, not DB-configurable                          |
 
 ### Performance Considerations
 
-| Area | Strategy |
-|------|----------|
-| Template compilation | `Map<versionId, compiled>` cache, compiled once per version per process |
-| Dispatch query | Partial index on `(status = 'todo', priority DESC, created_at ASC)` |
-| Template selection | In-memory pure function — O(n x c) where n = templates, c = condition fields |
-| Review score update | Single UPDATE per review, EWMA is O(1) |
-| Partials registration | Register once at module load, reused across all requests |
+| Area                  | Strategy                                                                     |
+| --------------------- | ---------------------------------------------------------------------------- |
+| Template compilation  | `Map<versionId, compiled>` cache, compiled once per version per process      |
+| Dispatch query        | Partial index on `(status = 'todo', priority DESC, created_at ASC)`          |
+| Template selection    | In-memory pure function — O(n x c) where n = templates, c = condition fields |
+| Review score update   | Single UPDATE per review, EWMA is O(1)                                       |
+| Partials registration | Register once at module load, reused across all requests                     |
 
 ### Recommendation
 
 All five approaches above are recommended. The architecture is intentionally simple:
+
 - Template selection and priority scoring are pure functions (~20 lines each)
 - Dispatch is a single SQL transaction with `FOR UPDATE SKIP LOCKED`
 - Hydration is Handlebars with a compile cache
@@ -225,12 +232,12 @@ The total new code is estimated at ~500-700 lines of implementation + ~400-600 l
 
 ## 6) Clarification (Resolved)
 
-| # | Question | Decision |
-|---|----------|----------|
-| 1 | Type ordering weights (not specified in MVP doc) | signal=50, hypothesis=40, plan=30, task=20, monitor=10. Spread of 10 between types; a medium-priority signal can outscore a high-priority task, which is intentional (signals = real-time issues). |
-| 2 | Blocked issue detection | Derive from relations — an issue is blocked if it has a `blocked_by` relation where the blocking issue's status is not `done` or `canceled`. No schema changes needed. |
-| 3 | Review scoring method | EWMA with alpha=0.3. Weights recent reviews more heavily for faster degradation detection. O(1) compute per review. Min-samples=3 before threshold checks. |
-| 4 | Score scale and threshold | Raw 1-5 scale, threshold=3.5 as specified in MVP doc. Composite = average of clarity + completeness + relevance. Human-readable. |
-| 5 | Default template content | Substantive — write real, usable prompts referencing the litepaper's workflows for each issue type. These are the core product. |
-| 6 | Dispatch HTTP method | GET as specified. Simple polling for agents, atomic claim is an implementation detail. |
-| 7 | Template preview auth | Same bearer token auth as all other `/api/*` routes. No special handling. |
+| #   | Question                                         | Decision                                                                                                                                                                                           |
+| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Type ordering weights (not specified in MVP doc) | signal=50, hypothesis=40, plan=30, task=20, monitor=10. Spread of 10 between types; a medium-priority signal can outscore a high-priority task, which is intentional (signals = real-time issues). |
+| 2   | Blocked issue detection                          | Derive from relations — an issue is blocked if it has a `blocked_by` relation where the blocking issue's status is not `done` or `canceled`. No schema changes needed.                             |
+| 3   | Review scoring method                            | EWMA with alpha=0.3. Weights recent reviews more heavily for faster degradation detection. O(1) compute per review. Min-samples=3 before threshold checks.                                         |
+| 4   | Score scale and threshold                        | Raw 1-5 scale, threshold=3.5 as specified in MVP doc. Composite = average of clarity + completeness + relevance. Human-readable.                                                                   |
+| 5   | Default template content                         | Substantive — write real, usable prompts referencing the litepaper's workflows for each issue type. These are the core product.                                                                    |
+| 6   | Dispatch HTTP method                             | GET as specified. Simple polling for agents, atomic claim is an implementation detail.                                                                                                             |
+| 7   | Template preview auth                            | Same bearer token auth as all other `/api/*` routes. No special handling.                                                                                                                          |

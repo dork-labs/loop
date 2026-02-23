@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 function SidebarCardSkeleton() {
   return (
@@ -22,7 +22,7 @@ function SidebarCardSkeleton() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 /** Two-column skeleton matching the Issue Detail page layout. */
@@ -77,5 +77,5 @@ export function IssueDetailSkeleton() {
         </aside>
       </div>
     </div>
-  )
+  );
 }

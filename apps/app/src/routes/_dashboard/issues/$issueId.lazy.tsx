@@ -1,27 +1,27 @@
-import { createLazyFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
-import { issueDetailOptions } from '@/lib/queries/issues'
-import { IssueHeader } from '@/components/issue-detail/issue-header'
-import { IssueMetadata } from '@/components/issue-detail/issue-metadata'
-import { IssueRelations } from '@/components/issue-detail/issue-relations'
-import { IssueChildren } from '@/components/issue-detail/issue-children'
-import { IssueAgentResults } from '@/components/issue-detail/issue-agent-results'
-import { IssueComments } from '@/components/issue-detail/issue-comments'
-import { SignalData } from '@/components/issue-detail/signal-data'
-import { HypothesisData } from '@/components/issue-detail/hypothesis-data'
-import { IssueDetailSkeleton } from '@/components/issue-detail/issue-detail-skeleton'
-import { MarkdownContent } from '@/components/markdown-content'
+import { createLazyFileRoute, Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
+import { issueDetailOptions } from '@/lib/queries/issues';
+import { IssueHeader } from '@/components/issue-detail/issue-header';
+import { IssueMetadata } from '@/components/issue-detail/issue-metadata';
+import { IssueRelations } from '@/components/issue-detail/issue-relations';
+import { IssueChildren } from '@/components/issue-detail/issue-children';
+import { IssueAgentResults } from '@/components/issue-detail/issue-agent-results';
+import { IssueComments } from '@/components/issue-detail/issue-comments';
+import { SignalData } from '@/components/issue-detail/signal-data';
+import { HypothesisData } from '@/components/issue-detail/hypothesis-data';
+import { IssueDetailSkeleton } from '@/components/issue-detail/issue-detail-skeleton';
+import { MarkdownContent } from '@/components/markdown-content';
 
 export const Route = createLazyFileRoute('/_dashboard/issues/$issueId')({
   component: IssueDetailPage,
-})
+});
 
 function IssueDetailPage() {
-  const { issueId } = Route.useParams()
-  const { data: issue, isLoading, error } = useQuery(issueDetailOptions(issueId))
+  const { issueId } = Route.useParams();
+  const { data: issue, isLoading, error } = useQuery(issueDetailOptions(issueId));
 
-  if (isLoading) return <IssueDetailSkeleton />
+  if (isLoading) return <IssueDetailSkeleton />;
 
   if (error || !issue) {
     return (
@@ -31,19 +31,19 @@ function IssueDetailPage() {
           Back to Issues
         </Link>
       </div>
-    )
+    );
   }
 
   const hasAgentResults =
     Boolean(issue.agentSummary) ||
     (issue.commits?.length ?? 0) > 0 ||
-    (issue.pullRequests?.length ?? 0) > 0
+    (issue.pullRequests?.length ?? 0) > 0;
 
   return (
     <div className="space-y-6">
       <Link
         to="/issues"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
       >
         <ArrowLeft className="size-4" />
         Back to Issues
@@ -85,5 +85,5 @@ function IssueDetailPage() {
         </aside>
       </div>
     </div>
-  )
+  );
 }

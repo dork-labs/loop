@@ -43,13 +43,13 @@ This means Loop automatically improves every time a better AI model is released 
 
 Every unit of work in Loop is an issue. There are five types, each representing a stage in the loop:
 
-| Type | Purpose | Example |
-|------|---------|---------|
-| **Signal** | Raw event from an external source, awaiting triage | "PostHog: sign-up conversion -12% (24h)" |
-| **Hypothesis** | A proposed explanation for a signal, with confidence and validation criteria | "OAuth redirect adds 1.5-3s blank screen, causing abandonment" |
-| **Plan** | A decomposition of a hypothesis into implementable work | "Fix OAuth redirect: add loading state, add tracking, monitor recovery" |
-| **Task** | A single unit of implementable work, completable in one agent session | "Add loading spinner to OAuth redirect page" |
-| **Monitor** | A verification check to validate or invalidate a hypothesis | "Check if conversion recovers to >3.4% within 48 hours" |
+| Type           | Purpose                                                                      | Example                                                                 |
+| -------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **Signal**     | Raw event from an external source, awaiting triage                           | "PostHog: sign-up conversion -12% (24h)"                                |
+| **Hypothesis** | A proposed explanation for a signal, with confidence and validation criteria | "OAuth redirect adds 1.5-3s blank screen, causing abandonment"          |
+| **Plan**       | A decomposition of a hypothesis into implementable work                      | "Fix OAuth redirect: add loading state, add tracking, monitor recovery" |
+| **Task**       | A single unit of implementable work, completable in one agent session        | "Add loading spinner to OAuth redirect page"                            |
+| **Monitor**    | A verification check to validate or invalidate a hypothesis                  | "Check if conversion recovers to >3.4% within 48 hours"                 |
 
 These types form a progression. Signals become hypotheses. Hypotheses produce plans. Plans break down into tasks. Tasks are monitored. And monitoring outcomes feed back as new signals.
 

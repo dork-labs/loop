@@ -26,6 +26,7 @@ Build Loop's core differentiator: the prompt engine and dispatch system. This ad
 Phase 1 established the data foundation: 11 database tables, CRUD endpoints for all entities, signal ingestion, and webhook handlers. However, the system cannot yet answer the core question: "What should an agent work on next, and how should it do it?"
 
 Without Phase 2:
+
 - There is no way for agents to pull work (no dispatch endpoint)
 - Prompt templates exist in the schema but have no selection or hydration logic
 - There is no priority scoring to determine which issue to work on first
@@ -59,13 +60,13 @@ Phase 2 transforms Loop from a data store into an autonomous work dispatch syste
 
 ## Technical Dependencies
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| `handlebars` | `^4.7.0` (>= 4.6.0 required for prototype pollution protection) | Template hydration |
-| `drizzle-orm` | `^0.45.1` (existing) | Database queries, raw SQL for `FOR UPDATE SKIP LOCKED` |
-| `@neondatabase/serverless` | `^1.0.2` (existing) | Transaction support via Pool driver |
-| `zod` | `^4.3.6` (existing) | Conditions schema validation |
-| `hono` | `^4` (existing) | Route handlers |
+| Dependency                 | Version                                                         | Purpose                                                |
+| -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------ |
+| `handlebars`               | `^4.7.0` (>= 4.6.0 required for prototype pollution protection) | Template hydration                                     |
+| `drizzle-orm`              | `^0.45.1` (existing)                                            | Database queries, raw SQL for `FOR UPDATE SKIP LOCKED` |
+| `@neondatabase/serverless` | `^1.0.2` (existing)                                             | Transaction support via Pool driver                    |
+| `zod`                      | `^4.3.6` (existing)                                             | Conditions schema validation                           |
+| `hono`                     | `^4` (existing)                                                 | Route handlers                                         |
 
 No new infrastructure. No AI runtime. No queue system.
 
@@ -112,25 +113,25 @@ Agent executes work, then POST /api/prompt-reviews
 
 **New files:**
 
-| File | Purpose | Size Est. |
-|------|---------|-----------|
-| `apps/api/src/lib/prompt-engine.ts` | Template selection + Handlebars hydration + context assembly | ~200 lines |
-| `apps/api/src/lib/priority-scoring.ts` | Priority scoring pure function + constants | ~80 lines |
-| `apps/api/src/lib/partials.ts` | Handlebars partial registration + content | ~150 lines |
-| `apps/api/src/routes/dispatch.ts` | Dispatch + queue + preview endpoints | ~250 lines |
-| `apps/api/drizzle/migrations/0002_seed_default_templates.sql` | Custom migration seeding 5 templates + versions | ~200 lines |
-| `apps/api/src/__tests__/prompt-engine.test.ts` | Unit tests for selection + hydration | ~200 lines |
-| `apps/api/src/__tests__/priority-scoring.test.ts` | Unit tests for scoring | ~100 lines |
-| `apps/api/src/__tests__/dispatch.test.ts` | Integration tests for dispatch endpoints | ~300 lines |
+| File                                                          | Purpose                                                      | Size Est.  |
+| ------------------------------------------------------------- | ------------------------------------------------------------ | ---------- |
+| `apps/api/src/lib/prompt-engine.ts`                           | Template selection + Handlebars hydration + context assembly | ~200 lines |
+| `apps/api/src/lib/priority-scoring.ts`                        | Priority scoring pure function + constants                   | ~80 lines  |
+| `apps/api/src/lib/partials.ts`                                | Handlebars partial registration + content                    | ~150 lines |
+| `apps/api/src/routes/dispatch.ts`                             | Dispatch + queue + preview endpoints                         | ~250 lines |
+| `apps/api/drizzle/migrations/0002_seed_default_templates.sql` | Custom migration seeding 5 templates + versions              | ~200 lines |
+| `apps/api/src/__tests__/prompt-engine.test.ts`                | Unit tests for selection + hydration                         | ~200 lines |
+| `apps/api/src/__tests__/priority-scoring.test.ts`             | Unit tests for scoring                                       | ~100 lines |
+| `apps/api/src/__tests__/dispatch.test.ts`                     | Integration tests for dispatch endpoints                     | ~300 lines |
 
 **Modified files:**
 
-| File | Changes |
-|------|---------|
-| `apps/api/package.json` | Add `handlebars` dependency |
-| `apps/api/src/app.ts` | Mount `dispatchRoutes` on `/api/dispatch`, mount template preview route |
-| `apps/api/src/routes/templates.ts` | Replace `z.record(z.string(), z.unknown())` with strict `TemplateConditionsSchema` |
-| `apps/api/src/routes/prompt-reviews.ts` | Replace simple average with EWMA, add improvement loop trigger |
+| File                                    | Changes                                                                            |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| `apps/api/package.json`                 | Add `handlebars` dependency                                                        |
+| `apps/api/src/app.ts`                   | Mount `dispatchRoutes` on `/api/dispatch`, mount template preview route            |
+| `apps/api/src/routes/templates.ts`      | Replace `z.record(z.string(), z.unknown())` with strict `TemplateConditionsSchema` |
+| `apps/api/src/routes/prompt-reviews.ts` | Replace simple average with EWMA, add improvement loop trigger                     |
 
 ---
 
@@ -146,11 +147,11 @@ Pure function with zero dependencies. Exported for direct unit testing.
 /** Priority level → score weight */
 export const PRIORITY_WEIGHTS: Record<number, number> = {
   1: 100, // urgent
-  2: 75,  // high
-  3: 50,  // medium
-  4: 25,  // low
-  0: 10,  // none
-}
+  2: 75, // high
+  3: 50, // medium
+  4: 25, // low
+  0: 10, // none
+};
 
 /** Issue type → score bonus */
 export const TYPE_WEIGHTS: Record<string, number> = {
@@ -159,35 +160,35 @@ export const TYPE_WEIGHTS: Record<string, number> = {
   plan: 30,
   task: 20,
   monitor: 10,
-}
+};
 
 /** Bonus when issue's project has an active goal */
-export const GOAL_ALIGNMENT_BONUS = 20
+export const GOAL_ALIGNMENT_BONUS = 20;
 
 /** Score increase per day in todo status */
-export const AGE_BONUS_PER_DAY = 1
+export const AGE_BONUS_PER_DAY = 1;
 ```
 
 #### Function Signature
 
 ```typescript
 export interface ScoreBreakdown {
-  priorityWeight: number
-  goalAlignmentBonus: number
-  ageBonus: number
-  typeBonus: number
-  total: number
+  priorityWeight: number;
+  goalAlignmentBonus: number;
+  ageBonus: number;
+  typeBonus: number;
+  total: number;
 }
 
 export interface ScoringInput {
-  priority: number
-  type: string
-  createdAt: Date
-  hasActiveGoal: boolean
+  priority: number;
+  type: string;
+  createdAt: Date;
+  hasActiveGoal: boolean;
 }
 
 /** Compute deterministic priority score for an issue. */
-export function scoreIssue(input: ScoringInput): ScoreBreakdown
+export function scoreIssue(input: ScoringInput): ScoreBreakdown;
 ```
 
 #### Logic
@@ -215,38 +216,40 @@ Pure function for matching. Separate function for context assembly (requires DB)
 ```typescript
 /** Validated condition keys stored in template.conditions JSONB */
 export interface TemplateConditions {
-  type?: string
-  signalSource?: string
-  labels?: string[]
-  projectId?: string
-  hasFailedSessions?: boolean
-  hypothesisConfidence?: number
+  type?: string;
+  signalSource?: string;
+  labels?: string[];
+  projectId?: string;
+  hasFailedSessions?: boolean;
+  hypothesisConfidence?: number;
 }
 
 /** Context built from an issue for template matching */
 export interface IssueContext {
-  type: string
-  signalSource: string | null
-  labels: string[]
-  projectId: string | null
-  hasFailedSessions: boolean
-  hypothesisConfidence: number | null
+  type: string;
+  signalSource: string | null;
+  labels: string[];
+  projectId: string | null;
+  hasFailedSessions: boolean;
+  hypothesisConfidence: number | null;
 }
 ```
 
 #### Zod Schema for Conditions Validation
 
 ```typescript
-import { issueTypeValues } from '../db/schema'
+import { issueTypeValues } from '../db/schema';
 
-export const TemplateConditionsSchema = z.object({
-  type: z.enum(issueTypeValues).optional(),
-  signalSource: z.string().optional(),
-  labels: z.array(z.string()).optional(),
-  projectId: z.string().optional(),
-  hasFailedSessions: z.boolean().optional(),
-  hypothesisConfidence: z.number().min(0).max(1).optional(),
-}).strict()
+export const TemplateConditionsSchema = z
+  .object({
+    type: z.enum(issueTypeValues).optional(),
+    signalSource: z.string().optional(),
+    labels: z.array(z.string()).optional(),
+    projectId: z.string().optional(),
+    hasFailedSessions: z.boolean().optional(),
+    hypothesisConfidence: z.number().min(0).max(1).optional(),
+  })
+  .strict();
 ```
 
 This replaces the current `z.record(z.string(), z.unknown()).default({})` in `templates.ts`.
@@ -254,13 +257,11 @@ This replaces the current `z.record(z.string(), z.unknown()).default({})` in `te
 #### Selection Algorithm
 
 ```typescript
-export function matchesConditions(
-  conditions: TemplateConditions,
-  context: IssueContext
-): boolean
+export function matchesConditions(conditions: TemplateConditions, context: IssueContext): boolean;
 ```
 
 For each key in `conditions`:
+
 - `type`: exact match against `context.type`
 - `signalSource`: exact match against `context.signalSource` (null context = no match)
 - `labels`: every label in `conditions.labels` must exist in `context.labels`
@@ -272,18 +273,18 @@ Empty conditions `{}` matches everything.
 
 ```typescript
 export interface TemplateCandidate {
-  id: string
-  slug: string
-  conditions: TemplateConditions
-  specificity: number
-  projectId: string | null
-  activeVersionId: string | null
+  id: string;
+  slug: string;
+  conditions: TemplateConditions;
+  specificity: number;
+  projectId: string | null;
+  activeVersionId: string | null;
 }
 
 export function selectTemplate(
   templates: TemplateCandidate[],
   context: IssueContext
-): TemplateCandidate | null
+): TemplateCandidate | null;
 ```
 
 1. Filter to templates where `matchesConditions(template.conditions, context)` is true
@@ -303,24 +304,24 @@ export function selectTemplate(
 
 ```typescript
 export interface HydrationContext {
-  issue: Record<string, unknown>
-  parent: Record<string, unknown> | null
-  siblings: Record<string, unknown>[]
-  children: Record<string, unknown>[]
-  project: Record<string, unknown> | null
-  goal: Record<string, unknown> | null
-  labels: Array<{ name: string; color: string }>
-  blocking: Array<{ number: number; title: string }>
-  blockedBy: Array<{ number: number; title: string }>
-  previousSessions: Array<{ status: string; agentSummary: string | null }>
-  loopUrl: string
-  loopToken: string
+  issue: Record<string, unknown>;
+  parent: Record<string, unknown> | null;
+  siblings: Record<string, unknown>[];
+  children: Record<string, unknown>[];
+  project: Record<string, unknown> | null;
+  goal: Record<string, unknown> | null;
+  labels: Array<{ name: string; color: string }>;
+  blocking: Array<{ number: number; title: string }>;
+  blockedBy: Array<{ number: number; title: string }>;
+  previousSessions: Array<{ status: string; agentSummary: string | null }>;
+  loopUrl: string;
+  loopToken: string;
   meta: {
-    templateId: string
-    templateSlug: string
-    versionId: string
-    versionNumber: number
-  }
+    templateId: string;
+    templateSlug: string;
+    versionId: string;
+    versionNumber: number;
+  };
 }
 
 /** Assemble full context for Handlebars hydration. */
@@ -329,7 +330,7 @@ export async function buildHydrationContext(
   issue: typeof issues.$inferSelect,
   template: { id: string; slug: string },
   version: { id: string; version: number }
-): Promise<HydrationContext>
+): Promise<HydrationContext>;
 ```
 
 **Queries to execute (in parallel where possible):**
@@ -345,48 +346,52 @@ export async function buildHydrationContext(
 9. **Previous sessions:** For MVP, extract from the issue itself (`agentSessionId`, `agentSummary`) — if `agentSummary` is non-null and status was previously set, include it as a session entry. Future versions may track multiple sessions.
 
 **Environment values:**
+
 - `loopUrl`: `process.env.LOOP_URL ?? 'http://localhost:4242'` (new optional env var)
 - `loopToken`: `process.env.LOOP_API_KEY`
 
 #### Handlebars Setup
 
 ```typescript
-import Handlebars from 'handlebars'
+import Handlebars from 'handlebars';
 
 /** Compiled template cache, keyed by version ID */
-const templateCache = new Map<string, HandlebarsTemplateDelegate>()
+const templateCache = new Map<string, HandlebarsTemplateDelegate>();
 
 /** Register shared partials and helpers. Call once at module load. */
-export function initHandlebars(): void
+export function initHandlebars(): void;
 ```
 
 **Initialization (called once at module load):**
+
 1. Register all 5 shared partials via `Handlebars.registerPartial(name, content)`
 2. Register `json` helper: `Handlebars.registerHelper('json', (ctx) => JSON.stringify(ctx, null, 2))`
 3. Register `priority_label` helper: maps priority int to human label
 
 **Compilation with caching:**
+
 ```typescript
 export function compileTemplate(versionId: string, content: string): HandlebarsTemplateDelegate {
-  const cached = templateCache.get(versionId)
-  if (cached) return cached
-  const compiled = Handlebars.compile(content, { strict: false, noEscape: true })
-  templateCache.set(versionId, compiled)
-  return compiled
+  const cached = templateCache.get(versionId);
+  if (cached) return cached;
+  const compiled = Handlebars.compile(content, { strict: false, noEscape: true });
+  templateCache.set(versionId, compiled);
+  return compiled;
 }
 ```
 
 Note: `strict: false` because templates should render gracefully when optional context is missing (e.g., no parent, no goal). `noEscape: true` because prompts are plain text for agents, not HTML — escaping would corrupt the output.
 
 **Hydration:**
+
 ```typescript
 export function hydrateTemplate(
   versionId: string,
   content: string,
   context: HydrationContext
 ): string {
-  const compiled = compileTemplate(versionId, content)
-  return compiled(context)
+  const compiled = compileTemplate(versionId, content);
+  return compiled(context);
 }
 ```
 
@@ -398,7 +403,7 @@ When creating or updating template versions, validate content does NOT contain t
 if (content.includes('{{{')) {
   throw new HTTPException(422, {
     message: 'Template content must not contain triple-braces ({{{...}}}). Use {{...}} instead.',
-  })
+  });
 }
 ```
 
@@ -413,79 +418,90 @@ Exports a `Record<string, string>` of partial name → Handlebars content. Regis
 #### `api_reference` Partial
 
 ```handlebars
-## Loop API Reference
-
-Base URL: {{loopUrl}}
-Auth: `Authorization: Bearer {{loopToken}}`
-
-### Create Issue
+## Loop API Reference Base URL:
+{{loopUrl}}
+Auth: `Authorization: Bearer
+{{loopToken}}` ### Create Issue
 ```
+
 curl -X POST {{loopUrl}}/api/issues \
-  -H "Authorization: Bearer {{loopToken}}" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "...", "type": "task", "parentId": "{{issue.parentId}}"}'
+ -H "Authorization: Bearer {{loopToken}}" \
+ -H "Content-Type: application/json" \
+ -d '{"title": "...", "type": "task", "parentId": "{{issue.parentId}}"}'
+
 ```
 
 ### Update Issue Status
 ```
+
 curl -X PATCH {{loopUrl}}/api/issues/{{issue.id}} \
-  -H "Authorization: Bearer {{loopToken}}" \
-  -H "Content-Type: application/json" \
-  -d '{"status": "done", "agentSummary": "..."}'
+ -H "Authorization: Bearer {{loopToken}}" \
+ -H "Content-Type: application/json" \
+ -d '{"status": "done", "agentSummary": "..."}'
+
 ```
 
 ### Add Comment
 ```
+
 curl -X POST {{loopUrl}}/api/issues/{{issue.id}}/comments \
-  -H "Authorization: Bearer {{loopToken}}" \
-  -H "Content-Type: application/json" \
-  -d '{"body": "...", "authorName": "Agent", "authorType": "agent"}'
+ -H "Authorization: Bearer {{loopToken}}" \
+ -H "Content-Type: application/json" \
+ -d '{"body": "...", "authorName": "Agent", "authorType": "agent"}'
+
 ```
 
 ### Create Relation
 ```
+
 curl -X POST {{loopUrl}}/api/issues/{{issue.id}}/relations \
-  -H "Authorization: Bearer {{loopToken}}" \
-  -H "Content-Type: application/json" \
-  -d '{"type": "blocks", "relatedIssueId": "..."}'
+ -H "Authorization: Bearer {{loopToken}}" \
+ -H "Content-Type: application/json" \
+ -d '{"type": "blocks", "relatedIssueId": "..."}'
+
 ```
+
 ```
 
 #### `review_instructions` Partial
 
 ```handlebars
-## After Completion
-
-Rate the quality of these instructions:
-
+## After Completion Rate the quality of these instructions:
 ```
+
 curl -X POST {{loopUrl}}/api/prompt-reviews \
-  -H "Authorization: Bearer {{loopToken}}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "versionId": "{{meta.versionId}}",
-    "issueId": "{{issue.id}}",
-    "clarity": <1-5>,
-    "completeness": <1-5>,
-    "relevance": <1-5>,
-    "feedback": "<what was missing, confusing, or unnecessary>"
-  }'
+ -H "Authorization: Bearer {{loopToken}}" \
+ -H "Content-Type: application/json" \
+ -d '{
+"versionId": "{{meta.versionId}}",
+"issueId": "{{issue.id}}",
+"clarity": <1-5>,
+"completeness": <1-5>,
+"relevance": <1-5>,
+"feedback": "<what was missing, confusing, or unnecessary>"
+}'
+
 ```
+
 ```
 
 #### `parent_context` Partial
 
 ```handlebars
 {{#if parent}}
-## Parent Issue
-#{{parent.number}} [{{parent.type}}]: {{parent.title}}
-{{#if parent.description}}
-{{parent.description}}
-{{/if}}
-{{#if parent.hypothesis}}
-Hypothesis: {{parent.hypothesis.statement}} (confidence: {{parent.hypothesis.confidence}})
-Validation: {{parent.hypothesis.validationCriteria}}
-{{/if}}
+  ## Parent Issue #{{parent.number}}
+  [{{parent.type}}]:
+  {{parent.title}}
+  {{#if parent.description}}
+    {{parent.description}}
+  {{/if}}
+  {{#if parent.hypothesis}}
+    Hypothesis:
+    {{parent.hypothesis.statement}}
+    (confidence:
+    {{parent.hypothesis.confidence}}) Validation:
+    {{parent.hypothesis.validationCriteria}}
+  {{/if}}
 {{/if}}
 ```
 
@@ -493,10 +509,12 @@ Validation: {{parent.hypothesis.validationCriteria}}
 
 ```handlebars
 {{#if siblings.length}}
-## Sibling Issues
-{{#each siblings}}
-- #{{this.number}} [{{this.status}}]: {{this.title}}
-{{/each}}
+  ## Sibling Issues
+  {{#each siblings}}
+    - #{{this.number}}
+    [{{this.status}}]:
+    {{this.title}}
+  {{/each}}
 {{/if}}
 ```
 
@@ -504,17 +522,21 @@ Validation: {{parent.hypothesis.validationCriteria}}
 
 ```handlebars
 {{#if project}}
-## Project
-{{project.name}}
-{{#if project.description}}
-{{project.description}}
-{{/if}}
-{{#if goal}}
-### Goal
-{{goal.title}}
-Progress: {{goal.currentValue}}{{goal.unit}} / {{goal.targetValue}}{{goal.unit}}
-Status: {{goal.status}}
-{{/if}}
+  ## Project
+  {{project.name}}
+  {{#if project.description}}
+    {{project.description}}
+  {{/if}}
+  {{#if goal}}
+    ### Goal
+    {{goal.title}}
+    Progress:
+    {{goal.currentValue}}{{goal.unit}}
+    /
+    {{goal.targetValue}}{{goal.unit}}
+    Status:
+    {{goal.status}}
+  {{/if}}
 {{/if}}
 ```
 
@@ -527,6 +549,7 @@ Status: {{goal.status}}
 #### `GET /api/dispatch/next`
 
 **Query params (all optional):**
+
 - `project` (string) — Filter to a specific project ID
 
 **Flow:**
@@ -618,11 +641,13 @@ RETURNING issues.*
 #### `GET /api/dispatch/queue`
 
 **Query params:**
+
 - `project` (string, optional) — Filter to a specific project
 - `limit` (number, 1-200, default 50)
 - `offset` (number, default 0)
 
 **Flow:**
+
 1. Same filtering as `/next` (status='todo', not deleted, not blocked)
 2. Score each issue using `scoreIssue()` from `priority-scoring.ts`
 3. Sort by score descending
@@ -653,6 +678,7 @@ Note: Queue scoring can be done in application code (fetch all todo issues, scor
 #### `GET /api/templates/preview/:issueId`
 
 **Flow:**
+
 1. Fetch issue by ID (404 if not found or deleted)
 2. Build `IssueContext` from issue
 3. Fetch all non-deleted templates with active versions
@@ -685,27 +711,31 @@ The endpoint currently computes `reviewScore` as a simple average across all rev
 After inserting the review:
 
 ```typescript
-const EWMA_ALPHA = 0.3
-const REVIEW_SCORE_THRESHOLD = 3.5
-const REVIEW_COUNT_THRESHOLD = 15
-const REVIEW_MIN_SAMPLES = 3
+const EWMA_ALPHA = 0.3;
+const REVIEW_SCORE_THRESHOLD = 3.5;
+const REVIEW_COUNT_THRESHOLD = 15;
+const REVIEW_MIN_SAMPLES = 3;
 
 // Compute composite score for this review
-const composite = (review.clarity + review.completeness + review.relevance) / 3
+const composite = (review.clarity + review.completeness + review.relevance) / 3;
 
 // Fetch current version
-const [version] = await db.select().from(promptVersions)
-  .where(eq(promptVersions.id, review.versionId))
+const [version] = await db
+  .select()
+  .from(promptVersions)
+  .where(eq(promptVersions.id, review.versionId));
 
 // EWMA update
-const newScore = version.reviewScore === null
-  ? composite
-  : EWMA_ALPHA * composite + (1 - EWMA_ALPHA) * version.reviewScore
+const newScore =
+  version.reviewScore === null
+    ? composite
+    : EWMA_ALPHA * composite + (1 - EWMA_ALPHA) * version.reviewScore;
 
 // Update version
-await db.update(promptVersions)
+await db
+  .update(promptVersions)
   .set({ reviewScore: newScore })
-  .where(eq(promptVersions.id, review.versionId))
+  .where(eq(promptVersions.id, review.versionId));
 ```
 
 #### Prompt Improvement Loop Trigger
@@ -717,20 +747,21 @@ After updating the score, check thresholds:
 const [{ count: reviewCount }] = await db
   .select({ count: count() })
   .from(promptReviews)
-  .where(eq(promptReviews.versionId, review.versionId))
+  .where(eq(promptReviews.versionId, review.versionId));
 
 // Only check thresholds if minimum samples met
 if (reviewCount >= REVIEW_MIN_SAMPLES) {
   const shouldCreateIssue =
-    newScore < REVIEW_SCORE_THRESHOLD ||
-    reviewCount >= REVIEW_COUNT_THRESHOLD
+    newScore < REVIEW_SCORE_THRESHOLD || reviewCount >= REVIEW_COUNT_THRESHOLD;
 
   if (shouldCreateIssue) {
     // Check if an improvement issue already exists for this version
     // (prevent duplicate improvement issues)
     // Look for existing open issue with title matching this template
-    const template = await db.select().from(promptTemplates)
-      .where(eq(promptTemplates.id, version.templateId))
+    const template = await db
+      .select()
+      .from(promptTemplates)
+      .where(eq(promptTemplates.id, version.templateId));
 
     // Auto-create improvement issue
     await db.insert(issues).values({
@@ -739,7 +770,7 @@ if (reviewCount >= REVIEW_MIN_SAMPLES) {
       status: 'todo',
       priority: 3, // medium
       description: buildImprovementDescription(template, version, newScore, reviewCount),
-    })
+    });
 
     // Create/find labels "prompt-improvement" and "meta", link to issue
     // (use INSERT ... ON CONFLICT DO NOTHING for label creation)
@@ -810,6 +841,7 @@ ON CONFLICT DO NOTHING;
 ```
 
 **Template content** for each of the 5 templates comes directly from the MVP doc's "Default Prompt Templates" section (lines 902-1065). Each template includes:
+
 - Issue-type-specific instructions
 - Appropriate partial references (`{{> api_reference}}`, `{{> review_instructions}}`, etc.)
 - Conditional sections for context (previous sessions, parent, siblings, goal)
@@ -826,10 +858,10 @@ Replace the current conditions validation:
 
 ```typescript
 // BEFORE (Phase 1):
-conditions: z.record(z.string(), z.unknown()).default({})
+conditions: z.record(z.string(), z.unknown()).default({});
 
 // AFTER (Phase 2):
-conditions: TemplateConditionsSchema.default({})
+conditions: TemplateConditionsSchema.default({});
 ```
 
 Import `TemplateConditionsSchema` from `../lib/prompt-engine`.
@@ -845,10 +877,10 @@ Apply to both `createTemplateSchema` and `updateTemplateSchema`.
 Add to the authenticated API group:
 
 ```typescript
-import { dispatchRoutes } from './routes/dispatch'
+import { dispatchRoutes } from './routes/dispatch';
 
 // Inside the api.use('*', ...) authenticated block:
-api.route('/dispatch', dispatchRoutes)
+api.route('/dispatch', dispatchRoutes);
 ```
 
 The template preview endpoint (`GET /api/templates/preview/:issueId`) should be added to the existing `templateRoutes` in `templates.ts` since it's template-related, or to `dispatchRoutes` since it uses the same selection logic. Recommendation: add to `dispatchRoutes` as `GET /preview/:issueId` and mount at `/api/dispatch`, making the full path `/api/dispatch/preview/:issueId`. This keeps all dispatch-related logic (next, queue, preview) together.
@@ -864,27 +896,27 @@ templateRoutes.get('/preview/:issueId', async (c) => { ... })
 
 ## API Endpoints (New)
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| `GET` | `/api/dispatch/next` | Claim highest-priority unblocked issue + hydrated prompt | Bearer |
-| `GET` | `/api/dispatch/queue` | Preview dispatch queue with scores (no claim) | Bearer |
-| `GET` | `/api/templates/preview/:issueId` | Preview template selection + hydration for an issue | Bearer |
+| Method | Path                              | Description                                              | Auth   |
+| ------ | --------------------------------- | -------------------------------------------------------- | ------ |
+| `GET`  | `/api/dispatch/next`              | Claim highest-priority unblocked issue + hydrated prompt | Bearer |
+| `GET`  | `/api/dispatch/queue`             | Preview dispatch queue with scores (no claim)            | Bearer |
+| `GET`  | `/api/templates/preview/:issueId` | Preview template selection + hydration for an issue      | Bearer |
 
 **Modified endpoints:**
 
-| Method | Path | Change |
-|--------|------|--------|
-| `POST` | `/api/prompt-reviews` | EWMA scoring + improvement loop trigger |
-| `POST` | `/api/templates` | Strict conditions validation |
-| `PATCH` | `/api/templates/:id` | Strict conditions validation |
+| Method  | Path                  | Change                                  |
+| ------- | --------------------- | --------------------------------------- |
+| `POST`  | `/api/prompt-reviews` | EWMA scoring + improvement loop trigger |
+| `POST`  | `/api/templates`      | Strict conditions validation            |
+| `PATCH` | `/api/templates/:id`  | Strict conditions validation            |
 
 ---
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `LOOP_URL` | No | `http://localhost:4242` | Base URL for API references in hydrated prompts |
+| Variable   | Required | Default                 | Description                                     |
+| ---------- | -------- | ----------------------- | ----------------------------------------------- |
+| `LOOP_URL` | No       | `http://localhost:4242` | Base URL for API references in hydrated prompts |
 
 All existing env vars remain unchanged. `LOOP_URL` is new but optional — only affects the `loopUrl` variable injected into templates.
 
@@ -990,7 +1022,7 @@ Using `withTestDb()` and `createTestApp()` from test infrastructure.
   - Submit review (clarity=4, completeness=5, relevance=3) → composite = 4.0
   - Verify version.reviewScore = 4.0 (first review, set directly)
   - Submit second review (clarity=2, completeness=2, relevance=2) → composite = 2.0
-  - Verify version.reviewScore = 0.3 * 2.0 + 0.7 * 4.0 = 3.4
+  - Verify version.reviewScore = 0.3 _ 2.0 + 0.7 _ 4.0 = 3.4
 
 - **Improvement issue auto-creation:**
   - Submit 3 reviews with low scores (all 2/5)
@@ -1010,14 +1042,14 @@ Using `withTestDb()` and `createTestApp()` from test infrastructure.
 
 ## Performance Considerations
 
-| Area | Strategy | Impact |
-|------|----------|--------|
-| Template compilation | `Map<versionId, compiled>` cache — compile once per version per process lifetime | Eliminates re-compilation on every dispatch |
-| Dispatch query | Single SQL query with `FOR UPDATE SKIP LOCKED` — scoring computed in SQL, not application code | One round-trip, atomic claim |
-| Partial index | `CREATE INDEX idx_issues_dispatch ON issues (status, priority, created_at) WHERE deleted_at IS NULL AND status = 'todo'` | Keeps dispatch query fast as table grows |
-| Template selection | In-memory pure function after single fetch — O(n) where n = template count | Negligible for < 1000 templates |
-| EWMA scoring | Single UPDATE per review, O(1) compute | No aggregation queries needed |
-| Context assembly | Parallel queries via `Promise.all` for independent lookups | Reduces latency for context building |
+| Area                 | Strategy                                                                                                                 | Impact                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| Template compilation | `Map<versionId, compiled>` cache — compile once per version per process lifetime                                         | Eliminates re-compilation on every dispatch |
+| Dispatch query       | Single SQL query with `FOR UPDATE SKIP LOCKED` — scoring computed in SQL, not application code                           | One round-trip, atomic claim                |
+| Partial index        | `CREATE INDEX idx_issues_dispatch ON issues (status, priority, created_at) WHERE deleted_at IS NULL AND status = 'todo'` | Keeps dispatch query fast as table grows    |
+| Template selection   | In-memory pure function after single fetch — O(n) where n = template count                                               | Negligible for < 1000 templates             |
+| EWMA scoring         | Single UPDATE per review, O(1) compute                                                                                   | No aggregation queries needed               |
+| Context assembly     | Parallel queries via `Promise.all` for independent lookups                                                               | Reduces latency for context building        |
 
 **Performance index:** Consider adding a partial index for dispatch queries. This can be added as a follow-up migration if query performance becomes an issue — not required for MVP launch since the table will be small.
 
@@ -1025,14 +1057,14 @@ Using `withTestDb()` and `createTestApp()` from test infrastructure.
 
 ## Security Considerations
 
-| Risk | Mitigation |
-|------|------------|
-| Server-Side Template Injection (SSTI) | Templates are authored by trusted humans/agents in the DB. Content validated on write. Triple-braces `{{{` banned via validation. |
-| Prototype pollution | Handlebars >= 4.6.0 (pinned) disables prototype property access by default. Never enable `allowProtoPropertiesByDefault`. |
-| Race condition in dispatch | `FOR UPDATE SKIP LOCKED` at PostgreSQL level prevents double-claiming. |
-| Condition schema injection | `TemplateConditionsSchema` with `.strict()` rejects unknown keys. |
-| Threshold manipulation | `EWMA_ALPHA`, `REVIEW_SCORE_THRESHOLD`, `REVIEW_COUNT_THRESHOLD`, `REVIEW_MIN_SAMPLES` are code constants, not DB-configurable. |
-| API token in prompts | `loopToken` is injected into hydrated prompts so agents can call back. This is intentional — the same token is already required for dispatch. Tokens should be scoped per-environment. |
+| Risk                                  | Mitigation                                                                                                                                                                             |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server-Side Template Injection (SSTI) | Templates are authored by trusted humans/agents in the DB. Content validated on write. Triple-braces `{{{` banned via validation.                                                      |
+| Prototype pollution                   | Handlebars >= 4.6.0 (pinned) disables prototype property access by default. Never enable `allowProtoPropertiesByDefault`.                                                              |
+| Race condition in dispatch            | `FOR UPDATE SKIP LOCKED` at PostgreSQL level prevents double-claiming.                                                                                                                 |
+| Condition schema injection            | `TemplateConditionsSchema` with `.strict()` rejects unknown keys.                                                                                                                      |
+| Threshold manipulation                | `EWMA_ALPHA`, `REVIEW_SCORE_THRESHOLD`, `REVIEW_COUNT_THRESHOLD`, `REVIEW_MIN_SAMPLES` are code constants, not DB-configurable.                                                        |
+| API token in prompts                  | `loopToken` is injected into hydrated prompts so agents can call back. This is intentional — the same token is already required for dispatch. Tokens should be scoped per-environment. |
 
 ---
 
@@ -1094,19 +1126,19 @@ Using `withTestDb()` and `createTestApp()` from test infrastructure.
 
 ## Related ADRs
 
-| ADR | Relevance |
-|-----|-----------|
-| ADR-003: Use Neon PostgreSQL | Transaction support via Pool driver for `FOR UPDATE SKIP LOCKED` |
-| ADR-004: Use Drizzle ORM | Raw SQL via `db.execute(sql\`...\`)` for features Drizzle doesn't support natively |
-| ADR-005: Use CUID2 Primary Keys | Default template IDs use stable strings (not CUID2-generated) for idempotent seeding |
-| ADR-006: Use Soft Delete | Dispatch query must filter `deleted_at IS NULL` |
+| ADR                             | Relevance                                                                                                               |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| ADR-003: Use Neon PostgreSQL    | Transaction support via Pool driver for `FOR UPDATE SKIP LOCKED`                                                        |
+| ADR-004: Use Drizzle ORM        | Raw SQL via `db.execute(sql\`...\`)` for features Drizzle doesn't support natively                                      |
+| ADR-005: Use CUID2 Primary Keys | Default template IDs use stable strings (not CUID2-generated) for idempotent seeding                                    |
+| ADR-006: Use Soft Delete        | Dispatch query must filter `deleted_at IS NULL`                                                                         |
 | ADR-007: Use PGlite for Testing | Test infrastructure supports migration-based seeding; PGlite may not fully simulate `FOR UPDATE SKIP LOCKED` contention |
 
 ---
 
 ## Open Questions
 
-*None — all 7 clarification questions were resolved during ideation.*
+_None — all 7 clarification questions were resolved during ideation._
 
 ---
 

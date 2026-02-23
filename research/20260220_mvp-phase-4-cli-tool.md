@@ -19,6 +19,7 @@ Commander.js is the clear choice for this CLI's framework — it dominates the e
 Commander.js leads the ecosystem by a massive margin (238M weekly downloads vs. oclif's 173K). For a REST API wrapper CLI with a fixed, known set of subcommands, Commander's lightweight approach is ideal. Oclif is built for plugin-extensible, Salesforce-scale CLIs and brings unnecessary overhead. Clipanion (Yarn's framework) and citty (UnJS) are viable modern alternatives but have smaller communities.
 
 Key data points:
+
 - Commander.js: 238,701,876 weekly downloads, 27,770 GitHub stars, v14.x
 - Oclif: 173,236 weekly downloads — 1,380x fewer than Commander
 - Yargs: 138M weekly downloads but higher dependency count
@@ -30,23 +31,27 @@ Key data points:
 ### 2. Output Libraries: Lean stack wins
 
 **Colors:** `picocolors` over `chalk`.
+
 - picocolors: 7 KB, single file, no dependencies, 14x smaller than chalk, 2x faster
 - chalk: 101 KB, ESM-only since v5, feature-rich (RGB, chaining), but overkill for status/priority coloring
 - kleur: 21 KB, drop-in chalk replacement, maintained but less popular
 - For this CLI's use case (coloring status strings, priority labels), picocolors covers all needed cases
 
 **Tables:** `cli-table3` over `console-table-printer`.
+
 - cli-table3: 3,952 dependent packages, supports cell spanning, custom per-cell styles, word wrapping, vertical alignment
 - console-table-printer: Lighter, simpler API, built-in color support, but less adopted
 - `tty-table`: Responsive to terminal width, but less maintained
 - cli-table3 is the safe choice with the largest community surface area
 
 **Spinners:** `nanospinner` over `ora`.
+
 - nanospinner: 20 KB total, single dependency (picocolors), TypeScript declarations included, CJS + ESM
 - ora: 280 KB including sub-dependencies — 14x larger
 - For a CLI that primarily wraps API calls, spinner needs are minimal; nanospinner is sufficient
 
 **Interactive Prompts:** `@inquirer/prompts` (the modern Inquirer rewrite).
+
 - The legacy `inquirer` package is no longer actively developed
 - `@inquirer/prompts` is the official successor: rewritten from scratch, reduced size, modern API
 - `prompts`: Lightweight, promise-based, "most accurate type declarations" per community consensus, actively maintained — a strong alternative
@@ -66,6 +71,7 @@ The `apps/app` package already depends on `ky@^1.14.3`. Choosing `ky` for the CL
 ### 4. Config Management: `conf` for simplicity, env vars for CI
 
 **`conf` (sindresorhus/conf):**
+
 - Version 15.1.0, published actively (last update: ~12 days before research date)
 - Stores config as JSON in the system user's config directory
 - macOS: `~/Library/Preferences/<name>-nodejs/`
@@ -78,23 +84,23 @@ The `apps/app` package already depends on `ky@^1.14.3`. Choosing `ky` for the CL
 **XDG Compliance:** `conf` handles XDG_CONFIG_HOME automatically on Linux. For the Loop CLI, the config directory should be `~/.config/loop/` (Linux/macOS) with the stored file being `config.json`.
 
 **Environment Variable Override Pattern (standard across gh, vercel, railway CLIs):**
+
 ```
 LOOP_API_URL   — override the API base URL
 LOOP_API_TOKEN — override the auth token (used in CI/CD instead of stored config)
 ```
 
 **Credential Storage Pattern (from gh, vercel, railway):**
+
 - Interactive auth: `loop auth login` prompts for API key and persists via `conf`
 - CI/non-interactive: Read `LOOP_API_TOKEN` env var, skip config file lookup
 - Precedence: env var > config file > prompt user
 
 **Implementation pattern:**
+
 ```typescript
 // Config resolution order:
-const token =
-  process.env.LOOP_API_TOKEN ??
-  config.get('token') ??
-  await promptForToken()
+const token = process.env.LOOP_API_TOKEN ?? config.get('token') ?? (await promptForToken());
 ```
 
 This mirrors how `gh`, `vercel`, and `railway` CLIs all handle credentials — token in config file for interactive sessions, env var for CI.
@@ -102,6 +108,7 @@ This mirrors how `gh`, `vercel`, and `railway` CLIs all handle credentials — t
 ### 5. CLI Architecture Patterns
 
 **Command Structure (gh CLI pattern):**
+
 ```
 apps/cli/
   src/
@@ -132,24 +139,26 @@ apps/cli/
 ```
 
 **Shared API Client Abstraction:**
+
 ```typescript
 // lib/api-client.ts
-import ky from 'ky'
-import { getConfig } from './config.js'
+import ky from 'ky';
+import { getConfig } from './config.js';
 
 export function createApiClient() {
-  const { baseUrl, token } = getConfig()
+  const { baseUrl, token } = getConfig();
   return ky.create({
     prefixUrl: process.env.LOOP_API_URL ?? baseUrl,
     headers: {
       Authorization: `Bearer ${process.env.LOOP_API_TOKEN ?? token}`,
     },
     retry: { limit: 2, statusCodes: [429, 500, 503] },
-  })
+  });
 }
 ```
 
 **Output Formatting Pattern:**
+
 - All commands accept `--json` flag (global option on root command)
 - Default output: colored table (cli-table3 + picocolors)
 - `--json` output: `JSON.stringify(data, null, 2)` piped to stdout
@@ -158,13 +167,14 @@ export function createApiClient() {
 ```typescript
 // Pattern for every command's action handler:
 if (options.json) {
-  process.stdout.write(JSON.stringify(result, null, 2) + '\n')
+  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 } else {
-  renderTable(result)
+  renderTable(result);
 }
 ```
 
 **Error Handling Strategy:**
+
 - Network errors: catch ky's `HTTPError`, extract status + body, print user-friendly message to stderr, exit code 1
 - Auth errors (401/403): special message suggesting `loop auth login`, exit code 1
 - Not found (404): "Not found: issue #abc", exit code 1
@@ -173,6 +183,7 @@ if (options.json) {
 - Unhandled: `process.on('uncaughtException')` safety net logs + exits cleanly
 
 **Exit Code Convention:**
+
 - 0: success
 - 1: general error (network, API, config)
 - 2: usage error (bad arguments) — Commander handles this automatically
@@ -180,6 +191,7 @@ if (options.json) {
 ### 6. npm/npx Publishing
 
 **package.json `bin` field:**
+
 ```json
 {
   "name": "@loop/cli",
@@ -191,30 +203,33 @@ if (options.json) {
 ```
 
 **Shebang in `src/bin.ts`:**
+
 ```typescript
 #!/usr/bin/env node
-import { runMain } from './index.js'
-runMain()
+import { runMain } from './index.js';
+runMain();
 ```
 
 tsup automatically preserves the shebang when it detects it at the top of the entry file.
 
 **tsup configuration (`tsup.config.ts`):**
+
 ```typescript
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/bin.ts'],
-  format: ['esm'],    // ESM matches the monorepo's "type": "module"
+  format: ['esm'], // ESM matches the monorepo's "type": "module"
   target: 'node18',
   clean: true,
-  minify: false,      // keep readable for debugging; bundle is small anyway
+  minify: false, // keep readable for debugging; bundle is small anyway
   sourcemap: true,
-  dts: false,         // CLI binary does not need type declarations
-})
+  dts: false, // CLI binary does not need type declarations
+});
 ```
 
 **Installation modes:**
+
 - `npx @loop/cli issues list` — works immediately without install
 - `npm install -g @loop/cli && loop issues list` — global install
 - `npm install --save-dev @loop/cli` — project-local (for team scripts)
@@ -226,6 +241,7 @@ export default defineConfig({
 ### 7. Framework Deep Dive: Why Not oclif, clipanion, or citty?
 
 **oclif:**
+
 - 173K weekly downloads vs Commander's 238M — 1,380x fewer
 - Designed for plugin-extensible CLIs (think Heroku's `heroku plugins:install`) — unnecessary for a fixed-command REST wrapper
 - Class-based with static properties for args/flags — more boilerplate
@@ -233,6 +249,7 @@ export default defineConfig({
 - Best for: Salesforce, Heroku-scale CLIs with plugin ecosystems
 
 **clipanion:**
+
 - Type-safe by design (used by Yarn Berry), which is its strongest argument
 - Class-based: commands extend `Command` base class, define options as class properties
 - The type inference is excellent, but the class syntax is unfamiliar compared to Commander's functional API
@@ -240,6 +257,7 @@ export default defineConfig({
 - Best for: projects where compile-time type safety on args is a hard requirement
 
 **citty:**
+
 - Zero dependencies (built on `util.parseArgs`), 100% TypeScript, v0.2.1
 - Lightweight and modern — used by Nuxt CLI and other UnJS projects
 - Pre-1.0 version signals some API instability risk
@@ -247,6 +265,7 @@ export default defineConfig({
 - Best for: UnJS ecosystem projects, or when zero-dependency is a hard constraint
 
 **Commander.js wins because:**
+
 1. Largest ecosystem and community (27.7K stars, 238M weekly downloads)
 2. Included TypeScript types (no separate `@types/` install)
 3. v14 `extra-typings` gives strong inference on parsed options
@@ -262,6 +281,7 @@ export default defineConfig({
 ### Monorepo Integration Checklist
 
 The monorepo uses:
+
 - `"type": "module"` at root — the CLI must also use ESM
 - npm workspaces — CLI package at `apps/cli/` is automatically included via `apps/*` glob
 - Turborepo — `dev`, `build`, `test`, `typecheck`, `lint` tasks will automatically apply to `@loop/cli`
@@ -273,6 +293,7 @@ The CLI package should share the API response types with the API package. This a
 ### Table Rendering Guidance
 
 For `loop issues list`, a table with these columns:
+
 ```
 ID    TYPE    TITLE                  STATUS    PRIORITY  CREATED
 abc1  bug     Login page crashes     open      high      2d ago
@@ -280,23 +301,24 @@ abc2  feat    Add dark mode          backlog   medium    5d ago
 ```
 
 cli-table3 setup:
+
 ```typescript
-import Table from 'cli-table3'
-import pc from 'picocolors'
+import Table from 'cli-table3';
+import pc from 'picocolors';
 
 const STATUS_COLORS: Record<string, (s: string) => string> = {
-  open:      pc.green,
+  open: pc.green,
   in_progress: pc.yellow,
-  closed:    pc.dim,
-  backlog:   pc.cyan,
-}
+  closed: pc.dim,
+  backlog: pc.cyan,
+};
 
 const PRIORITY_COLORS: Record<string, (s: string) => string> = {
-  critical:  pc.red,
-  high:      pc.yellow,
-  medium:    pc.white,
-  low:       pc.dim,
-}
+  critical: pc.red,
+  high: pc.yellow,
+  medium: pc.white,
+  low: pc.dim,
+};
 ```
 
 ### Config File Schema
@@ -305,8 +327,8 @@ const PRIORITY_COLORS: Record<string, (s: string) => string> = {
 // ~/.config/loop/config.json (Linux/macOS)
 // ~/Library/Preferences/loop-nodejs/config.json (macOS via conf)
 interface LoopConfig {
-  apiUrl: string      // default: 'https://api.looped.me'
-  token: string       // Bearer token
+  apiUrl: string; // default: 'https://api.looped.me'
+  token: string; // Bearer token
 }
 ```
 
@@ -335,25 +357,27 @@ loop auth logout
 
 ## Final Recommendation
 
-| Category | Package | Rationale |
-|---|---|---|
-| CLI Framework | `commander` v14 | 238M weekly downloads, TypeScript built-in, simple subcommands, active maintenance |
-| Colors | `picocolors` | 7 KB, zero deps, 14x smaller than chalk, fast, covers all status/priority coloring needs |
-| Table output | `cli-table3` | Widest adoption (3,952 dependents), cell spanning, word wrap, custom styles |
-| Spinners | `nanospinner` | 20 KB vs ora's 280 KB, single dep (picocolors), TypeScript types |
-| Interactive prompts | `@inquirer/prompts` | Official modern Inquirer rewrite, actively maintained, familiar mental model |
-| HTTP client | `ky` | Already in monorepo (`apps/app`), TypeScript-first, handles JSON/errors/retries cleanly |
-| Config management | `conf` | v15.1.0, actively maintained, XDG-compliant, JSON Schema validation, typed generics |
-| Build tool | `tsup` | Zero-config, esbuild-backed speed, shebang preservation, ESM output, handles `dist/` |
+| Category            | Package             | Rationale                                                                                |
+| ------------------- | ------------------- | ---------------------------------------------------------------------------------------- |
+| CLI Framework       | `commander` v14     | 238M weekly downloads, TypeScript built-in, simple subcommands, active maintenance       |
+| Colors              | `picocolors`        | 7 KB, zero deps, 14x smaller than chalk, fast, covers all status/priority coloring needs |
+| Table output        | `cli-table3`        | Widest adoption (3,952 dependents), cell spanning, word wrap, custom styles              |
+| Spinners            | `nanospinner`       | 20 KB vs ora's 280 KB, single dep (picocolors), TypeScript types                         |
+| Interactive prompts | `@inquirer/prompts` | Official modern Inquirer rewrite, actively maintained, familiar mental model             |
+| HTTP client         | `ky`                | Already in monorepo (`apps/app`), TypeScript-first, handles JSON/errors/retries cleanly  |
+| Config management   | `conf`              | v15.1.0, actively maintained, XDG-compliant, JSON Schema validation, typed generics      |
+| Build tool          | `tsup`              | Zero-config, esbuild-backed speed, shebang preservation, ESM output, handles `dist/`     |
 
 **Dependencies to install in `apps/cli/`:**
 
 Runtime:
+
 ```
 commander picocolors cli-table3 nanospinner @inquirer/prompts ky conf
 ```
 
 Dev:
+
 ```
 tsup @types/node typescript
 ```

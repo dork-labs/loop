@@ -53,6 +53,7 @@ Phase F (Integration Verification)
 ```
 
 **Parallel Execution Opportunities:**
+
 - Tasks 1.1, 1.2, 1.3 can run in parallel
 - Tasks 1.4, 1.5 can run in parallel (after their respective deps)
 - Tasks 2.1, 2.4 can run in parallel with each other
@@ -96,11 +97,11 @@ Create the priority scoring pure function with zero external dependencies. This 
 /** Priority level -> score weight */
 export const PRIORITY_WEIGHTS: Record<number, number> = {
   1: 100, // urgent
-  2: 75,  // high
-  3: 50,  // medium
-  4: 25,  // low
-  0: 10,  // none
-}
+  2: 75, // high
+  3: 50, // medium
+  4: 25, // low
+  0: 10, // none
+};
 
 /** Issue type -> score bonus */
 export const TYPE_WEIGHTS: Record<string, number> = {
@@ -109,38 +110,39 @@ export const TYPE_WEIGHTS: Record<string, number> = {
   plan: 30,
   task: 20,
   monitor: 10,
-}
+};
 
 /** Bonus when issue's project has an active goal */
-export const GOAL_ALIGNMENT_BONUS = 20
+export const GOAL_ALIGNMENT_BONUS = 20;
 
 /** Score increase per day in todo status */
-export const AGE_BONUS_PER_DAY = 1
+export const AGE_BONUS_PER_DAY = 1;
 
 export interface ScoreBreakdown {
-  priorityWeight: number
-  goalAlignmentBonus: number
-  ageBonus: number
-  typeBonus: number
-  total: number
+  priorityWeight: number;
+  goalAlignmentBonus: number;
+  ageBonus: number;
+  typeBonus: number;
+  total: number;
 }
 
 export interface ScoringInput {
-  priority: number
-  type: string
-  createdAt: Date
-  hasActiveGoal: boolean
+  priority: number;
+  type: string;
+  createdAt: Date;
+  hasActiveGoal: boolean;
 }
 
 /** Compute deterministic priority score for an issue. */
 export function scoreIssue(input: ScoringInput): ScoreBreakdown {
-  const priorityWeight = PRIORITY_WEIGHTS[input.priority] ?? 10
-  const typeBonus = TYPE_WEIGHTS[input.type] ?? 0
-  const goalAlignmentBonus = input.hasActiveGoal ? GOAL_ALIGNMENT_BONUS : 0
-  const ageBonus = Math.floor((Date.now() - input.createdAt.getTime()) / 86_400_000) * AGE_BONUS_PER_DAY
-  const total = priorityWeight + typeBonus + goalAlignmentBonus + ageBonus
+  const priorityWeight = PRIORITY_WEIGHTS[input.priority] ?? 10;
+  const typeBonus = TYPE_WEIGHTS[input.type] ?? 0;
+  const goalAlignmentBonus = input.hasActiveGoal ? GOAL_ALIGNMENT_BONUS : 0;
+  const ageBonus =
+    Math.floor((Date.now() - input.createdAt.getTime()) / 86_400_000) * AGE_BONUS_PER_DAY;
+  const total = priorityWeight + typeBonus + goalAlignmentBonus + ageBonus;
 
-  return { priorityWeight, goalAlignmentBonus, ageBonus, typeBonus, total }
+  return { priorityWeight, goalAlignmentBonus, ageBonus, typeBonus, total };
 }
 ```
 
@@ -159,41 +161,43 @@ Create the prompt engine file with template selection types, Zod schema, and pur
 **Full implementation:**
 
 ```typescript
-import { z } from 'zod'
-import { issueTypeValues } from '../db/schema'
+import { z } from 'zod';
+import { issueTypeValues } from '../db/schema';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 /** Validated condition keys stored in template.conditions JSONB */
 export interface TemplateConditions {
-  type?: string
-  signalSource?: string
-  labels?: string[]
-  projectId?: string
-  hasFailedSessions?: boolean
-  hypothesisConfidence?: number
+  type?: string;
+  signalSource?: string;
+  labels?: string[];
+  projectId?: string;
+  hasFailedSessions?: boolean;
+  hypothesisConfidence?: number;
 }
 
 /** Context built from an issue for template matching */
 export interface IssueContext {
-  type: string
-  signalSource: string | null
-  labels: string[]
-  projectId: string | null
-  hasFailedSessions: boolean
-  hypothesisConfidence: number | null
+  type: string;
+  signalSource: string | null;
+  labels: string[];
+  projectId: string | null;
+  hasFailedSessions: boolean;
+  hypothesisConfidence: number | null;
 }
 
 // ─── Zod Schema ──────────────────────────────────────────────────────────────
 
-export const TemplateConditionsSchema = z.object({
-  type: z.enum(issueTypeValues).optional(),
-  signalSource: z.string().optional(),
-  labels: z.array(z.string()).optional(),
-  projectId: z.string().optional(),
-  hasFailedSessions: z.boolean().optional(),
-  hypothesisConfidence: z.number().min(0).max(1).optional(),
-}).strict()
+export const TemplateConditionsSchema = z
+  .object({
+    type: z.enum(issueTypeValues).optional(),
+    signalSource: z.string().optional(),
+    labels: z.array(z.string()).optional(),
+    projectId: z.string().optional(),
+    hasFailedSessions: z.boolean().optional(),
+    hypothesisConfidence: z.number().min(0).max(1).optional(),
+  })
+  .strict();
 
 // ─── Selection Algorithm ─────────────────────────────────────────────────────
 
@@ -202,31 +206,28 @@ export const TemplateConditionsSchema = z.object({
  * Empty conditions {} matches everything.
  * All specified conditions must match (AND logic).
  */
-export function matchesConditions(
-  conditions: TemplateConditions,
-  context: IssueContext
-): boolean {
+export function matchesConditions(conditions: TemplateConditions, context: IssueContext): boolean {
   if (conditions.type !== undefined && conditions.type !== context.type) {
-    return false
+    return false;
   }
   if (conditions.signalSource !== undefined) {
     if (context.signalSource === null || conditions.signalSource !== context.signalSource) {
-      return false
+      return false;
     }
   }
   if (conditions.labels !== undefined) {
     if (!conditions.labels.every((label) => context.labels.includes(label))) {
-      return false
+      return false;
     }
   }
   if (conditions.projectId !== undefined) {
     if (context.projectId === null || conditions.projectId !== context.projectId) {
-      return false
+      return false;
     }
   }
   if (conditions.hasFailedSessions !== undefined) {
     if (conditions.hasFailedSessions !== context.hasFailedSessions) {
-      return false
+      return false;
     }
   }
   if (conditions.hypothesisConfidence !== undefined) {
@@ -234,19 +235,19 @@ export function matchesConditions(
       context.hypothesisConfidence === null ||
       context.hypothesisConfidence < conditions.hypothesisConfidence
     ) {
-      return false
+      return false;
     }
   }
-  return true
+  return true;
 }
 
 export interface TemplateCandidate {
-  id: string
-  slug: string
-  conditions: TemplateConditions
-  specificity: number
-  projectId: string | null
-  activeVersionId: string | null
+  id: string;
+  slug: string;
+  conditions: TemplateConditions;
+  specificity: number;
+  projectId: string | null;
+  activeVersionId: string | null;
 }
 
 /**
@@ -266,14 +267,14 @@ export function selectTemplate(
     .filter((t) => matchesConditions(t.conditions, context))
     .sort((a, b) => {
       // Project-specific templates first
-      const aProjectMatch = a.projectId === context.projectId && a.projectId !== null ? 1 : 0
-      const bProjectMatch = b.projectId === context.projectId && b.projectId !== null ? 1 : 0
-      if (aProjectMatch !== bProjectMatch) return bProjectMatch - aProjectMatch
+      const aProjectMatch = a.projectId === context.projectId && a.projectId !== null ? 1 : 0;
+      const bProjectMatch = b.projectId === context.projectId && b.projectId !== null ? 1 : 0;
+      if (aProjectMatch !== bProjectMatch) return bProjectMatch - aProjectMatch;
       // Then by specificity descending
-      return b.specificity - a.specificity
-    })
+      return b.specificity - a.specificity;
+    });
 
-  return matching[0] ?? null
+  return matching[0] ?? null;
 }
 ```
 
@@ -292,33 +293,33 @@ Write comprehensive unit tests for the priority scoring pure function. No databa
 **Test cases to implement:**
 
 ```typescript
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest';
 import {
   scoreIssue,
   PRIORITY_WEIGHTS,
   TYPE_WEIGHTS,
   GOAL_ALIGNMENT_BONUS,
   AGE_BONUS_PER_DAY,
-} from '../lib/priority-scoring'
+} from '../lib/priority-scoring';
 
 describe('scoreIssue', () => {
   // 1. Score calculation correctness:
   //    Given priority=2 (high), type='signal', hasActiveGoal=true, created 3 days ago
   //    -> verify exact score breakdown: 75 + 50 + 20 + 3 = 148
   it('computes correct total for high-priority signal with goal alignment', () => {
-    const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000)
+    const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000);
     const result = scoreIssue({
       priority: 2,
       type: 'signal',
       createdAt: threeDaysAgo,
       hasActiveGoal: true,
-    })
-    expect(result.priorityWeight).toBe(75)
-    expect(result.typeBonus).toBe(50)
-    expect(result.goalAlignmentBonus).toBe(20)
-    expect(result.ageBonus).toBe(3)
-    expect(result.total).toBe(148)
-  })
+    });
+    expect(result.priorityWeight).toBe(75);
+    expect(result.typeBonus).toBe(50);
+    expect(result.goalAlignmentBonus).toBe(20);
+    expect(result.ageBonus).toBe(3);
+    expect(result.total).toBe(148);
+  });
 
   // 2. Priority weight mapping: Test all 5 priority levels
   it.each([
@@ -333,9 +334,9 @@ describe('scoreIssue', () => {
       type: 'task',
       createdAt: new Date(),
       hasActiveGoal: false,
-    })
-    expect(result.priorityWeight).toBe(expected)
-  })
+    });
+    expect(result.priorityWeight).toBe(expected);
+  });
 
   // 3. Type weight mapping: Test all 5 issue types
   it.each([
@@ -350,9 +351,9 @@ describe('scoreIssue', () => {
       type,
       createdAt: new Date(),
       hasActiveGoal: false,
-    })
-    expect(result.typeBonus).toBe(expected)
-  })
+    });
+    expect(result.typeBonus).toBe(expected);
+  });
 
   // 4. Unknown priority/type: fallback to defaults (10 and 0)
   it('falls back to default weight for unknown priority', () => {
@@ -361,9 +362,9 @@ describe('scoreIssue', () => {
       type: 'task',
       createdAt: new Date(),
       hasActiveGoal: false,
-    })
-    expect(result.priorityWeight).toBe(10)
-  })
+    });
+    expect(result.priorityWeight).toBe(10);
+  });
 
   it('falls back to zero bonus for unknown type', () => {
     const result = scoreIssue({
@@ -371,9 +372,9 @@ describe('scoreIssue', () => {
       type: 'unknown_type',
       createdAt: new Date(),
       hasActiveGoal: false,
-    })
-    expect(result.typeBonus).toBe(0)
-  })
+    });
+    expect(result.typeBonus).toBe(0);
+  });
 
   // 5. Age bonus accumulation: 0 days, 30 days, 365 days
   it('returns zero age bonus for just-created issue', () => {
@@ -382,31 +383,31 @@ describe('scoreIssue', () => {
       type: 'task',
       createdAt: new Date(),
       hasActiveGoal: false,
-    })
-    expect(result.ageBonus).toBe(0)
-  })
+    });
+    expect(result.ageBonus).toBe(0);
+  });
 
   it('returns 30 age bonus for 30-day-old issue', () => {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000);
     const result = scoreIssue({
       priority: 0,
       type: 'task',
       createdAt: thirtyDaysAgo,
       hasActiveGoal: false,
-    })
-    expect(result.ageBonus).toBe(30)
-  })
+    });
+    expect(result.ageBonus).toBe(30);
+  });
 
   it('returns 365 age bonus for 1-year-old issue', () => {
-    const oneYearAgo = new Date(Date.now() - 365 * 86_400_000)
+    const oneYearAgo = new Date(Date.now() - 365 * 86_400_000);
     const result = scoreIssue({
       priority: 0,
       type: 'task',
       createdAt: oneYearAgo,
       hasActiveGoal: false,
-    })
-    expect(result.ageBonus).toBe(365)
-  })
+    });
+    expect(result.ageBonus).toBe(365);
+  });
 
   // 6. Goal alignment: with and without active goal
   it('adds goal alignment bonus when hasActiveGoal is true', () => {
@@ -415,9 +416,9 @@ describe('scoreIssue', () => {
       type: 'task',
       createdAt: new Date(),
       hasActiveGoal: true,
-    })
-    expect(result.goalAlignmentBonus).toBe(GOAL_ALIGNMENT_BONUS)
-  })
+    });
+    expect(result.goalAlignmentBonus).toBe(GOAL_ALIGNMENT_BONUS);
+  });
 
   it('adds zero goal bonus when hasActiveGoal is false', () => {
     const result = scoreIssue({
@@ -425,10 +426,10 @@ describe('scoreIssue', () => {
       type: 'task',
       createdAt: new Date(),
       hasActiveGoal: false,
-    })
-    expect(result.goalAlignmentBonus).toBe(0)
-  })
-})
+    });
+    expect(result.goalAlignmentBonus).toBe(0);
+  });
+});
 ```
 
 **Verification:** `npx vitest run apps/api/src/__tests__/priority-scoring.test.ts` — all tests pass.
@@ -446,14 +447,14 @@ Write unit tests for `matchesConditions` and `selectTemplate` pure functions. No
 **Test cases to implement:**
 
 ```typescript
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest';
 import {
   matchesConditions,
   selectTemplate,
   type IssueContext,
   type TemplateCandidate,
   type TemplateConditions,
-} from '../lib/prompt-engine'
+} from '../lib/prompt-engine';
 
 const baseContext: IssueContext = {
   type: 'signal',
@@ -462,55 +463,55 @@ const baseContext: IssueContext = {
   projectId: 'proj_1',
   hasFailedSessions: false,
   hypothesisConfidence: null,
-}
+};
 
 describe('matchesConditions', () => {
   it('empty conditions match everything', () => {
-    expect(matchesConditions({}, baseContext)).toBe(true)
-  })
+    expect(matchesConditions({}, baseContext)).toBe(true);
+  });
 
   it('single type condition matches correct type', () => {
-    expect(matchesConditions({ type: 'signal' }, baseContext)).toBe(true)
-    expect(matchesConditions({ type: 'task' }, baseContext)).toBe(false)
-  })
+    expect(matchesConditions({ type: 'signal' }, baseContext)).toBe(true);
+    expect(matchesConditions({ type: 'task' }, baseContext)).toBe(false);
+  });
 
   it('multiple conditions require all to match (AND)', () => {
-    expect(matchesConditions({ type: 'signal', signalSource: 'posthog' }, baseContext)).toBe(true)
-    expect(matchesConditions({ type: 'signal', signalSource: 'sentry' }, baseContext)).toBe(false)
-  })
+    expect(matchesConditions({ type: 'signal', signalSource: 'posthog' }, baseContext)).toBe(true);
+    expect(matchesConditions({ type: 'signal', signalSource: 'sentry' }, baseContext)).toBe(false);
+  });
 
   it('labels condition requires all specified labels present', () => {
-    expect(matchesConditions({ labels: ['frontend'] }, baseContext)).toBe(true)
-    expect(matchesConditions({ labels: ['frontend', 'urgent'] }, baseContext)).toBe(true)
-    expect(matchesConditions({ labels: ['backend'] }, baseContext)).toBe(false)
-  })
+    expect(matchesConditions({ labels: ['frontend'] }, baseContext)).toBe(true);
+    expect(matchesConditions({ labels: ['frontend', 'urgent'] }, baseContext)).toBe(true);
+    expect(matchesConditions({ labels: ['backend'] }, baseContext)).toBe(false);
+  });
 
   it('null context signalSource does not match signalSource condition', () => {
-    const ctx: IssueContext = { ...baseContext, signalSource: null }
-    expect(matchesConditions({ signalSource: 'posthog' }, ctx)).toBe(false)
-  })
+    const ctx: IssueContext = { ...baseContext, signalSource: null };
+    expect(matchesConditions({ signalSource: 'posthog' }, ctx)).toBe(false);
+  });
 
   it('null context projectId does not match projectId condition', () => {
-    const ctx: IssueContext = { ...baseContext, projectId: null }
-    expect(matchesConditions({ projectId: 'proj_1' }, ctx)).toBe(false)
-  })
+    const ctx: IssueContext = { ...baseContext, projectId: null };
+    expect(matchesConditions({ projectId: 'proj_1' }, ctx)).toBe(false);
+  });
 
   it('hasFailedSessions exact match', () => {
-    expect(matchesConditions({ hasFailedSessions: false }, baseContext)).toBe(true)
-    expect(matchesConditions({ hasFailedSessions: true }, baseContext)).toBe(false)
-  })
+    expect(matchesConditions({ hasFailedSessions: false }, baseContext)).toBe(true);
+    expect(matchesConditions({ hasFailedSessions: true }, baseContext)).toBe(false);
+  });
 
   it('hypothesisConfidence matches when context >= condition', () => {
-    const ctx: IssueContext = { ...baseContext, hypothesisConfidence: 0.8 }
-    expect(matchesConditions({ hypothesisConfidence: 0.7 }, ctx)).toBe(true)
-    expect(matchesConditions({ hypothesisConfidence: 0.8 }, ctx)).toBe(true)
-    expect(matchesConditions({ hypothesisConfidence: 0.9 }, ctx)).toBe(false)
-  })
+    const ctx: IssueContext = { ...baseContext, hypothesisConfidence: 0.8 };
+    expect(matchesConditions({ hypothesisConfidence: 0.7 }, ctx)).toBe(true);
+    expect(matchesConditions({ hypothesisConfidence: 0.8 }, ctx)).toBe(true);
+    expect(matchesConditions({ hypothesisConfidence: 0.9 }, ctx)).toBe(false);
+  });
 
   it('hypothesisConfidence with null context does not match', () => {
-    expect(matchesConditions({ hypothesisConfidence: 0.5 }, baseContext)).toBe(false)
-  })
-})
+    expect(matchesConditions({ hypothesisConfidence: 0.5 }, baseContext)).toBe(false);
+  });
+});
 
 describe('selectTemplate', () => {
   const makeCandidate = (overrides: Partial<TemplateCandidate>): TemplateCandidate => ({
@@ -521,47 +522,54 @@ describe('selectTemplate', () => {
     projectId: null,
     activeVersionId: 'ver_1',
     ...overrides,
-  })
+  });
 
   it('returns highest specificity match', () => {
     const templates = [
       makeCandidate({ id: 'low', slug: 'low', specificity: 10, conditions: { type: 'signal' } }),
       makeCandidate({ id: 'high', slug: 'high', specificity: 50, conditions: { type: 'signal' } }),
-    ]
-    const result = selectTemplate(templates, baseContext)
-    expect(result?.id).toBe('high')
-  })
+    ];
+    const result = selectTemplate(templates, baseContext);
+    expect(result?.id).toBe('high');
+  });
 
   it('project-specific template wins over higher-specificity generic', () => {
     const templates = [
-      makeCandidate({ id: 'generic', slug: 'generic', specificity: 100, conditions: { type: 'signal' } }),
-      makeCandidate({ id: 'proj', slug: 'proj', specificity: 10, projectId: 'proj_1', conditions: { type: 'signal' } }),
-    ]
-    const result = selectTemplate(templates, baseContext)
-    expect(result?.id).toBe('proj')
-  })
+      makeCandidate({
+        id: 'generic',
+        slug: 'generic',
+        specificity: 100,
+        conditions: { type: 'signal' },
+      }),
+      makeCandidate({
+        id: 'proj',
+        slug: 'proj',
+        specificity: 10,
+        projectId: 'proj_1',
+        conditions: { type: 'signal' },
+      }),
+    ];
+    const result = selectTemplate(templates, baseContext);
+    expect(result?.id).toBe('proj');
+  });
 
   it('returns null when no templates match', () => {
-    const templates = [
-      makeCandidate({ conditions: { type: 'task' } }),
-    ]
-    const result = selectTemplate(templates, baseContext)
-    expect(result).toBeNull()
-  })
+    const templates = [makeCandidate({ conditions: { type: 'task' } })];
+    const result = selectTemplate(templates, baseContext);
+    expect(result).toBeNull();
+  });
 
   it('filters out templates without activeVersionId', () => {
-    const templates = [
-      makeCandidate({ activeVersionId: null, conditions: { type: 'signal' } }),
-    ]
-    const result = selectTemplate(templates, baseContext)
-    expect(result).toBeNull()
-  })
+    const templates = [makeCandidate({ activeVersionId: null, conditions: { type: 'signal' } })];
+    const result = selectTemplate(templates, baseContext);
+    expect(result).toBeNull();
+  });
 
   it('returns null for empty template list', () => {
-    const result = selectTemplate([], baseContext)
-    expect(result).toBeNull()
-  })
-})
+    const result = selectTemplate([], baseContext);
+    expect(result).toBeNull();
+  });
+});
 ```
 
 **Verification:** `npx vitest run apps/api/src/__tests__/prompt-engine.test.ts` — all tests pass.
@@ -670,7 +678,7 @@ Progress: {{goal.currentValue}}{{goal.unit}} / {{goal.targetValue}}{{goal.unit}}
 Status: {{goal.status}}
 {{/if}}
 {{/if}}`,
-}
+};
 ```
 
 **Verification:** File compiles. Partials contain all 5 entries per spec: `api_reference`, `review_instructions`, `parent_context`, `sibling_context`, `project_and_goal_context`.
@@ -688,23 +696,23 @@ Add Handlebars initialization, compilation with caching, and hydration functions
 **Code to add to prompt-engine.ts:**
 
 ```typescript
-import Handlebars from 'handlebars'
-import { PARTIALS } from './partials'
+import Handlebars from 'handlebars';
+import { PARTIALS } from './partials';
 
 // ─── Handlebars Setup ────────────────────────────────────────────────────────
 
 /** Compiled template cache, keyed by version ID */
-const templateCache = new Map<string, Handlebars.TemplateDelegate>()
+const templateCache = new Map<string, Handlebars.TemplateDelegate>();
 
 /** Register shared partials and helpers. Call once at module load. */
 export function initHandlebars(): void {
   // Register all 5 shared partials
   for (const [name, content] of Object.entries(PARTIALS)) {
-    Handlebars.registerPartial(name, content)
+    Handlebars.registerPartial(name, content);
   }
 
   // Register json helper for rendering JSONB fields
-  Handlebars.registerHelper('json', (ctx: unknown) => JSON.stringify(ctx, null, 2))
+  Handlebars.registerHelper('json', (ctx: unknown) => JSON.stringify(ctx, null, 2));
 
   // Register priority_label helper mapping priority int to human label
   Handlebars.registerHelper('priority_label', (priority: number) => {
@@ -714,13 +722,13 @@ export function initHandlebars(): void {
       3: 'medium',
       4: 'low',
       0: 'none',
-    }
-    return labels[priority] ?? 'unknown'
-  })
+    };
+    return labels[priority] ?? 'unknown';
+  });
 }
 
 // Initialize at module load
-initHandlebars()
+initHandlebars();
 
 /**
  * Compile a Handlebars template with caching by version ID.
@@ -728,11 +736,11 @@ initHandlebars()
  * Uses noEscape: true because prompts are plain text, not HTML.
  */
 export function compileTemplate(versionId: string, content: string): Handlebars.TemplateDelegate {
-  const cached = templateCache.get(versionId)
-  if (cached) return cached
-  const compiled = Handlebars.compile(content, { strict: false, noEscape: true })
-  templateCache.set(versionId, compiled)
-  return compiled
+  const cached = templateCache.get(versionId);
+  if (cached) return cached;
+  const compiled = Handlebars.compile(content, { strict: false, noEscape: true });
+  templateCache.set(versionId, compiled);
+  return compiled;
 }
 
 /**
@@ -744,8 +752,8 @@ export function hydrateTemplate(
   content: string,
   context: HydrationContext
 ): string {
-  const compiled = compileTemplate(versionId, content)
-  return compiled(context)
+  const compiled = compileTemplate(versionId, content);
+  return compiled(context);
 }
 ```
 
@@ -753,24 +761,24 @@ Also add the `HydrationContext` type (needed by `hydrateTemplate`):
 
 ```typescript
 export interface HydrationContext {
-  issue: Record<string, unknown>
-  parent: Record<string, unknown> | null
-  siblings: Record<string, unknown>[]
-  children: Record<string, unknown>[]
-  project: Record<string, unknown> | null
-  goal: Record<string, unknown> | null
-  labels: Array<{ name: string; color: string }>
-  blocking: Array<{ number: number; title: string }>
-  blockedBy: Array<{ number: number; title: string }>
-  previousSessions: Array<{ status: string; agentSummary: string | null }>
-  loopUrl: string
-  loopToken: string
+  issue: Record<string, unknown>;
+  parent: Record<string, unknown> | null;
+  siblings: Record<string, unknown>[];
+  children: Record<string, unknown>[];
+  project: Record<string, unknown> | null;
+  goal: Record<string, unknown> | null;
+  labels: Array<{ name: string; color: string }>;
+  blocking: Array<{ number: number; title: string }>;
+  blockedBy: Array<{ number: number; title: string }>;
+  previousSessions: Array<{ status: string; agentSummary: string | null }>;
+  loopUrl: string;
+  loopToken: string;
   meta: {
-    templateId: string
-    templateSlug: string
-    versionId: string
-    versionNumber: number
-  }
+    templateId: string;
+    templateSlug: string;
+    versionId: string;
+    versionNumber: number;
+  };
 }
 ```
 
@@ -789,16 +797,9 @@ Add the `buildHydrationContext` function that assembles full context for Handleb
 **Full implementation:**
 
 ```typescript
-import { eq, and, ne, isNull } from 'drizzle-orm'
-import {
-  issues,
-  projects,
-  goals,
-  issueLabels,
-  labels,
-  issueRelations,
-} from '../db/schema'
-import type { AnyDb } from '../types'
+import { eq, and, ne, isNull } from 'drizzle-orm';
+import { issues, projects, goals, issueLabels, labels, issueRelations } from '../db/schema';
+import type { AnyDb } from '../types';
 
 /**
  * Assemble full context for Handlebars hydration.
@@ -833,12 +834,7 @@ export async function buildHydrationContext(
       })
       .from(issueRelations)
       .innerJoin(issues, eq(issueRelations.relatedIssueId, issues.id))
-      .where(
-        and(
-          eq(issueRelations.issueId, issue.id),
-          eq(issueRelations.type, 'blocks')
-        )
-      ),
+      .where(and(eq(issueRelations.issueId, issue.id), eq(issueRelations.type, 'blocks'))),
 
     // BlockedBy: issues blocking this issue
     db
@@ -849,13 +845,8 @@ export async function buildHydrationContext(
       })
       .from(issueRelations)
       .innerJoin(issues, eq(issueRelations.relatedIssueId, issues.id))
-      .where(
-        and(
-          eq(issueRelations.issueId, issue.id),
-          eq(issueRelations.type, 'blocked_by')
-        )
-      ),
-  ])
+      .where(and(eq(issueRelations.issueId, issue.id), eq(issueRelations.type, 'blocked_by'))),
+  ]);
 
   // Parallel query group 2: siblings/children, project, goal
   const [siblingsOrChildren, projectResult] = await Promise.all([
@@ -880,32 +871,29 @@ export async function buildHydrationContext(
     issue.projectId
       ? db.select().from(projects).where(eq(projects.id, issue.projectId))
       : Promise.resolve([]),
-  ])
+  ]);
 
-  const parent = parentResult[0] ?? null
-  const project = projectResult[0] ?? null
+  const parent = parentResult[0] ?? null;
+  const project = projectResult[0] ?? null;
 
   // Goal (if project found)
-  let goal = null
+  let goal = null;
   if (project) {
-    const [goalResult] = await db
-      .select()
-      .from(goals)
-      .where(eq(goals.projectId, project.id))
-    goal = goalResult ?? null
+    const [goalResult] = await db.select().from(goals).where(eq(goals.projectId, project.id));
+    goal = goalResult ?? null;
   }
 
   // Previous sessions: extract from the issue itself for MVP
-  const previousSessions: Array<{ status: string; agentSummary: string | null }> = []
+  const previousSessions: Array<{ status: string; agentSummary: string | null }> = [];
   if (issue.agentSummary) {
     previousSessions.push({
       status: issue.status,
       agentSummary: issue.agentSummary,
-    })
+    });
   }
 
-  const siblings = issue.parentId ? siblingsOrChildren : []
-  const children = issue.parentId ? [] : siblingsOrChildren
+  const siblings = issue.parentId ? siblingsOrChildren : [];
+  const children = issue.parentId ? [] : siblingsOrChildren;
 
   return {
     issue: issue as unknown as Record<string, unknown>,
@@ -926,7 +914,7 @@ export async function buildHydrationContext(
       versionId: version.id,
       versionNumber: version.version,
     },
-  }
+  };
 }
 ```
 
@@ -951,7 +939,7 @@ Add this validation after `const isFirstVersion = template.activeVersionId === n
 if (body.content.includes('{{{')) {
   throw new HTTPException(422, {
     message: 'Template content must not contain triple-braces ({{{...}}}). Use {{...}} instead.',
-  })
+  });
 }
 ```
 
@@ -975,7 +963,7 @@ import {
   hydrateTemplate,
   initHandlebars,
   type HydrationContext,
-} from '../lib/prompt-engine'
+} from '../lib/prompt-engine';
 
 const mockContext: HydrationContext = {
   issue: { id: 'iss_1', title: 'Test Issue', number: 42, type: 'task', parentId: null },
@@ -996,26 +984,26 @@ const mockContext: HydrationContext = {
     versionId: 'ver_1',
     versionNumber: 1,
   },
-}
+};
 
 describe('hydrateTemplate', () => {
   it('injects issue variables', () => {
-    const result = hydrateTemplate('v_inject', '# {{issue.title}}', mockContext)
-    expect(result).toBe('# Test Issue')
-  })
+    const result = hydrateTemplate('v_inject', '# {{issue.title}}', mockContext);
+    expect(result).toBe('# Test Issue');
+  });
 
   it('renders conditional sections only when present', () => {
-    const template = '{{#if parent}}Parent: {{parent.title}}{{/if}}No parent'
-    const result = hydrateTemplate('v_cond', template, mockContext)
-    expect(result).toBe('No parent')
+    const template = '{{#if parent}}Parent: {{parent.title}}{{/if}}No parent';
+    const result = hydrateTemplate('v_cond', template, mockContext);
+    expect(result).toBe('No parent');
 
     const withParent: HydrationContext = {
       ...mockContext,
       parent: { title: 'Parent Task', number: 1 },
-    }
-    const result2 = hydrateTemplate('v_cond2', template, withParent)
-    expect(result2).toBe('Parent: Parent TaskNo parent')
-  })
+    };
+    const result2 = hydrateTemplate('v_cond2', template, withParent);
+    expect(result2).toBe('Parent: Parent TaskNo parent');
+  });
 
   it('iterates with each loops', () => {
     const ctx: HydrationContext = {
@@ -1024,48 +1012,46 @@ describe('hydrateTemplate', () => {
         { number: 1, status: 'todo', title: 'Sibling A' },
         { number: 2, status: 'done', title: 'Sibling B' },
       ] as Record<string, unknown>[],
-    }
-    const template = '{{#each siblings}}#{{this.number}} {{/each}}'
-    const result = hydrateTemplate('v_each', template, ctx)
-    expect(result).toBe('#1 #2 ')
-  })
+    };
+    const template = '{{#each siblings}}#{{this.number}} {{/each}}';
+    const result = hydrateTemplate('v_each', template, ctx);
+    expect(result).toBe('#1 #2 ');
+  });
 
   it('renders json helper', () => {
     const ctx: HydrationContext = {
       ...mockContext,
       issue: { ...mockContext.issue, signalPayload: { key: 'value' } },
-    }
-    const template = '{{json issue.signalPayload}}'
-    const result = hydrateTemplate('v_json', template, ctx)
-    expect(result).toContain('"key": "value"')
-  })
+    };
+    const template = '{{json issue.signalPayload}}';
+    const result = hydrateTemplate('v_json', template, ctx);
+    expect(result).toContain('"key": "value"');
+  });
 
   it('renders partials', () => {
-    const template = '{{> sibling_context}}'
+    const template = '{{> sibling_context}}';
     const ctx: HydrationContext = {
       ...mockContext,
-      siblings: [
-        { number: 10, status: 'todo', title: 'Sib' },
-      ] as Record<string, unknown>[],
-    }
-    const result = hydrateTemplate('v_partial', template, ctx)
-    expect(result).toContain('#10')
-    expect(result).toContain('Sib')
-  })
+      siblings: [{ number: 10, status: 'todo', title: 'Sib' }] as Record<string, unknown>[],
+    };
+    const result = hydrateTemplate('v_partial', template, ctx);
+    expect(result).toContain('#10');
+    expect(result).toContain('Sib');
+  });
 
   it('renders without error when optional context is null/empty', () => {
-    const template = '{{#if parent}}{{parent.title}}{{/if}}{{#if goal}}{{goal.title}}{{/if}}OK'
-    const result = hydrateTemplate('v_missing', template, mockContext)
-    expect(result).toBe('OK')
-  })
+    const template = '{{#if parent}}{{parent.title}}{{/if}}{{#if goal}}{{goal.title}}{{/if}}OK';
+    const result = hydrateTemplate('v_missing', template, mockContext);
+    expect(result).toBe('OK');
+  });
 
   it('returns cached compiled template on second call', () => {
-    const content = 'Hello {{issue.title}}'
-    const compiled1 = compileTemplate('v_cache_test', content)
-    const compiled2 = compileTemplate('v_cache_test', content)
-    expect(compiled1).toBe(compiled2) // Same reference = cache hit
-  })
-})
+    const content = 'Hello {{issue.title}}';
+    const compiled1 = compileTemplate('v_cache_test', content);
+    const compiled2 = compileTemplate('v_cache_test', content);
+    expect(compiled1).toBe(compiled2); // Same reference = cache hit
+  });
+});
 ```
 
 **Verification:** `npx vitest run apps/api/src/__tests__/prompt-engine.test.ts` — all tests pass (both selection and hydration).
@@ -1083,14 +1069,17 @@ describe('hydrateTemplate', () => {
 Generate a custom migration file and populate it with seed SQL for all 5 default templates and their initial versions.
 
 **Step 1:** Generate the empty migration:
+
 ```bash
 cd apps/api && npx drizzle-kit generate --custom
 ```
+
 This creates a timestamped migration file. Rename it or note the filename.
 
 **Step 2:** Write the migration SQL. The file must contain INSERT statements for 5 templates and 5 versions with ON CONFLICT for idempotency.
 
 **Template IDs (stable, hard-coded):**
+
 - `tpl_default_signal_triage` / `ver_default_signal_triage_v1`
 - `tpl_default_hypothesis_planning` / `ver_default_hypothesis_planning_v1`
 - `tpl_default_task_execution` / `ver_default_task_execution_v1`
@@ -1263,6 +1252,7 @@ Implement the dispatch route handler with two endpoints:
 **`GET /dispatch/next` — Claim highest-priority unblocked issue + hydrated prompt:**
 
 Flow:
+
 1. Get `db` from Hono context
 2. Read optional `project` query param
 3. Begin database transaction
@@ -1322,6 +1312,7 @@ RETURNING issues.*
 **`GET /dispatch/queue` — Preview dispatch queue with scores (no claim):**
 
 Flow:
+
 1. Read optional `project`, `limit` (1-200, default 50), `offset` (default 0) query params
 2. Same filtering as `/next` (status='todo', not deleted, not blocked) — but using Drizzle query builder
 3. Score each issue using `scoreIssue()` from `priority-scoring.ts`
@@ -1348,17 +1339,17 @@ Add the template preview endpoint to the existing template routes. This allows d
 ```typescript
 /** GET /preview/:issueId — Preview template selection + hydration for an issue. */
 templateRoutes.get('/preview/:issueId', async (c) => {
-  const db = c.get('db')
-  const issueId = c.req.param('issueId')
+  const db = c.get('db');
+  const issueId = c.req.param('issueId');
 
   // 1. Fetch issue by ID (404 if not found or deleted)
   const [issue] = await db
     .select()
     .from(issues)
-    .where(and(eq(issues.id, issueId), isNull(issues.deletedAt)))
+    .where(and(eq(issues.id, issueId), isNull(issues.deletedAt)));
 
   if (!issue) {
-    throw new HTTPException(404, { message: 'Issue not found' })
+    throw new HTTPException(404, { message: 'Issue not found' });
   }
 
   // 2. Build IssueContext from issue
@@ -1369,13 +1360,13 @@ templateRoutes.get('/preview/:issueId', async (c) => {
     projectId: issue.projectId,
     hasFailedSessions: issue.agentSummary !== null,
     hypothesisConfidence: issue.hypothesis?.confidence ?? null,
-  }
+  };
 
   // 3. Fetch all non-deleted templates with active versions
   const allTemplates = await db
     .select()
     .from(promptTemplates)
-    .where(isNull(promptTemplates.deletedAt))
+    .where(isNull(promptTemplates.deletedAt));
 
   const candidates: TemplateCandidate[] = allTemplates.map((t) => ({
     id: t.id,
@@ -1384,15 +1375,16 @@ templateRoutes.get('/preview/:issueId', async (c) => {
     specificity: t.specificity,
     projectId: t.projectId,
     activeVersionId: t.activeVersionId,
-  }))
+  }));
 
   // 4. Select template with fallback
-  let selected = selectTemplate(candidates, issueContext)
+  let selected = selectTemplate(candidates, issueContext);
   if (!selected) {
     // Fallback: look for default template matching issue type
-    selected = candidates.find(
-      (t) => (t.conditions as TemplateConditions).type === issue.type && t.activeVersionId
-    ) ?? null
+    selected =
+      candidates.find(
+        (t) => (t.conditions as TemplateConditions).type === issue.type && t.activeVersionId
+      ) ?? null;
   }
 
   // 5. No template found
@@ -1403,14 +1395,14 @@ templateRoutes.get('/preview/:issueId', async (c) => {
       version: null,
       prompt: null,
       message: 'No matching template found',
-    })
+    });
   }
 
   // 6. Fetch version, build context, hydrate
   const [version] = await db
     .select()
     .from(promptVersions)
-    .where(eq(promptVersions.id, selected.activeVersionId))
+    .where(eq(promptVersions.id, selected.activeVersionId));
 
   if (!version) {
     return c.json({
@@ -1419,13 +1411,16 @@ templateRoutes.get('/preview/:issueId', async (c) => {
       version: null,
       prompt: null,
       message: 'Active version not found',
-    })
+    });
   }
 
   const hydrationContext = await buildHydrationContext(
-    db, issue, { id: selected.id, slug: selected.slug }, { id: version.id, version: version.version }
-  )
-  const prompt = hydrateTemplate(version.id, version.content, hydrationContext)
+    db,
+    issue,
+    { id: selected.id, slug: selected.slug },
+    { id: version.id, version: version.version }
+  );
+  const prompt = hydrateTemplate(version.id, version.content, hydrationContext);
 
   // 7. Return preview
   return c.json({
@@ -1439,13 +1434,14 @@ templateRoutes.get('/preview/:issueId', async (c) => {
     },
     version: { id: version.id, version: version.version },
     prompt,
-  })
-})
+  });
+});
 ```
 
 **Required imports to add to templates.ts:**
+
 ```typescript
-import { issues } from '../db/schema'
+import { issues } from '../db/schema';
 import {
   selectTemplate,
   matchesConditions,
@@ -1454,7 +1450,7 @@ import {
   type IssueContext,
   type TemplateCandidate,
   type TemplateConditions,
-} from '../lib/prompt-engine'
+} from '../lib/prompt-engine';
 ```
 
 **Verification:** `GET /api/templates/preview/:issueId` returns template + hydrated prompt for a valid issue, or 404 for missing issues.
@@ -1472,13 +1468,15 @@ Mount the dispatch routes on the authenticated API group.
 **Changes to app.ts:**
 
 1. Add import:
+
 ```typescript
-import { dispatchRoutes } from './routes/dispatch'
+import { dispatchRoutes } from './routes/dispatch';
 ```
 
 2. Add route mount after the existing route registrations (after `api.route('/prompt-reviews', promptReviewRoutes)`):
+
 ```typescript
-api.route('/dispatch', dispatchRoutes)
+api.route('/dispatch', dispatchRoutes);
 ```
 
 **Verification:** `GET /api/dispatch/next` and `GET /api/dispatch/queue` are accessible (with auth). `GET /api/templates/preview/:issueId` is accessible via existing template routes mount.
@@ -1496,24 +1494,27 @@ Replace the loose `z.record(z.string(), z.unknown())` conditions validation with
 **Changes:**
 
 1. Add import:
+
 ```typescript
-import { TemplateConditionsSchema } from '../lib/prompt-engine'
+import { TemplateConditionsSchema } from '../lib/prompt-engine';
 ```
 
 2. In `createTemplateSchema`, replace:
+
 ```typescript
 // BEFORE:
-conditions: z.record(z.string(), z.unknown()).default({})
+conditions: z.record(z.string(), z.unknown()).default({});
 // AFTER:
-conditions: TemplateConditionsSchema.default({})
+conditions: TemplateConditionsSchema.default({});
 ```
 
 3. In `updateTemplateSchema`, replace:
+
 ```typescript
 // BEFORE:
-conditions: z.record(z.string(), z.unknown()).optional()
+conditions: z.record(z.string(), z.unknown()).optional();
 // AFTER:
-conditions: TemplateConditionsSchema.optional()
+conditions: TemplateConditionsSchema.optional();
 ```
 
 **Verification:** Creating a template with `{ conditions: { type: "signal" } }` succeeds. Creating with `{ conditions: { unknownKey: "value" } }` returns 422 (rejected by `.strict()`).
@@ -1572,40 +1573,41 @@ Replace the current simple average review score calculation with Exponentially W
 
 ```typescript
 /** EWMA smoothing factor — higher = more weight on recent reviews */
-export const EWMA_ALPHA = 0.3
+export const EWMA_ALPHA = 0.3;
 
 /** Score threshold below which improvement issue is triggered */
-export const REVIEW_SCORE_THRESHOLD = 3.5
+export const REVIEW_SCORE_THRESHOLD = 3.5;
 
 /** Review count threshold that also triggers improvement */
-export const REVIEW_COUNT_THRESHOLD = 15
+export const REVIEW_COUNT_THRESHOLD = 15;
 
 /** Minimum number of reviews before thresholds are checked */
-export const REVIEW_MIN_SAMPLES = 3
+export const REVIEW_MIN_SAMPLES = 3;
 ```
 
 **Replace the existing score calculation block** (the `scoreResult` + `reviewScore` + update section) with:
 
 ```typescript
 // Compute composite score for this review
-const composite = (body.clarity + body.completeness + body.relevance) / 3
+const composite = (body.clarity + body.completeness + body.relevance) / 3;
 
 // Fetch current version with its review score
 const [currentVersion] = await db
   .select()
   .from(promptVersions)
-  .where(eq(promptVersions.id, body.versionId))
+  .where(eq(promptVersions.id, body.versionId));
 
 // EWMA update
-const newScore = currentVersion.reviewScore === null
-  ? composite
-  : EWMA_ALPHA * composite + (1 - EWMA_ALPHA) * currentVersion.reviewScore
+const newScore =
+  currentVersion.reviewScore === null
+    ? composite
+    : EWMA_ALPHA * composite + (1 - EWMA_ALPHA) * currentVersion.reviewScore;
 
 // Update version with new EWMA score
 await db
   .update(promptVersions)
   .set({ reviewScore: newScore })
-  .where(eq(promptVersions.id, body.versionId))
+  .where(eq(promptVersions.id, body.versionId));
 ```
 
 **Remove** the old `avg()` subquery computation entirely — it is replaced by the EWMA calculation above.
@@ -1625,30 +1627,29 @@ Add the prompt improvement loop trigger that auto-creates improvement issues whe
 **Code to add after the EWMA score update in the POST handler:**
 
 ```typescript
-import { count } from 'drizzle-orm'
-import { promptTemplates, issues, labels, issueLabels } from '../db/schema'
+import { count } from 'drizzle-orm';
+import { promptTemplates, issues, labels, issueLabels } from '../db/schema';
 
 // Count reviews for this version
 const [{ count: reviewCount }] = await db
   .select({ count: count() })
   .from(promptReviews)
-  .where(eq(promptReviews.versionId, body.versionId))
+  .where(eq(promptReviews.versionId, body.versionId));
 
 // Only check thresholds if minimum samples met
 if (Number(reviewCount) >= REVIEW_MIN_SAMPLES) {
   const shouldCreateIssue =
-    newScore < REVIEW_SCORE_THRESHOLD ||
-    Number(reviewCount) >= REVIEW_COUNT_THRESHOLD
+    newScore < REVIEW_SCORE_THRESHOLD || Number(reviewCount) >= REVIEW_COUNT_THRESHOLD;
 
   if (shouldCreateIssue) {
     // Fetch the template for this version
     const [template] = await db
       .select()
       .from(promptTemplates)
-      .where(eq(promptTemplates.id, currentVersion.templateId))
+      .where(eq(promptTemplates.id, currentVersion.templateId));
 
     // Check if an improvement issue already exists (prevent duplicates)
-    const existingImprovementTitle = `Improve prompt template: ${template.slug}`
+    const existingImprovementTitle = `Improve prompt template: ${template.slug}`;
     const [existingIssue] = await db
       .select({ id: issues.id })
       .from(issues)
@@ -1658,32 +1659,35 @@ if (Number(reviewCount) >= REVIEW_MIN_SAMPLES) {
           sql`${issues.status} NOT IN ('done', 'canceled')`,
           isNull(issues.deletedAt)
         )
-      )
+      );
 
     if (!existingIssue) {
       // Auto-create improvement issue
-      const [improvementIssue] = await db.insert(issues).values({
-        title: `Improve prompt template: ${template.slug} (avg review ${newScore.toFixed(1)}/5, ${reviewCount} reviews since v${currentVersion.version})`,
-        type: 'task',
-        status: 'todo',
-        priority: 3, // medium
-        description: [
-          `## Prompt Improvement Required`,
-          ``,
-          `Template **${template.slug}** (${template.name}) has degraded quality.`,
-          ``,
-          `- EWMA Score: ${newScore.toFixed(2)}/5`,
-          `- Review Count: ${reviewCount}`,
-          `- Version: v${currentVersion.version}`,
-          `- Version ID: ${currentVersion.id}`,
-          ``,
-          `## Action Required`,
-          ``,
-          `1. Review recent feedback on this template`,
-          `2. Create a new version addressing the issues`,
-          `3. Promote the new version to active`,
-        ].join('\n'),
-      }).returning()
+      const [improvementIssue] = await db
+        .insert(issues)
+        .values({
+          title: `Improve prompt template: ${template.slug} (avg review ${newScore.toFixed(1)}/5, ${reviewCount} reviews since v${currentVersion.version})`,
+          type: 'task',
+          status: 'todo',
+          priority: 3, // medium
+          description: [
+            `## Prompt Improvement Required`,
+            ``,
+            `Template **${template.slug}** (${template.name}) has degraded quality.`,
+            ``,
+            `- EWMA Score: ${newScore.toFixed(2)}/5`,
+            `- Review Count: ${reviewCount}`,
+            `- Version: v${currentVersion.version}`,
+            `- Version ID: ${currentVersion.id}`,
+            ``,
+            `## Action Required`,
+            ``,
+            `1. Review recent feedback on this template`,
+            `2. Create a new version addressing the issues`,
+            `3. Promote the new version to active`,
+          ].join('\n'),
+        })
+        .returning();
 
       // Create/find "prompt-improvement" and "meta" labels, link to issue
       for (const labelName of ['prompt-improvement', 'meta']) {
@@ -1691,16 +1695,19 @@ if (Number(reviewCount) >= REVIEW_MIN_SAMPLES) {
           sql`INSERT INTO labels (id, name, color, created_at)
               VALUES (${`lbl_${labelName}`}, ${labelName}, ${labelName === 'meta' ? '#6b7280' : '#f59e0b'}, NOW())
               ON CONFLICT (name) DO NOTHING`
-        )
+        );
         const [label] = await db
           .select({ id: labels.id })
           .from(labels)
-          .where(eq(labels.name, labelName))
+          .where(eq(labels.name, labelName));
         if (label) {
-          await db.insert(issueLabels).values({
-            issueId: improvementIssue.id,
-            labelId: label.id,
-          }).onConflictDoNothing()
+          await db
+            .insert(issueLabels)
+            .values({
+              issueId: improvementIssue.id,
+              labelId: label.id,
+            })
+            .onConflictDoNothing();
         }
       }
     }
@@ -1709,9 +1716,10 @@ if (Number(reviewCount) >= REVIEW_MIN_SAMPLES) {
 ```
 
 **Required additional imports:**
+
 ```typescript
-import { and, isNull, sql } from 'drizzle-orm'
-import { promptTemplates, issues, labels, issueLabels } from '../db/schema'
+import { and, isNull, sql } from 'drizzle-orm';
+import { promptTemplates, issues, labels, issueLabels } from '../db/schema';
 ```
 
 **Verification:** Submitting 3+ low-score reviews triggers automatic improvement issue creation. Duplicate prevention works (no second issue created). Below REVIEW_MIN_SAMPLES, no issue created.
@@ -1733,7 +1741,7 @@ Write integration tests for the enhanced prompt review system.
    - Submit review (clarity=4, completeness=5, relevance=3) -> composite = 4.0
    - Verify version.reviewScore = 4.0 (first review, set directly)
    - Submit second review (clarity=2, completeness=2, relevance=2) -> composite = 2.0
-   - Verify version.reviewScore = 0.3 * 2.0 + 0.7 * 4.0 = 3.4
+   - Verify version.reviewScore = 0.3 _ 2.0 + 0.7 _ 4.0 = 3.4
 
 2. **Improvement issue auto-creation:**
    - Submit 3 reviews with low scores (all 2/5)
@@ -1777,6 +1785,7 @@ npm run format:check
 ```
 
 **Expected results:**
+
 - All existing Phase 1 tests still pass (no regressions)
 - All new Phase 2 tests pass (priority-scoring, prompt-engine, dispatch, prompt-reviews)
 - TypeScript reports zero errors
@@ -1791,12 +1800,12 @@ npm run format:check
 
 ## Summary
 
-| Phase | Tasks | New Files | Modified Files |
-|-------|-------|-----------|----------------|
-| A: Pure Functions | 1.1-1.5 | priority-scoring.ts, prompt-engine.ts (partial), 2 test files | package.json |
-| B: Handlebars | 2.1-2.5 | partials.ts | prompt-engine.ts, templates.ts, prompt-engine.test.ts |
-| C: Migration | 3.1 | 0002_seed_default_templates.sql | — |
-| D: Dispatch | 4.1-4.5 | dispatch.ts, dispatch.test.ts | app.ts, templates.ts |
-| E: Reviews | 5.1-5.3 | prompt-reviews.test.ts | prompt-reviews.ts |
-| F: Verify | 6.1 | — | — |
-| **Total** | **18** | **8** | **4** |
+| Phase             | Tasks   | New Files                                                     | Modified Files                                        |
+| ----------------- | ------- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| A: Pure Functions | 1.1-1.5 | priority-scoring.ts, prompt-engine.ts (partial), 2 test files | package.json                                          |
+| B: Handlebars     | 2.1-2.5 | partials.ts                                                   | prompt-engine.ts, templates.ts, prompt-engine.test.ts |
+| C: Migration      | 3.1     | 0002_seed_default_templates.sql                               | —                                                     |
+| D: Dispatch       | 4.1-4.5 | dispatch.ts, dispatch.test.ts                                 | app.ts, templates.ts                                  |
+| E: Reviews        | 5.1-5.3 | prompt-reviews.test.ts                                        | prompt-reviews.ts                                     |
+| F: Verify         | 6.1     | —                                                             | —                                                     |
+| **Total**         | **18**  | **8**                                                         | **4**                                                 |

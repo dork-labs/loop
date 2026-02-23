@@ -20,6 +20,7 @@ Building `@dork-labs/loop-sdk` as a hand-written, class-based SDK following the 
 Both are Stainless-generated but their architecture is now the canonical pattern regardless of generation:
 
 **Class hierarchy:**
+
 ```
 LoopClient (root client)
   ├── issues: IssuesResource extends BaseResource
@@ -33,33 +34,37 @@ LoopClient (root client)
 ```
 
 **`BaseResource` provides:**
+
 - Reference back to the root client (for config, HTTP client access)
 - URL construction from the base path
 - The `_request()` method shared by all resources
 - Attachment of pagination helpers when response is a list type
 
 **Namespacing on the client:**
+
 ```typescript
 // Stripe's approach — instantiate resources in the constructor, assign as properties
 class LoopClient {
-  readonly issues: IssuesResource
-  readonly projects: ProjectsResource
+  readonly issues: IssuesResource;
+  readonly projects: ProjectsResource;
   // ...
 
   constructor(config: LoopClientConfig) {
-    this.issues = new IssuesResource(this)
-    this.projects = new ProjectsResource(this)
+    this.issues = new IssuesResource(this);
+    this.projects = new ProjectsResource(this);
     // ...
   }
 }
 ```
 
 **Per-request options** flow through a second argument on every method:
+
 ```typescript
-await client.issues.list({ status: 'triage' }, { timeout: 5000, idempotencyKey: 'abc' })
+await client.issues.list({ status: 'triage' }, { timeout: 5000, idempotencyKey: 'abc' });
 ```
 
 **Error hierarchy:**
+
 ```
 LoopError (base)
   LoopAPIError (HTTP errors with status code)
@@ -94,6 +99,7 @@ const all = await client.issues.listAll({ status: 'triage' });
 ```
 
 Implementation of `iter()`:
+
 ```typescript
 async *iter(params: ListIssuesParams): AsyncGenerator<Issue> {
   let offset = 0;
@@ -111,6 +117,7 @@ Loop's current API uses offset-based pagination (`limit` + `offset` query params
 ### 3. Retry Logic — Exponential Backoff with Jitter
 
 Standard pattern across all major SDKs:
+
 - Default: 2 retries (3 total attempts)
 - Retry on: connection errors, 408, 429, 500, 502, 503, 504
 - Do NOT retry on: 400, 401, 403, 404, 422 (these are deterministic failures)
@@ -120,11 +127,11 @@ Standard pattern across all major SDKs:
 ```typescript
 const DEFAULT_RETRY_CONFIG = {
   maxRetries: 2,
-  initialDelay: 500,    // ms
-  maxDelay: 30_000,     // ms
-  jitter: 200,          // ms
+  initialDelay: 500, // ms
+  maxDelay: 30_000, // ms
+  jitter: 200, // ms
   retryableStatuses: [408, 429, 500, 502, 503, 504],
-} as const
+} as const;
 ```
 
 The existing MCP package's `client.ts` uses `ky.create()` with `retry: { limit: 2, statusCodes: [429, 500, 503] }`. The SDK should use the same `ky` dependency and similar config, or re-implement with native fetch if zero-dep is required.
@@ -132,6 +139,7 @@ The existing MCP package's `client.ts` uses `ky.create()` with `retry: { limit: 
 ### 4. Idempotency Keys
 
 The Stripe pattern is the reference:
+
 - Idempotency keys are passed per-request in the options object
 - For POST mutations, callers pass `{ idempotencyKey: 'uuid' }`
 - The SDK sends this as the `Idempotency-Key` HTTP header
@@ -143,15 +151,15 @@ The Stripe pattern is the reference:
 await client.issues.create(
   { title: 'Bug: sign-up broken', type: 'task' },
   { idempotencyKey: crypto.randomUUID() }
-)
+);
 
 // SDK implementation
 this._client.fetch(url, {
   method: 'POST',
   headers: {
     'Idempotency-Key': options.idempotencyKey,
-  }
-})
+  },
+});
 ```
 
 ### 5. HTTP Client Strategy — ky vs Native Fetch
@@ -159,11 +167,13 @@ this._client.fetch(url, {
 The existing MCP package uses `ky`. The SDK has two defensible choices:
 
 **Option A: Use `ky` (1 dependency, ~10KB)**
+
 - Pros: Already in the monorepo, retry built-in, timeout built-in, clean API, works in Node 18+, Deno, Bun, browsers, Cloudflare Workers
 - Cons: One dependency (violates "zero-dep" goal strictly)
 - Best for: consistency with existing packages
 
 **Option B: Native `fetch` with hand-rolled retry (~0 dependencies)**
+
 - Pros: True zero-dep, works in any runtime with `fetch` (Node 18+, all edge runtimes)
 - Cons: More code to write and maintain (~80 lines of retry/timeout logic)
 - Best for: maximum portability and bundle-size sensitivity
@@ -178,22 +188,23 @@ The 2025 industry standard for TypeScript library publishing:
 
 ```typescript
 // tsup.config.ts
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
-  dts: true,               // generate .d.ts declarations
+  dts: true, // generate .d.ts declarations
   clean: true,
   sourcemap: true,
-  splitting: false,        // keep it simple for a small SDK
+  splitting: false, // keep it simple for a small SDK
   outExtension({ format }) {
-    return { js: format === 'esm' ? '.mjs' : '.cjs' }
+    return { js: format === 'esm' ? '.mjs' : '.cjs' };
   },
-})
+});
 ```
 
 **`package.json` exports field:**
+
 ```json
 {
   "name": "@dork-labs/loop-sdk",
@@ -228,14 +239,15 @@ Loop's API routes already define Zod schemas for all request/response shapes. Th
 
 ### 8. SDK Generator Comparison (Stainless, Fern, Speakeasy, hey-api)
 
-| Generator | TypeScript Quality | OpenAPI Fidelity | Requires Custom Config | Self-hostable |
-|-----------|-------------------|------------------|----------------------|---------------|
-| Stainless | Excellent | Partial (prefers its own format) | Yes — needs Stainless config | No — cloud-only |
-| Fern | Excellent, "hand-written feel" | Full OpenAPI support | Minimal | Yes |
-| Speakeasy | Good | Full OpenAPI | Yes | Yes (binary) |
-| hey-api/openapi-ts | Good for types, minimal for client features | Full | Minimal | Yes |
+| Generator          | TypeScript Quality                          | OpenAPI Fidelity                 | Requires Custom Config       | Self-hostable   |
+| ------------------ | ------------------------------------------- | -------------------------------- | ---------------------------- | --------------- |
+| Stainless          | Excellent                                   | Partial (prefers its own format) | Yes — needs Stainless config | No — cloud-only |
+| Fern               | Excellent, "hand-written feel"              | Full OpenAPI support             | Minimal                      | Yes             |
+| Speakeasy          | Good                                        | Full OpenAPI                     | Yes                          | Yes (binary)    |
+| hey-api/openapi-ts | Good for types, minimal for client features | Full                             | Minimal                      | Yes             |
 
 **For Loop:**
+
 - Stainless powers OpenAI's SDK and would produce the best output, but requires Loop to maintain a Stainless config alongside the OpenAPI spec, and has cloud-dependency
 - Fern would also produce excellent output with less lock-in, but adds ongoing generation CI complexity
 - **Neither is worth it for Loop's current API size.** The total SDK is ~800-1200 lines of TypeScript across 10-12 files. Hand-writing is faster and produces a more idiomatic result tailored to Loop's specific patterns (dispatch, signals) that no generator will handle well without custom templates
@@ -249,6 +261,7 @@ Loop's API routes already define Zod schemas for all request/response shapes. Th
 Write all resource classes, types, HTTP logic, retry, and pagination by hand following the Stripe/OpenAI pattern.
 
 **Pros:**
+
 - Full control over API ergonomics
 - Loop-specific idioms are natural (dispatch.next() with its complex response shape)
 - No generation step, no CI complexity
@@ -257,6 +270,7 @@ Write all resource classes, types, HTTP logic, retry, and pagination by hand fol
 - Consistent with existing MCP package patterns (which is hand-written)
 
 **Cons:**
+
 - When the API adds endpoints, the SDK must be manually updated
 - Initial investment: ~2-3 days of focused work
 - Risk of types drifting from API reality if not disciplined
@@ -272,12 +286,14 @@ Write all resource classes, types, HTTP logic, retry, and pagination by hand fol
 Use `hey-api/openapi-ts` or Fern to generate types and client from `/api/openapi.json`.
 
 **Pros:**
+
 - API changes propagate automatically when generation runs
 - Zero manual type maintenance
 - `hey-api/openapi-ts` generates TanStack Query hooks too (useful for the app)
 - Fern produces genuinely good TypeScript
 
 **Cons:**
+
 - Generation step must run in CI when API changes — adds workflow complexity
 - Generated types include everything, even internal-only fields
 - The dispatch endpoint's response (`{ issue, prompt, meta }`) requires custom handling that generators won't get right without templates
@@ -296,12 +312,14 @@ Use `hey-api/openapi-ts` or Fern to generate types and client from `/api/openapi
 Write the client class and resource methods by hand. Extract types from existing Zod schemas in the API routes (or a shared package) rather than duplicating them.
 
 **Pros:**
+
 - Zod schemas are the source of truth — types cannot drift
 - Client design is fully hand-controlled (same ergonomic benefits as Approach 1)
 - When an API schema changes, the TypeScript compiler enforces SDK type updates
 - Enables runtime validation in the SDK if desired (parse responses through Zod)
 
 **Cons:**
+
 - Requires creating `packages/types` or `packages/schemas` to share Zod schemas between API and SDK
 - Adds a monorepo package with its own tsconfig, build step, and publishing consideration
 - Zod as a peer dependency of the SDK increases install size (~13KB gzipped)
@@ -363,6 +381,7 @@ Write the client class and resource methods by hand. Extract types from existing
 **Published name:** `@dork-labs/loop-sdk`
 
 **Directory structure:**
+
 ```
 packages/sdk/
   src/
@@ -390,25 +409,26 @@ packages/sdk/
 ```
 
 **Core client shape:**
+
 ```typescript
 // packages/sdk/src/client.ts
 
 export interface LoopClientConfig {
-  apiKey: string
-  baseURL?: string       // default: 'https://api.looped.me'
-  maxRetries?: number    // default: 2
-  timeout?: number       // default: 30_000 ms
+  apiKey: string;
+  baseURL?: string; // default: 'https://api.looped.me'
+  maxRetries?: number; // default: 2
+  timeout?: number; // default: 30_000 ms
 }
 
 export class LoopClient {
-  readonly issues: IssuesResource
-  readonly projects: ProjectsResource
-  readonly goals: GoalsResource
-  readonly labels: LabelsResource
-  readonly signals: SignalsResource
-  readonly templates: TemplatesResource
-  readonly dispatch: DispatchResource
-  readonly dashboard: DashboardResource
+  readonly issues: IssuesResource;
+  readonly projects: ProjectsResource;
+  readonly goals: GoalsResource;
+  readonly labels: LabelsResource;
+  readonly signals: SignalsResource;
+  readonly templates: TemplatesResource;
+  readonly dispatch: DispatchResource;
+  readonly dashboard: DashboardResource;
 
   constructor(config: LoopClientConfig) {
     // validate apiKey
@@ -419,15 +439,17 @@ export class LoopClient {
 ```
 
 **Per-request options:**
+
 ```typescript
 export interface RequestOptions {
-  timeout?: number
-  idempotencyKey?: string
-  signal?: AbortSignal     // for cancellation
+  timeout?: number;
+  idempotencyKey?: string;
+  signal?: AbortSignal; // for cancellation
 }
 ```
 
 **Dispatch resource (highest priority — this is Loop's killer feature):**
+
 ```typescript
 export class DispatchResource extends BaseResource {
   /**
@@ -445,18 +467,19 @@ export class DispatchResource extends BaseResource {
 ```
 
 **Error handling (consumer-facing):**
+
 ```typescript
-import { LoopClient, LoopNotFoundError, LoopRateLimitError } from '@dork-labs/loop-sdk'
+import { LoopClient, LoopNotFoundError, LoopRateLimitError } from '@dork-labs/loop-sdk';
 
 try {
-  const issue = await client.issues.get('nonexistent-id')
+  const issue = await client.issues.get('nonexistent-id');
 } catch (e) {
   if (e instanceof LoopNotFoundError) {
     // handle 404
   } else if (e instanceof LoopRateLimitError) {
-    console.log(`Rate limited. Retry after ${e.retryAfter}s`)
+    console.log(`Rate limited. Retry after ${e.retryAfter}s`);
   } else {
-    throw e
+    throw e;
   }
 }
 ```

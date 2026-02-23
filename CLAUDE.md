@@ -89,71 +89,71 @@ PostgreSQL via [Neon](https://neon.tech) serverless driver (production) or stand
 
 **Schema files:**
 
-| File | Tables |
-|------|--------|
-| `_helpers.ts` | Shared column helpers (`cuid2Id`, `timestamps`, `softDelete`) |
-| `issues.ts` | `issues`, `labels`, `issue_labels`, `issue_relations`, `comments` |
-| `projects.ts` | `projects`, `goals` |
-| `signals.ts` | `signals` |
-| `prompts.ts` | `prompt_templates`, `prompt_versions`, `prompt_reviews` |
+| File          | Tables                                                            |
+| ------------- | ----------------------------------------------------------------- |
+| `_helpers.ts` | Shared column helpers (`cuid2Id`, `timestamps`, `softDelete`)     |
+| `issues.ts`   | `issues`, `labels`, `issue_labels`, `issue_relations`, `comments` |
+| `projects.ts` | `projects`, `goals`                                               |
+| `signals.ts`  | `signals`                                                         |
+| `prompts.ts`  | `prompt_templates`, `prompt_versions`, `prompt_reviews`           |
 
 #### API Endpoints
 
 **Public (no auth):**
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check (`{ ok, service, timestamp }`) |
-| `GET` | `/` | Service info (`{ name, version }`) |
+| Method | Path      | Description                                 |
+| ------ | --------- | ------------------------------------------- |
+| `GET`  | `/health` | Health check (`{ ok, service, timestamp }`) |
+| `GET`  | `/`       | Service info (`{ name, version }`)          |
 
 **Protected (`/api/*` -- requires `Authorization: Bearer <LOOP_API_KEY>`):**
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/issues` | List issues (filterable by status, type, projectId; paginated) |
-| `POST` | `/api/issues` | Create an issue |
-| `GET` | `/api/issues/:id` | Get issue by ID with labels, relations, comments |
-| `PATCH` | `/api/issues/:id` | Update an issue |
-| `DELETE` | `/api/issues/:id` | Soft-delete an issue |
-| `POST` | `/api/issues/:id/relations` | Create a relation between two issues |
-| `GET` | `/api/issues/:id/comments` | List comments for an issue (threaded) |
-| `POST` | `/api/issues/:id/comments` | Add a comment to an issue |
-| `GET` | `/api/projects` | List projects (paginated) |
-| `POST` | `/api/projects` | Create a project |
-| `GET` | `/api/projects/:id` | Get project with goal and issue counts |
-| `PATCH` | `/api/projects/:id` | Update a project |
-| `DELETE` | `/api/projects/:id` | Soft-delete a project |
-| `GET` | `/api/goals` | List goals (paginated) |
-| `POST` | `/api/goals` | Create a goal |
-| `GET` | `/api/goals/:id` | Get goal by ID |
-| `PATCH` | `/api/goals/:id` | Update a goal |
-| `DELETE` | `/api/goals/:id` | Soft-delete a goal |
-| `GET` | `/api/labels` | List labels (paginated) |
-| `POST` | `/api/labels` | Create a label |
-| `DELETE` | `/api/labels/:id` | Soft-delete a label |
-| `DELETE` | `/api/relations/:id` | Hard-delete a relation |
-| `POST` | `/api/signals` | Ingest a signal (creates signal + linked issue) |
-| `GET` | `/api/templates` | List prompt templates (paginated) |
-| `POST` | `/api/templates` | Create a prompt template |
-| `GET` | `/api/templates/:id` | Get template with active version |
-| `PATCH` | `/api/templates/:id` | Update a template |
-| `DELETE` | `/api/templates/:id` | Soft-delete a template |
-| `GET` | `/api/templates/:id/versions` | List versions for a template |
-| `POST` | `/api/templates/:id/versions` | Create a new version |
-| `POST` | `/api/templates/:id/versions/:versionId/promote` | Promote a version to active |
-| `GET` | `/api/templates/:id/reviews` | List reviews across all versions |
-| `POST` | `/api/prompt-reviews` | Create a prompt review |
-| `GET` | `/api/dashboard/stats` | System health metrics |
-| `GET` | `/api/dashboard/activity` | Signal chains for activity timeline |
-| `GET` | `/api/dashboard/prompts` | Template health with scores |
+| Method   | Path                                             | Description                                                    |
+| -------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| `GET`    | `/api/issues`                                    | List issues (filterable by status, type, projectId; paginated) |
+| `POST`   | `/api/issues`                                    | Create an issue                                                |
+| `GET`    | `/api/issues/:id`                                | Get issue by ID with labels, relations, comments               |
+| `PATCH`  | `/api/issues/:id`                                | Update an issue                                                |
+| `DELETE` | `/api/issues/:id`                                | Soft-delete an issue                                           |
+| `POST`   | `/api/issues/:id/relations`                      | Create a relation between two issues                           |
+| `GET`    | `/api/issues/:id/comments`                       | List comments for an issue (threaded)                          |
+| `POST`   | `/api/issues/:id/comments`                       | Add a comment to an issue                                      |
+| `GET`    | `/api/projects`                                  | List projects (paginated)                                      |
+| `POST`   | `/api/projects`                                  | Create a project                                               |
+| `GET`    | `/api/projects/:id`                              | Get project with goal and issue counts                         |
+| `PATCH`  | `/api/projects/:id`                              | Update a project                                               |
+| `DELETE` | `/api/projects/:id`                              | Soft-delete a project                                          |
+| `GET`    | `/api/goals`                                     | List goals (paginated)                                         |
+| `POST`   | `/api/goals`                                     | Create a goal                                                  |
+| `GET`    | `/api/goals/:id`                                 | Get goal by ID                                                 |
+| `PATCH`  | `/api/goals/:id`                                 | Update a goal                                                  |
+| `DELETE` | `/api/goals/:id`                                 | Soft-delete a goal                                             |
+| `GET`    | `/api/labels`                                    | List labels (paginated)                                        |
+| `POST`   | `/api/labels`                                    | Create a label                                                 |
+| `DELETE` | `/api/labels/:id`                                | Soft-delete a label                                            |
+| `DELETE` | `/api/relations/:id`                             | Hard-delete a relation                                         |
+| `POST`   | `/api/signals`                                   | Ingest a signal (creates signal + linked issue)                |
+| `GET`    | `/api/templates`                                 | List prompt templates (paginated)                              |
+| `POST`   | `/api/templates`                                 | Create a prompt template                                       |
+| `GET`    | `/api/templates/:id`                             | Get template with active version                               |
+| `PATCH`  | `/api/templates/:id`                             | Update a template                                              |
+| `DELETE` | `/api/templates/:id`                             | Soft-delete a template                                         |
+| `GET`    | `/api/templates/:id/versions`                    | List versions for a template                                   |
+| `POST`   | `/api/templates/:id/versions`                    | Create a new version                                           |
+| `POST`   | `/api/templates/:id/versions/:versionId/promote` | Promote a version to active                                    |
+| `GET`    | `/api/templates/:id/reviews`                     | List reviews across all versions                               |
+| `POST`   | `/api/prompt-reviews`                            | Create a prompt review                                         |
+| `GET`    | `/api/dashboard/stats`                           | System health metrics                                          |
+| `GET`    | `/api/dashboard/activity`                        | Signal chains for activity timeline                            |
+| `GET`    | `/api/dashboard/prompts`                         | Template health with scores                                    |
 
 **Webhooks (`/api/signals/*` -- provider-specific auth, not Bearer token):**
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/api/signals/posthog` | `POSTHOG_WEBHOOK_SECRET` | PostHog metric alerts |
-| `POST` | `/api/signals/github` | `GITHUB_WEBHOOK_SECRET` (HMAC-SHA256) | GitHub events |
-| `POST` | `/api/signals/sentry` | `SENTRY_CLIENT_SECRET` (HMAC-SHA256) | Sentry error alerts |
+| Method | Path                   | Auth                                  | Description           |
+| ------ | ---------------------- | ------------------------------------- | --------------------- |
+| `POST` | `/api/signals/posthog` | `POSTHOG_WEBHOOK_SECRET`              | PostHog metric alerts |
+| `POST` | `/api/signals/github`  | `GITHUB_WEBHOOK_SECRET` (HMAC-SHA256) | GitHub events         |
+| `POST` | `/api/signals/sentry`  | `SENTRY_CLIENT_SECRET` (HMAC-SHA256)  | Sentry error alerts   |
 
 ### App (`apps/app/`)
 
@@ -188,20 +188,20 @@ Each app validates environment variables at startup using Zod (`env.ts`). Missin
 
 The API requires the following environment variables (see `apps/api/.env.example`):
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | Neon PostgreSQL connection string |
-| `LOOP_API_KEY` | Yes | Bearer token for authenticating API requests |
-| `GITHUB_WEBHOOK_SECRET` | For webhooks | HMAC secret for GitHub webhook signature verification |
-| `SENTRY_CLIENT_SECRET` | For webhooks | HMAC secret for Sentry webhook signature verification |
-| `POSTHOG_WEBHOOK_SECRET` | For webhooks | Shared secret for PostHog webhook verification |
+| Variable                 | Required     | Description                                           |
+| ------------------------ | ------------ | ----------------------------------------------------- |
+| `DATABASE_URL`           | Yes          | Neon PostgreSQL connection string                     |
+| `LOOP_API_KEY`           | Yes          | Bearer token for authenticating API requests          |
+| `GITHUB_WEBHOOK_SECRET`  | For webhooks | HMAC secret for GitHub webhook signature verification |
+| `SENTRY_CLIENT_SECRET`   | For webhooks | HMAC secret for Sentry webhook signature verification |
+| `POSTHOG_WEBHOOK_SECRET` | For webhooks | Shared secret for PostHog webhook verification        |
 
 The App requires the following environment variables (see `apps/app/.env.example`):
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_API_URL` | No | API base URL (defaults to `http://localhost:5667`) |
-| `VITE_LOOP_API_KEY` | Yes | Bearer token for authenticating dashboard API requests |
+| Variable            | Required | Description                                            |
+| ------------------- | -------- | ------------------------------------------------------ |
+| `VITE_API_URL`      | No       | API base URL (defaults to `http://localhost:5667`)     |
+| `VITE_LOOP_API_KEY` | Yes      | Bearer token for authenticating dashboard API requests |
 
 ## Testing
 

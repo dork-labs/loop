@@ -4,10 +4,10 @@
  * @module @dork-labs/loop-mcp/http
  */
 
-import { Hono } from 'hono'
-import { StreamableHTTPTransport } from '@hono/mcp'
-import { createLoopMcpServer } from './index.js'
-import type { LoopMcpConfig } from './types.js'
+import { Hono } from 'hono';
+import { StreamableHTTPTransport } from '@hono/mcp';
+import { createLoopMcpServer } from './index.js';
+import type { LoopMcpConfig } from './types.js';
 
 /**
  * Create a Hono app that handles MCP Streamable HTTP requests.
@@ -21,16 +21,16 @@ import type { LoopMcpConfig } from './types.js'
  * @param config - API key and optional API URL
  */
 export function createMcpHandler(config: LoopMcpConfig): Hono {
-  const mcpApp = new Hono()
-  const server = createLoopMcpServer(config)
-  const transport = new StreamableHTTPTransport()
+  const mcpApp = new Hono();
+  const server = createLoopMcpServer(config);
+  const transport = new StreamableHTTPTransport();
 
-  server.connect(transport)
+  server.connect(transport);
 
   mcpApp.all('*', async (c) => {
-    const response = await transport.handleRequest(c)
-    return response ?? c.json({ error: 'No response from MCP transport' }, 500)
-  })
+    const response = await transport.handleRequest(c);
+    return response ?? c.json({ error: 'No response from MCP transport' }, 500);
+  });
 
-  return mcpApp
+  return mcpApp;
 }

@@ -17,10 +17,10 @@ looped templates list [options]
 
 ### Options
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--limit <n>` | `50` | Results per page |
-| `--offset <n>` | `0` | Pagination offset |
+| Flag           | Default | Description       |
+| -------------- | ------- | ----------------- |
+| `--limit <n>`  | `50`    | Results per page  |
+| `--offset <n>` | `0`     | Pagination offset |
 
 ### Example
 
@@ -53,9 +53,9 @@ looped templates show <id>
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `id` | Template ID (CUID2) |
+| Argument | Description         |
+| -------- | ------------------- |
+| `id`     | Template ID (CUID2) |
 
 ### Example
 
@@ -104,10 +104,10 @@ looped templates promote <templateId> <versionId>
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `templateId` | Template ID (CUID2) |
-| `versionId` | Version ID (CUID2) to promote |
+| Argument     | Description                   |
+| ------------ | ----------------------------- |
+| `templateId` | Template ID (CUID2)           |
+| `versionId`  | Version ID (CUID2) to promote |
 
 ### Example
 
@@ -125,11 +125,11 @@ Promoted version 3 to active for template clx1abc2def3ghi4jkl5mnop
 
 ## Version statuses
 
-| Status | Description |
-|--------|-------------|
-| `active` | Currently used when dispatching issues matching this template |
-| `draft` | New version not yet promoted |
-| `retired` | Previously active version that has been superseded |
+| Status    | Description                                                   |
+| --------- | ------------------------------------------------------------- |
+| `active`  | Currently used when dispatching issues matching this template |
+| `draft`   | New version not yet promoted                                  |
+| `retired` | Previously active version that has been superseded            |
 
 ## Typical template workflow
 

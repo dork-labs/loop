@@ -69,6 +69,7 @@ status: ideation
 ### API — Schema & Routes (Complete from Phases 1 & 2)
 
 **Schema files** (`apps/api/src/db/schema/`):
+
 - `_helpers.ts` — Shared `cuid2Id`, `timestamps`, `softDelete` column builders
 - `issues.ts` — `issues`, `labels`, `issueLabels`, `issueRelations`, `comments` tables
 - `projects.ts` — `projects`, `goals` tables
@@ -76,6 +77,7 @@ status: ideation
 - `prompts.ts` — `promptTemplates`, `promptVersions`, `promptReviews` tables
 
 **Route files** (`apps/api/src/routes/`):
+
 - `issues.ts` (288 LOC) — Full CRUD with filtering and pagination
 - `projects.ts` (193 LOC) — CRUD with goal validation
 - `goals.ts` (132 LOC) — CRUD
@@ -89,6 +91,7 @@ status: ideation
 - `webhooks.ts` (212 LOC) — PostHog, GitHub, Sentry handlers
 
 **Core libraries** (`apps/api/src/lib/`):
+
 - `prompt-engine.ts` — Template selection, hydration context, Handlebars rendering
 - `priority-scoring.ts` — Deterministic scoring algorithm
 - `partials.ts` — Shared Handlebars partials
@@ -124,6 +127,7 @@ apps/app/src/
 ### Potential Blast Radius
 
 **Files to create (frontend — ~25-30 new files):**
+
 - Route definitions (5 page routes + 2 layout routes)
 - API client module
 - Query key factory and queryOptions definitions
@@ -132,9 +136,11 @@ apps/app/src/
 - Type definitions for API responses
 
 **Files to create (API — 1 new file):**
+
 - `apps/api/src/routes/dashboard.ts` — 3 new endpoints
 
 **Files to modify:**
+
 - `apps/app/package.json` — Add ~10 new dependencies
 - `apps/app/src/main.tsx` — Router provider setup
 - `apps/app/src/App.tsx` — Replace placeholder with router outlet

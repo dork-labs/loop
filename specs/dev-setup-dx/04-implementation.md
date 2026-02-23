@@ -88,6 +88,7 @@
 Batch 1 complete (5/5 tasks). Pre-existing test failures in dispatch.test.ts, signals.test.ts, issues.test.ts confirmed unrelated to env changes.
 
 Batch 2 complete (8/8 tasks). Key decisions:
+
 - `env.ts` skips validation in test mode (VITEST=true or NODE_ENV=test) with safe defaults to avoid crashing test runner.
 - Webhook middleware keeps `process.env` for optional secrets since tests manipulate env vars at runtime.
 - `instrumentation-client.ts` kept using literal `process.env.NEXT_PUBLIC_*` (Next.js static replacement requirement).

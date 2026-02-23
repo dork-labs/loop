@@ -44,7 +44,7 @@ status: ideation
 - `apps/api/.env.example`: Current value `LOOP_API_KEY=loop-dev-api-key-insecure`. No generation command comment.
 - `apps/app/.env.example`: Current value `VITE_LOOP_API_KEY=loop-dev-api-key-insecure`. No generation command comment.
 - `apps/api/src/middleware/auth.ts`: Bearer token validation using timing-safe comparison. Format-agnostic — will work with `loop_` prefixed keys transparently.
-- `apps/app/src/components/setup-checklist.tsx`: FTUE component, line 24 masks key as `apiKey.slice(0, 3) + '•'.repeat(...)`. With `loop_` prefix, this shows "loo•••" which isn't ideal — should show "loop_•••" to communicate the format.
+- `apps/app/src/components/setup-checklist.tsx`: FTUE component, line 24 masks key as `apiKey.slice(0, 3) + '•'.repeat(...)`. With `loop_` prefix, this shows "loo•••" which isn't ideal — should show "loop\_•••" to communicate the format.
 - `apps/app/src/components/setup-code-snippet.tsx`: Multi-language code examples. Fully dynamic — injects `apiKey` prop, no changes needed.
 - `apps/app/src/lib/api-client.ts`: ky HTTP client with Bearer token auth. Format-agnostic, no changes needed.
 - `docs/self-hosting/environment.mdx`: Lines 53 and 63 show generation commands with `tok_` prefix (outdated). Must be updated to `loop_`.
@@ -168,6 +168,7 @@ N/A — This is a DX improvement, not a bug fix.
 **Generation:** Create a standalone `scripts/generate-api-key.js` that the setup script calls. Also expose as `npm run generate-key` for manual key rotation. The script should be idempotent — skip generation if a valid `loop_`-prefixed key already exists.
 
 **Error messaging:** Use the `ENV_HINTS` map pattern in both `env.ts` files. When `LOOP_API_KEY` is missing, print:
+
 ```
 Missing LOOP_API_KEY. Generate one with:
   node -e "console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))"

@@ -52,14 +52,14 @@ The Fumadocs infrastructure is fully configured (`fumadocs-core@16.6.2`, `fumado
 
 ## 7. Technical Dependencies
 
-| Dependency | Version | Purpose |
-|-----------|---------|---------|
-| `fumadocs-core` | ^16.6.2 | Already installed — core docs framework |
-| `fumadocs-ui` | ^16.6.2 | Already installed — UI components |
-| `fumadocs-mdx` | ^14.2.7 | Already installed — MDX processing |
-| `fumadocs-openapi` | ^10.3.5 | Already installed — OpenAPI → MDX generation |
-| `@asteasolutions/zod-to-openapi` | ^8.4.0 | **New** — Zod schema → OpenAPI spec generation |
-| `zod` | ^4.1.13 | Already in API — schema validation |
+| Dependency                       | Version | Purpose                                        |
+| -------------------------------- | ------- | ---------------------------------------------- |
+| `fumadocs-core`                  | ^16.6.2 | Already installed — core docs framework        |
+| `fumadocs-ui`                    | ^16.6.2 | Already installed — UI components              |
+| `fumadocs-mdx`                   | ^14.2.7 | Already installed — MDX processing             |
+| `fumadocs-openapi`               | ^10.3.5 | Already installed — OpenAPI → MDX generation   |
+| `@asteasolutions/zod-to-openapi` | ^8.4.0  | **New** — Zod schema → OpenAPI spec generation |
+| `zod`                            | ^4.1.13 | Already in API — schema validation             |
 
 ## 8. Detailed Design
 
@@ -81,14 +81,18 @@ extendZodWithOpenApi(z);
 const registry = new OpenAPIRegistry();
 
 // Define reusable schemas with OpenAPI names
-const ErrorResponseSchema = z.object({
-  error: z.string(),
-}).openapi('ErrorResponse');
+const ErrorResponseSchema = z
+  .object({
+    error: z.string(),
+  })
+  .openapi('ErrorResponse');
 
-const PaginationQuerySchema = z.object({
-  limit: z.coerce.number().min(1).max(200).default(50).openapi({ example: 50 }),
-  offset: z.coerce.number().min(0).default(0).openapi({ example: 0 }),
-}).openapi('PaginationQuery');
+const PaginationQuerySchema = z
+  .object({
+    limit: z.coerce.number().min(1).max(200).default(50).openapi({ example: 50 }),
+    offset: z.coerce.number().min(0).default(0).openapi({ example: 0 }),
+  })
+  .openapi('PaginationQuery');
 
 // Register each endpoint group...
 // Issues (6 endpoints), Projects (5), Goals (5), Labels (3),
@@ -97,6 +101,7 @@ const PaginationQuerySchema = z.object({
 ```
 
 **Tags** (endpoint groups):
+
 - Issues, Projects, Goals, Labels, Relations, Comments
 - Signals, Webhooks
 - Templates, Prompt Reviews
@@ -104,6 +109,7 @@ const PaginationQuerySchema = z.object({
 - Dashboard
 
 Each `registry.registerPath()` call includes:
+
 - `method`, `path`, `tags`, `summary`, `description`
 - `request` (params, query, body with Zod schemas)
 - `responses` (success + error shapes)
@@ -154,6 +160,7 @@ console.log(`OpenAPI spec exported to ${OUTPUT_PATH}`);
 ```
 
 Add to root `package.json`:
+
 ```json
 "scripts": {
   "docs:export-api": "tsx scripts/export-openapi.ts"
@@ -174,6 +181,7 @@ app.get('/api/openapi.json', (c) => c.json(generateOpenAPISpec()));
 #### 8.1.5 Auto-Generate API Reference Pages
 
 The existing `apps/web/scripts/generate-api-docs.ts` already handles this:
+
 1. Reads `docs/api/openapi.json`
 2. Generates MDX pages via `fumadocs-openapi`
 3. Output goes to `docs/api/`
@@ -259,6 +267,7 @@ docs/
 ```
 
 Changes from current:
+
 - Added `cli` (was missing)
 - Removed `changelog` (deferred — no content yet)
 - Reordered to match Diátaxis priority (tutorials → explanation → reference)
@@ -268,6 +277,7 @@ Changes from current:
 #### Content Depth
 
 Every page follows the "rich with examples" standard:
+
 - **Explanatory text** — 500-800 words per page, clear prose
 - **Code examples** — curl commands, JSON request/response payloads, CLI output
 - **Fumadocs components** — `<Steps>` for walkthroughs, `<Tabs>` for curl/CLI/JS examples, `<Callout>` for warnings/tips, `<Cards>` for landing pages
@@ -276,6 +286,7 @@ Every page follows the "rich with examples" standard:
 #### Source Material
 
 Adapt content from these existing documents (don't write from scratch):
+
 - `meta/loop-mvp.md` — Feature descriptions, API endpoint tables, CLI commands, default templates
 - `meta/loop-litepaper.md` — Vision, "no AI" architecture, competitive positioning
 - `CLAUDE.md` — API endpoint table, env vars, commands, tech stack
@@ -294,6 +305,7 @@ Adapt content from these existing documents (don't write from scratch):
 #### `docs/getting-started/quickstart.mdx` — 5-Minute Tutorial
 
 Using `<Steps>` component:
+
 1. Clone repo and install deps
 2. Set up Neon database + env vars
 3. Run migrations
@@ -306,6 +318,7 @@ Using `<Steps>` component:
 #### `docs/concepts/index.mdx` — How Loop Works
 
 ASCII or mermaid diagram showing the core loop:
+
 ```
 Signal → Triage Issue → Hypothesis → Plan → Tasks → Monitor → Validated/Invalidated
                                                          ↓
@@ -368,6 +381,7 @@ All subsection meta.json files follow this pattern, listing pages in reading ord
 ## 9. User Experience
 
 After this work:
+
 - Visiting `www.looped.me/docs` shows a professional welcome page with navigation
 - The sidebar has 8 sections, each with sub-pages
 - API reference has an interactive playground (via fumadocs-openapi)
@@ -440,52 +454,28 @@ This spec IS the documentation effort — no separate documentation needed.
 Write in priority order:
 
 **Getting Started (3 pages):**
+
 1. `getting-started/index.mdx` — Prerequisites and overview
 2. `getting-started/quickstart.mdx` — 5-minute tutorial
 3. `getting-started/authentication.mdx` — API keys and webhook secrets
 
-**Concepts (6 pages):**
-4. `concepts/index.mdx` — How Loop works (the loop diagram)
-5. `concepts/issues.mdx` — Issue types, hierarchy, lifecycle
-6. `concepts/signals.mdx` — Signal ingestion, sources, triage
-7. `concepts/dispatch.mdx` — Priority scoring, template selection, dispatch
-8. `concepts/prompts.mdx` — Templates, versions, reviews, EWMA
-9. `concepts/projects-and-goals.mdx` — Projects, goals, metrics
+**Concepts (6 pages):** 4. `concepts/index.mdx` — How Loop works (the loop diagram) 5. `concepts/issues.mdx` — Issue types, hierarchy, lifecycle 6. `concepts/signals.mdx` — Signal ingestion, sources, triage 7. `concepts/dispatch.mdx` — Priority scoring, template selection, dispatch 8. `concepts/prompts.mdx` — Templates, versions, reviews, EWMA 9. `concepts/projects-and-goals.mdx` — Projects, goals, metrics
 
 ### Phase 4: Reference Documentation
 
-**API Reference (1 hand-written + auto-generated):**
-10. `api/index.mdx` — API overview (base URL, auth, errors, pagination)
-    - Auto-generated pages from OpenAPI spec handle per-endpoint docs
+**API Reference (1 hand-written + auto-generated):** 10. `api/index.mdx` — API overview (base URL, auth, errors, pagination) - Auto-generated pages from OpenAPI spec handle per-endpoint docs
 
-**CLI Reference (7 pages):**
-11. `cli/index.mdx` — Installation, config, global flags
-12. `cli/issues.mdx` — issues, show, create, comment commands
-13. `cli/signals.mdx` — signal command
-14. `cli/triage.mdx` — triage command
-15. `cli/templates.mdx` — templates command
-16. `cli/dispatch.mdx` — next and dispatch commands
-17. `cli/status.mdx` — status, projects, goals commands
+**CLI Reference (7 pages):** 11. `cli/index.mdx` — Installation, config, global flags 12. `cli/issues.mdx` — issues, show, create, comment commands 13. `cli/signals.mdx` — signal command 14. `cli/triage.mdx` — triage command 15. `cli/templates.mdx` — templates command 16. `cli/dispatch.mdx` — next and dispatch commands 17. `cli/status.mdx` — status, projects, goals commands
 
 ### Phase 5: Guides, Integrations, Operations
 
-**Guides (2 pages):**
-18. `guides/dashboard.mdx` — Dashboard tour, views, keyboard shortcuts
-19. `guides/writing-templates.mdx` — Handlebars syntax, conditions, partials
+**Guides (2 pages):** 18. `guides/dashboard.mdx` — Dashboard tour, views, keyboard shortcuts 19. `guides/writing-templates.mdx` — Handlebars syntax, conditions, partials
 
-**Integrations (4 pages):**
-20. `integrations/index.mdx` — Integration overview
-21. `integrations/github.mdx` — GitHub webhook setup
-22. `integrations/sentry.mdx` — Sentry webhook setup
-23. `integrations/posthog.mdx` — PostHog webhook setup
+**Integrations (4 pages):** 20. `integrations/index.mdx` — Integration overview 21. `integrations/github.mdx` — GitHub webhook setup 22. `integrations/sentry.mdx` — Sentry webhook setup 23. `integrations/posthog.mdx` — PostHog webhook setup
 
-**Self-Hosting (3 pages):**
-24. `self-hosting/index.mdx` — Overview and requirements
-25. `self-hosting/environment.mdx` — Environment variables reference
-26. `self-hosting/deployment.mdx` — Deployment guide (Vercel, manual)
+**Self-Hosting (3 pages):** 24. `self-hosting/index.mdx` — Overview and requirements 25. `self-hosting/environment.mdx` — Environment variables reference 26. `self-hosting/deployment.mdx` — Deployment guide (Vercel, manual)
 
-**Contributing (1 page):**
-27. `contributing/index.mdx` — Dev setup, testing, code quality
+**Contributing (1 page):** 27. `contributing/index.mdx` — Dev setup, testing, code quality
 
 ## 15. Open Questions
 

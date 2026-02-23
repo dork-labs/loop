@@ -1,23 +1,23 @@
-import type { Metadata, Viewport } from 'next'
-import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
-import { siteConfig } from '@/config/site'
-import { Providers } from './providers'
-import { CookieConsentBanner } from '@/layers/widgets/cookie-consent'
-import './globals.css'
+import type { Metadata, Viewport } from 'next';
+import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
+import { siteConfig } from '@/config/site';
+import { Providers } from './providers';
+import { CookieConsentBanner } from '@/layers/widgets/cookie-consent';
+import './globals.css';
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-ibm-plex-sans',
   display: 'swap',
-})
+});
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   variable: '--font-ibm-plex-mono',
   display: 'swap',
-})
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -26,7 +26,14 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
-  keywords: ['loop', 'autonomous improvement engine', 'claude code', 'agent sdk', 'ai tools', 'developer tools'],
+  keywords: [
+    'loop',
+    'autonomous improvement engine',
+    'claude code',
+    'agent sdk',
+    'ai tools',
+    'developer tools',
+  ],
   authors: [{ name: siteConfig.name, url: siteConfig.url }],
   creator: '@doriancollier',
   publisher: siteConfig.name,
@@ -60,7 +67,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
-}
+};
 
 export const viewport: Viewport = {
   themeColor: [
@@ -69,23 +76,17 @@ export const viewport: Viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
-}
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}
-      >
+      <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}>
         <Providers>
           {children}
           <CookieConsentBanner />
         </Providers>
       </body>
     </html>
-  )
+  );
 }

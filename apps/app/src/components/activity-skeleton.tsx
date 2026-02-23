@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton';
 
 /** Skeleton loading state for the Loop Activity timeline. */
 export function ActivitySkeleton() {
@@ -11,5 +11,5 @@ export function ActivitySkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }

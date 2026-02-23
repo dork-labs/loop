@@ -19,7 +19,7 @@ Parse `$ARGUMENTS` for these options:
 | _(none)_    | Interactive scope selection                    |
 | `all`       | Update everything (harness + guides + roadmap) |
 | `harness`   | Update `.claude/` directory only               |
-| `guides`    | Update `contributing/` only                          |
+| `guides`    | Update `contributing/` only                    |
 | `selective` | Choose individual files to update              |
 
 ### Flags
@@ -555,7 +555,7 @@ Algorithm:
 | ---------------------- | --------------------------------------------------------- | --------------------------------- |
 | **Harness Core**       | `.claude/hooks/`, `.claude/scripts/`                      | Replace                           |
 | **Harness Extensible** | `.claude/commands/`, `.claude/skills/`, `.claude/agents/` | Replace (preserve user additions) |
-| **Guides**             | `contributing/*.md`                                             | Replace                           |
+| **Guides**             | `contributing/*.md`                                       | Replace                           |
 | **Roadmap System**     | `roadmap/*.ts`, `roadmap/scripts/`                        | Replace                           |
 | **Roadmap Data**       | `roadmap/roadmap.json`                                    | Skip (user data)                  |
 | **Gray Zone**          | `CLAUDE.md`, `package.json`                               | Merge (Phase 8)                   |

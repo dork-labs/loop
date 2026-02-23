@@ -1,5 +1,5 @@
-import { HTTPError } from 'ky'
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
+import { HTTPError } from 'ky';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
 /**
  * Wrap an MCP tool handler with standardized error handling for ky HTTP errors.
@@ -9,17 +9,14 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
  *
  * @param fn - Async function that performs the tool's work and returns a `CallToolResult`
  */
-export async function handleToolCall(
-  fn: () => Promise<CallToolResult>,
-): Promise<CallToolResult> {
+export async function handleToolCall(fn: () => Promise<CallToolResult>): Promise<CallToolResult> {
   try {
-    return await fn()
+    return await fn();
   } catch (error) {
     if (error instanceof HTTPError) {
-      const status = error.response.status
-      const body = await error.response.json().catch(() => null)
-      const message =
-        (body as Record<string, unknown> | null)?.message ?? error.message
+      const status = error.response.status;
+      const body = await error.response.json().catch(() => null);
+      const message = (body as Record<string, unknown> | null)?.message ?? error.message;
 
       if (status === 404) {
         return {
@@ -30,7 +27,7 @@ export async function handleToolCall(
             },
           ],
           isError: true,
-        }
+        };
       }
 
       if (status === 401) {
@@ -42,20 +39,18 @@ export async function handleToolCall(
             },
           ],
           isError: true,
-        }
+        };
       }
 
       return {
         content: [{ type: 'text', text: `API error (${status}): ${message}` }],
         isError: true,
-      }
+      };
     }
 
     return {
-      content: [
-        { type: 'text', text: `Unexpected error: ${String(error)}` },
-      ],
+      content: [{ type: 'text', text: `Unexpected error: ${String(error)}` }],
       isError: true,
-    }
+    };
   }
 }

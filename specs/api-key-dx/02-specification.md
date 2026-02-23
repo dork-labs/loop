@@ -75,6 +75,7 @@ The dev key `loop-dev-api-key-insecure` remains non-prefixed to make it obviousl
 ### 2. Key Generation Script (`scripts/generate-api-key.js`)
 
 New file that:
+
 - Generates a `loop_`-prefixed key using `crypto.randomBytes(32).toString('hex')`
 - Writes `LOOP_API_KEY=<key>` to `apps/api/.env`
 - Writes `VITE_LOOP_API_KEY=<key>` to `apps/app/.env`
@@ -173,7 +174,7 @@ Add an `ENV_HINTS` map that provides contextual error messages per variable. Whe
 const ENV_HINTS: Record<string, string> = {
   LOOP_API_KEY: [
     'Generate one with:',
-    '  node -e "console.log(\'loop_\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+    "  node -e \"console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))\"",
     'Or run: npm run setup',
   ].join('\n'),
   DATABASE_URL: 'Run: npm run db:dev:up (starts local PostgreSQL)',
@@ -194,7 +195,7 @@ for (const issue of result.error.issues) {
 const ENV_HINTS: Record<string, string> = {
   VITE_LOOP_API_KEY: [
     'Generate one with:',
-    '  node -e "console.log(\'loop_\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+    "  node -e \"console.log('loop_' + require('crypto').randomBytes(32).toString('hex'))\"",
     'Or run: npm run setup',
   ].join('\n'),
 };
@@ -243,7 +244,7 @@ Replace all `tok_` prefix references with `loop_`:
 
 ### 9. Test Key Consistency
 
-**apps/api/src/__tests__/setup.ts** (line 12):
+**apps/api/src/**tests**/setup.ts** (line 12):
 
 ```ts
 // Before
@@ -253,13 +254,14 @@ process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'test-api-key';
 process.env.LOOP_API_KEY = process.env.LOOP_API_KEY ?? 'loop_test-api-key';
 ```
 
-**apps/api/src/__tests__/env.test.ts:**
+**apps/api/src/**tests**/env.test.ts:**
 
 Update all test cases using `'test-key'` to `'loop_test-key'`.
 
 **Test files with hardcoded `'test-api-key'` in Bearer headers:**
 
 The following files hardcode `Bearer test-api-key` and must be updated to `Bearer loop_test-api-key`:
+
 - `apps/api/src/__tests__/signals.test.ts`
 - `apps/api/src/__tests__/issues.test.ts`
 - `apps/api/src/__tests__/goals.test.ts`
@@ -268,6 +270,7 @@ The following files hardcode `Bearer test-api-key` and must be updated to `Beare
 Files using `Bearer ${process.env.LOOP_API_KEY}` (dynamic) need no changes — they pick up the new default from `setup.ts`.
 
 Files using the fallback pattern `Bearer ${process.env.LOOP_API_KEY ?? 'test-api-key'}` should update the fallback:
+
 - `apps/api/src/__tests__/relations.test.ts`
 - `apps/api/src/__tests__/comments.test.ts`
 
@@ -340,6 +343,7 @@ Written to:
 New test file: `scripts/__tests__/generate-api-key.test.ts` (or test via shell assertions in existing test suite)
 
 Tests:
+
 1. **Generates valid key format** — output matches `loop_[a-f0-9]{64}`
 2. **Writes to both .env files** — verify both files contain the generated key
 3. **Idempotent skip** — when valid key exists, exits without modifying files
@@ -379,6 +383,7 @@ All existing API tests continue to pass with the updated `loop_test-api-key` def
 ## Documentation
 
 Files to update:
+
 - `docs/self-hosting/environment.mdx` — Replace `tok_` prefix with `loop_`, add `npm run generate-key` command
 - `apps/api/.env.example` — Add generation command comment
 - `apps/app/.env.example` — Add generation command comment

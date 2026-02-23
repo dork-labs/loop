@@ -25,12 +25,12 @@ The Diátaxis framework identifies four documentation types that serve different
 
 Loop's existing section placeholders in `docs/meta.json` (`getting-started`, `guides`, `concepts`, `integrations`, `api`, `self-hosting`, `contributing`, `changelog`) map directly onto this framework:
 
-| Diátaxis Type | Loop Section |
-|---|---|
-| Tutorial | `getting-started` |
-| How-to guides | `guides`, `integrations` |
-| Reference | `api`, `cli` (missing), `self-hosting` |
-| Explanation | `concepts` |
+| Diátaxis Type | Loop Section                           |
+| ------------- | -------------------------------------- |
+| Tutorial      | `getting-started`                      |
+| How-to guides | `guides`, `integrations`               |
+| Reference     | `api`, `cli` (missing), `self-hosting` |
+| Explanation   | `concepts`                             |
 
 The most important insight: **the "concepts" section is where Loop earns developer trust**. Loop is not a simple CRUD API — it has a mental model (signals → issues → dispatch → reviews) that needs to be explained before any integration attempt. Prioritize concepts early.
 
@@ -39,6 +39,7 @@ The most important insight: **the "concepts" section is where Loop earns develop
 Industry standard (Twilio, Stripe) is to minimize time-to-first-successful-call. The goal is a working signal ingestion in under 5 minutes for any developer who lands on the docs. The Getting Started section should be a linear tutorial, not a reference dump.
 
 Effective Getting Started structure:
+
 1. One-sentence product description (what it is, what it does)
 2. Prerequisites (API key, curl or any HTTP client)
 3. Step 1: Health check — prove the connection works
@@ -60,21 +61,22 @@ The web app already has:
 - **`DocsLayout`** with sidebar driven by `source.pageTree` and a GitHub link
 
 This means the API reference section requires only:
+
 1. Generating `docs/api/openapi.json` from the Hono routes (Hono has `@hono/zod-openapi` or similar for spec generation)
 2. Running `fumadocs-openapi generate` to produce MDX files in `docs/api/`
 3. Adding a `meta.json` inside `docs/api/` to control sidebar order
 
 Fumadocs components available for use in MDX:
 
-| Component | Use Case |
-|---|---|
-| `<Callout>` | Warnings, tips, prerequisites, "danger" for destructive ops |
-| `<Tabs>` / `<Tab>` | Multi-language code examples (curl, JS, Python) |
-| `<Steps>` | Numbered how-to sequences |
-| `<Card>` / `<Cards>` | Section landing pages, "next steps" navigation |
-| `<TypeTable>` | Parameter/field reference tables |
-| Code blocks with title + highlight | All API request/response examples |
-| `APIPage` (OpenAPI) | Auto-generated interactive API reference |
+| Component                          | Use Case                                                    |
+| ---------------------------------- | ----------------------------------------------------------- |
+| `<Callout>`                        | Warnings, tips, prerequisites, "danger" for destructive ops |
+| `<Tabs>` / `<Tab>`                 | Multi-language code examples (curl, JS, Python)             |
+| `<Steps>`                          | Numbered how-to sequences                                   |
+| `<Card>` / `<Cards>`               | Section landing pages, "next steps" navigation              |
+| `<TypeTable>`                      | Parameter/field reference tables                            |
+| Code blocks with title + highlight | All API request/response examples                           |
+| `APIPage` (OpenAPI)                | Auto-generated interactive API reference                    |
 
 ### 4. Sidebar Organization: Folder-Per-Section with meta.json
 
@@ -85,6 +87,7 @@ Recommended file system layout (see Full Recommendation below).
 ### 5. API Reference: Generate From OpenAPI, Don't Hand-Write
 
 Hand-written API reference docs go stale. The correct approach for Loop is:
+
 1. Add `@hono/zod-openapi` or a route-level OpenAPI annotation approach to generate a spec from the existing Zod schemas already in the route files
 2. Output `docs/api/openapi.json` (or YAML) as part of the build
 3. Use `fumadocs-openapi` to generate/refresh the MDX reference pages
@@ -127,6 +130,7 @@ This is the pattern used by the Kubernetes kubectl docs, Vercel CLI docs, and St
 ### 7. Webhook Documentation Pattern
 
 Webhook docs need three things:
+
 1. **Setup guide** — how to register an endpoint, verify signatures, respond correctly (2xx fast)
 2. **Event catalog** — every event type with full example payload (one code block per event)
 3. **Security** — HMAC-SHA256 verification walkthrough with copy-paste code
@@ -145,7 +149,7 @@ Stripe's webhook docs are the gold standard: they show the full JSON payload, ex
 
 ### 9. 2025-2026 DX Trend: Agent Experience (AX)
 
-One notable 2025-2026 trend: "You can't have great DX if you don't have great AX (Agent Experience)." Loop's product is *about* AI agents, so its docs should be structured to be consumed by AI agents as well as humans. This means:
+One notable 2025-2026 trend: "You can't have great DX if you don't have great AX (Agent Experience)." Loop's product is _about_ AI agents, so its docs should be structured to be consumed by AI agents as well as humans. This means:
 
 - Clear, unambiguous headings (agents use them as semantic anchors)
 - Explicit field-by-field descriptions (no "see above" or "as mentioned")
@@ -302,6 +306,7 @@ Every how-to and tutorial page should use the Fumadocs `<Steps>` component inste
 ### Use `<Callout>` Consistently
 
 Establish a four-callout vocabulary:
+
 - `<Callout type="info">` — supplementary context
 - `<Callout type="warn">` — things that commonly go wrong
 - `<Callout type="error">` — security or data-loss warnings
@@ -335,6 +340,7 @@ A diagram (even ASCII) showing Signal → Issue → Priority Score → Dispatch 
 ### Authentication Documentation
 
 Loop uses a single Bearer token (`LOOP_API_KEY`) for all `/api/*` endpoints and separate HMAC secrets per webhook provider. This is simple but must be documented explicitly because:
+
 - Webhook auth is different from REST auth (a common confusion point)
 - The three webhook secrets (`GITHUB_WEBHOOK_SECRET`, `SENTRY_CLIENT_SECRET`, `POSTHOG_WEBHOOK_SECRET`) each have different verification mechanisms
 
@@ -344,13 +350,13 @@ Document these as separate concepts: "API Key Authentication" for REST and "Webh
 
 The API uses consistent error shapes (`{ error: string }` for most errors, `{ error, details }` for Zod validation failures). The `api/index.mdx` overview should include a complete error code table:
 
-| Status | Meaning | Common Cause |
-|---|---|---|
-| 400 | Bad Request | Missing or invalid body fields |
-| 401 | Unauthorized | Missing or invalid Authorization header |
-| 404 | Not Found | Resource ID does not exist or was soft-deleted |
-| 422 | Validation Error | Zod schema validation failed (includes `details`) |
-| 500 | Internal Server Error | Unexpected error — contact support |
+| Status | Meaning               | Common Cause                                      |
+| ------ | --------------------- | ------------------------------------------------- |
+| 400    | Bad Request           | Missing or invalid body fields                    |
+| 401    | Unauthorized          | Missing or invalid Authorization header           |
+| 404    | Not Found             | Resource ID does not exist or was soft-deleted    |
+| 422    | Validation Error      | Zod schema validation failed (includes `details`) |
+| 500    | Internal Server Error | Unexpected error — contact support                |
 
 ### Pagination Documentation
 

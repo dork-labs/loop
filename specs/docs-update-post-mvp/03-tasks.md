@@ -14,6 +14,7 @@ last-decompose: 2026-02-20
 **Implementation:**
 
 1. Install dependency:
+
 ```bash
 cd apps/api && npm install @asteasolutions/zod-to-openapi
 ```
@@ -28,256 +29,315 @@ extendZodWithOpenApi(z);
 
 // --- Shared Schemas ---
 
-export const ErrorResponseSchema = z.object({
-  error: z.string(),
-}).openapi('ErrorResponse');
+export const ErrorResponseSchema = z
+  .object({
+    error: z.string(),
+  })
+  .openapi('ErrorResponse');
 
-export const PaginationQuerySchema = z.object({
-  limit: z.coerce.number().min(1).max(200).default(50).openapi({ example: 50 }),
-  offset: z.coerce.number().min(0).default(0).openapi({ example: 0 }),
-}).openapi('PaginationQuery');
+export const PaginationQuerySchema = z
+  .object({
+    limit: z.coerce.number().min(1).max(200).default(50).openapi({ example: 50 }),
+    offset: z.coerce.number().min(0).default(0).openapi({ example: 0 }),
+  })
+  .openapi('PaginationQuery');
 
-export const CuidParamSchema = z.object({
-  id: z.string().openapi({ example: 'clxyz1234567890abcdef' }),
-}).openapi('CuidParam');
+export const CuidParamSchema = z
+  .object({
+    id: z.string().openapi({ example: 'clxyz1234567890abcdef' }),
+  })
+  .openapi('CuidParam');
 
 // --- Issue Schemas ---
 
-export const IssueSchema = z.object({
-  id: z.string(),
-  type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']),
-  status: z.enum(['open', 'in_progress', 'closed', 'cancelled']),
-  title: z.string(),
-  body: z.string().nullable(),
-  priority: z.number().nullable(),
-  projectId: z.string().nullable(),
-  parentId: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-}).openapi('Issue');
+export const IssueSchema = z
+  .object({
+    id: z.string(),
+    type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']),
+    status: z.enum(['open', 'in_progress', 'closed', 'cancelled']),
+    title: z.string(),
+    body: z.string().nullable(),
+    priority: z.number().nullable(),
+    projectId: z.string().nullable(),
+    parentId: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })
+  .openapi('Issue');
 
-export const CreateIssueSchema = z.object({
-  type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']),
-  title: z.string().min(1).max(500),
-  body: z.string().optional(),
-  status: z.enum(['open', 'in_progress', 'closed', 'cancelled']).optional(),
-  priority: z.number().min(0).max(100).optional(),
-  projectId: z.string().optional(),
-  parentId: z.string().optional(),
-}).openapi('CreateIssue');
+export const CreateIssueSchema = z
+  .object({
+    type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']),
+    title: z.string().min(1).max(500),
+    body: z.string().optional(),
+    status: z.enum(['open', 'in_progress', 'closed', 'cancelled']).optional(),
+    priority: z.number().min(0).max(100).optional(),
+    projectId: z.string().optional(),
+    parentId: z.string().optional(),
+  })
+  .openapi('CreateIssue');
 
-export const UpdateIssueSchema = z.object({
-  title: z.string().min(1).max(500).optional(),
-  body: z.string().optional(),
-  status: z.enum(['open', 'in_progress', 'closed', 'cancelled']).optional(),
-  priority: z.number().min(0).max(100).optional(),
-  type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']).optional(),
-  projectId: z.string().nullable().optional(),
-  parentId: z.string().nullable().optional(),
-}).openapi('UpdateIssue');
+export const UpdateIssueSchema = z
+  .object({
+    title: z.string().min(1).max(500).optional(),
+    body: z.string().optional(),
+    status: z.enum(['open', 'in_progress', 'closed', 'cancelled']).optional(),
+    priority: z.number().min(0).max(100).optional(),
+    type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']).optional(),
+    projectId: z.string().nullable().optional(),
+    parentId: z.string().nullable().optional(),
+  })
+  .openapi('UpdateIssue');
 
 // --- Project Schemas ---
 
-export const ProjectSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-}).openapi('Project');
+export const ProjectSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })
+  .openapi('Project');
 
-export const CreateProjectSchema = z.object({
-  name: z.string().min(1).max(200),
-  description: z.string().optional(),
-}).openapi('CreateProject');
+export const CreateProjectSchema = z
+  .object({
+    name: z.string().min(1).max(200),
+    description: z.string().optional(),
+  })
+  .openapi('CreateProject');
 
-export const UpdateProjectSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
-}).openapi('UpdateProject');
+export const UpdateProjectSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    description: z.string().optional(),
+  })
+  .openapi('UpdateProject');
 
 // --- Goal Schemas ---
 
-export const GoalSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string().nullable(),
-  targetDate: z.string().nullable(),
-  status: z.enum(['active', 'completed', 'cancelled']),
-  projectId: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-}).openapi('Goal');
+export const GoalSchema = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string().nullable(),
+    targetDate: z.string().nullable(),
+    status: z.enum(['active', 'completed', 'cancelled']),
+    projectId: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })
+  .openapi('Goal');
 
-export const CreateGoalSchema = z.object({
-  title: z.string().min(1).max(500),
-  description: z.string().optional(),
-  targetDate: z.string().optional(),
-  status: z.enum(['active', 'completed', 'cancelled']).optional(),
-  projectId: z.string().optional(),
-}).openapi('CreateGoal');
+export const CreateGoalSchema = z
+  .object({
+    title: z.string().min(1).max(500),
+    description: z.string().optional(),
+    targetDate: z.string().optional(),
+    status: z.enum(['active', 'completed', 'cancelled']).optional(),
+    projectId: z.string().optional(),
+  })
+  .openapi('CreateGoal');
 
-export const UpdateGoalSchema = z.object({
-  title: z.string().min(1).max(500).optional(),
-  description: z.string().optional(),
-  targetDate: z.string().nullable().optional(),
-  status: z.enum(['active', 'completed', 'cancelled']).optional(),
-  projectId: z.string().nullable().optional(),
-}).openapi('UpdateGoal');
+export const UpdateGoalSchema = z
+  .object({
+    title: z.string().min(1).max(500).optional(),
+    description: z.string().optional(),
+    targetDate: z.string().nullable().optional(),
+    status: z.enum(['active', 'completed', 'cancelled']).optional(),
+    projectId: z.string().nullable().optional(),
+  })
+  .openapi('UpdateGoal');
 
 // --- Label Schemas ---
 
-export const LabelSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  color: z.string().nullable(),
-  createdAt: z.string(),
-  deletedAt: z.string().nullable(),
-}).openapi('Label');
+export const LabelSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    color: z.string().nullable(),
+    createdAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })
+  .openapi('Label');
 
-export const CreateLabelSchema = z.object({
-  name: z.string().min(1).max(100),
-  color: z.string().optional(),
-}).openapi('CreateLabel');
+export const CreateLabelSchema = z
+  .object({
+    name: z.string().min(1).max(100),
+    color: z.string().optional(),
+  })
+  .openapi('CreateLabel');
 
 // --- Relation Schemas ---
 
-export const RelationSchema = z.object({
-  id: z.string(),
-  sourceIssueId: z.string(),
-  targetIssueId: z.string(),
-  type: z.enum(['blocks', 'relates_to', 'duplicates']),
-  createdAt: z.string(),
-}).openapi('Relation');
+export const RelationSchema = z
+  .object({
+    id: z.string(),
+    sourceIssueId: z.string(),
+    targetIssueId: z.string(),
+    type: z.enum(['blocks', 'relates_to', 'duplicates']),
+    createdAt: z.string(),
+  })
+  .openapi('Relation');
 
-export const CreateRelationSchema = z.object({
-  targetIssueId: z.string(),
-  type: z.enum(['blocks', 'relates_to', 'duplicates']),
-}).openapi('CreateRelation');
+export const CreateRelationSchema = z
+  .object({
+    targetIssueId: z.string(),
+    type: z.enum(['blocks', 'relates_to', 'duplicates']),
+  })
+  .openapi('CreateRelation');
 
 // --- Comment Schemas ---
 
-export const CommentSchema = z.object({
-  id: z.string(),
-  issueId: z.string(),
-  body: z.string(),
-  parentId: z.string().nullable(),
-  authorType: z.enum(['human', 'agent']),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-}).openapi('Comment');
+export const CommentSchema = z
+  .object({
+    id: z.string(),
+    issueId: z.string(),
+    body: z.string(),
+    parentId: z.string().nullable(),
+    authorType: z.enum(['human', 'agent']),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi('Comment');
 
-export const CreateCommentSchema = z.object({
-  body: z.string().min(1),
-  parentId: z.string().optional(),
-  authorType: z.enum(['human', 'agent']).optional(),
-}).openapi('CreateComment');
+export const CreateCommentSchema = z
+  .object({
+    body: z.string().min(1),
+    parentId: z.string().optional(),
+    authorType: z.enum(['human', 'agent']).optional(),
+  })
+  .openapi('CreateComment');
 
 // --- Signal Schemas ---
 
-export const SignalSchema = z.object({
-  id: z.string(),
-  source: z.string(),
-  externalId: z.string().nullable(),
-  title: z.string(),
-  body: z.string().nullable(),
-  severity: z.enum(['low', 'medium', 'high', 'critical']).nullable(),
-  metadata: z.record(z.unknown()).nullable(),
-  issueId: z.string().nullable(),
-  createdAt: z.string(),
-}).openapi('Signal');
+export const SignalSchema = z
+  .object({
+    id: z.string(),
+    source: z.string(),
+    externalId: z.string().nullable(),
+    title: z.string(),
+    body: z.string().nullable(),
+    severity: z.enum(['low', 'medium', 'high', 'critical']).nullable(),
+    metadata: z.record(z.unknown()).nullable(),
+    issueId: z.string().nullable(),
+    createdAt: z.string(),
+  })
+  .openapi('Signal');
 
-export const CreateSignalSchema = z.object({
-  source: z.string().min(1),
-  externalId: z.string().optional(),
-  title: z.string().min(1).max(500),
-  body: z.string().optional(),
-  severity: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  metadata: z.record(z.unknown()).optional(),
-}).openapi('CreateSignal');
+export const CreateSignalSchema = z
+  .object({
+    source: z.string().min(1),
+    externalId: z.string().optional(),
+    title: z.string().min(1).max(500),
+    body: z.string().optional(),
+    severity: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+    metadata: z.record(z.unknown()).optional(),
+  })
+  .openapi('CreateSignal');
 
 // --- Template Schemas ---
 
-export const TemplateSchema = z.object({
-  id: z.string(),
-  slug: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  activeVersionId: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  deletedAt: z.string().nullable(),
-}).openapi('Template');
+export const TemplateSchema = z
+  .object({
+    id: z.string(),
+    slug: z.string(),
+    name: z.string(),
+    description: z.string().nullable(),
+    activeVersionId: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
+  })
+  .openapi('Template');
 
-export const CreateTemplateSchema = z.object({
-  slug: z.string().min(1).max(200),
-  name: z.string().min(1).max(200),
-  description: z.string().optional(),
-}).openapi('CreateTemplate');
+export const CreateTemplateSchema = z
+  .object({
+    slug: z.string().min(1).max(200),
+    name: z.string().min(1).max(200),
+    description: z.string().optional(),
+  })
+  .openapi('CreateTemplate');
 
-export const UpdateTemplateSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
-}).openapi('UpdateTemplate');
+export const UpdateTemplateSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    description: z.string().optional(),
+  })
+  .openapi('UpdateTemplate');
 
-export const TemplateVersionSchema = z.object({
-  id: z.string(),
-  templateId: z.string(),
-  version: z.number(),
-  body: z.string(),
-  conditions: z.record(z.unknown()).nullable(),
-  specificity: z.number(),
-  createdAt: z.string(),
-}).openapi('TemplateVersion');
+export const TemplateVersionSchema = z
+  .object({
+    id: z.string(),
+    templateId: z.string(),
+    version: z.number(),
+    body: z.string(),
+    conditions: z.record(z.unknown()).nullable(),
+    specificity: z.number(),
+    createdAt: z.string(),
+  })
+  .openapi('TemplateVersion');
 
-export const CreateVersionSchema = z.object({
-  body: z.string().min(1),
-  conditions: z.record(z.unknown()).optional(),
-}).openapi('CreateVersion');
+export const CreateVersionSchema = z
+  .object({
+    body: z.string().min(1),
+    conditions: z.record(z.unknown()).optional(),
+  })
+  .openapi('CreateVersion');
 
 // --- Prompt Review Schemas ---
 
-export const PromptReviewSchema = z.object({
-  id: z.string(),
-  versionId: z.string(),
-  rating: z.number(),
-  feedback: z.string().nullable(),
-  sessionId: z.string().nullable(),
-  createdAt: z.string(),
-}).openapi('PromptReview');
+export const PromptReviewSchema = z
+  .object({
+    id: z.string(),
+    versionId: z.string(),
+    rating: z.number(),
+    feedback: z.string().nullable(),
+    sessionId: z.string().nullable(),
+    createdAt: z.string(),
+  })
+  .openapi('PromptReview');
 
-export const CreatePromptReviewSchema = z.object({
-  versionId: z.string(),
-  rating: z.number().min(1).max(5),
-  feedback: z.string().optional(),
-  sessionId: z.string().optional(),
-}).openapi('CreatePromptReview');
+export const CreatePromptReviewSchema = z
+  .object({
+    versionId: z.string(),
+    rating: z.number().min(1).max(5),
+    feedback: z.string().optional(),
+    sessionId: z.string().optional(),
+  })
+  .openapi('CreatePromptReview');
 
 // --- Dispatch Schemas ---
 
-export const DispatchResponseSchema = z.object({
-  issue: IssueSchema,
-  prompt: z.string(),
-  templateSlug: z.string(),
-  versionId: z.string(),
-}).openapi('DispatchResponse');
+export const DispatchResponseSchema = z
+  .object({
+    issue: IssueSchema,
+    prompt: z.string(),
+    templateSlug: z.string(),
+    versionId: z.string(),
+  })
+  .openapi('DispatchResponse');
 
 // --- Dashboard Schemas ---
 
-export const DashboardStatsSchema = z.object({
-  totalIssues: z.number(),
-  openIssues: z.number(),
-  signalsToday: z.number(),
-  dispatchesThisWeek: z.number(),
-}).openapi('DashboardStats');
+export const DashboardStatsSchema = z
+  .object({
+    totalIssues: z.number(),
+    openIssues: z.number(),
+    signalsToday: z.number(),
+    dispatchesThisWeek: z.number(),
+  })
+  .openapi('DashboardStats');
 ```
 
 Schemas must mirror the actual Drizzle types but remain standalone. Verify each schema against the corresponding route file in `apps/api/src/routes/`.
 
 **Acceptance Criteria:**
+
 - [ ] `@asteasolutions/zod-to-openapi` installed in `apps/api/package.json`
 - [ ] `apps/api/src/lib/openapi-schemas.ts` exists with all schemas
 - [ ] Every schema has `.openapi('SchemaName')` metadata
@@ -347,15 +407,26 @@ registry.registerPath({
   path: '/api/issues',
   tags: ['Issues'],
   summary: 'List issues',
-  description: 'List issues with optional filtering by status, type, and projectId. Supports pagination.',
-  request: { query: PaginationQuerySchema.extend({
-    status: z.enum(['open', 'in_progress', 'closed', 'cancelled']).optional(),
-    type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']).optional(),
-    projectId: z.string().optional(),
-  })},
+  description:
+    'List issues with optional filtering by status, type, and projectId. Supports pagination.',
+  request: {
+    query: PaginationQuerySchema.extend({
+      status: z.enum(['open', 'in_progress', 'closed', 'cancelled']).optional(),
+      type: z.enum(['signal', 'hypothesis', 'plan', 'task', 'monitor']).optional(),
+      projectId: z.string().optional(),
+    }),
+  },
   responses: {
-    200: { description: 'Paginated list of issues', content: { 'application/json': { schema: z.object({ data: z.array(IssueSchema), total: z.number() }) } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    200: {
+      description: 'Paginated list of issues',
+      content: {
+        'application/json': { schema: z.object({ data: z.array(IssueSchema), total: z.number() }) },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
 });
 
@@ -427,6 +498,7 @@ registry.registerPath({
 Each `registerPath` call must include: method, path, tags array, summary, description, request (params/query/body as applicable), and responses (200/201 success + 400/401/404 errors).
 
 **Tags to register:**
+
 - Issues, Projects, Goals, Labels, Relations, Comments
 - Signals, Webhooks
 - Templates, Prompt Reviews
@@ -455,6 +527,7 @@ export function generateOpenAPISpec() {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] `apps/api/src/lib/openapi-registry.ts` exists
 - [ ] All ~40 endpoints registered with correct methods, paths, tags
 - [ ] `generateOpenAPISpec()` returns a valid OpenAPI 3.1.0 document
@@ -487,6 +560,7 @@ console.log(`OpenAPI spec exported to ${OUTPUT_PATH}`);
 ```
 
 2. Add to root `package.json` scripts:
+
 ```json
 {
   "docs:export-api": "tsx scripts/export-openapi.ts"
@@ -494,6 +568,7 @@ console.log(`OpenAPI spec exported to ${OUTPUT_PATH}`);
 ```
 
 3. Add runtime endpoint to `apps/api/src/app.ts`:
+
 ```typescript
 import { generateOpenAPISpec } from './lib/openapi-registry';
 
@@ -504,6 +579,7 @@ app.get('/api/openapi.json', (c) => c.json(generateOpenAPISpec()));
 4. Run `npm run docs:export-api` and verify `docs/api/openapi.json` is produced.
 
 **Acceptance Criteria:**
+
 - [ ] `scripts/export-openapi.ts` exists
 - [ ] `npm run docs:export-api` script added to root `package.json`
 - [ ] Running script produces valid `docs/api/openapi.json`
@@ -558,8 +634,18 @@ describe('OpenAPI Registry', () => {
     }
 
     const expectedTags = [
-      'Issues', 'Projects', 'Goals', 'Labels', 'Relations', 'Comments',
-      'Signals', 'Webhooks', 'Templates', 'Prompt Reviews', 'Dispatch', 'Dashboard',
+      'Issues',
+      'Projects',
+      'Goals',
+      'Labels',
+      'Relations',
+      'Comments',
+      'Signals',
+      'Webhooks',
+      'Templates',
+      'Prompt Reviews',
+      'Dispatch',
+      'Dashboard',
     ];
     for (const tag of expectedTags) {
       expect(allTags).toContain(tag);
@@ -600,6 +686,7 @@ describe('OpenAPI Registry', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Test file exists at `apps/api/src/__tests__/openapi-registry.test.ts`
 - [ ] All tests pass with `npx vitest run apps/api/src/__tests__/openapi-registry.test.ts`
 - [ ] Tests validate: OpenAPI version, servers, security scheme, all tag groups, all paths, JSON export
@@ -622,6 +709,7 @@ describe('OpenAPI Registry', () => {
 The existing `apps/web/scripts/generate-api-docs.ts` handles the generation. May need to verify its configuration reads from `docs/api/openapi.json`.
 
 **Acceptance Criteria:**
+
 - [ ] `docs/api/openapi.json` exists with valid content
 - [ ] Running `generate:api-docs` produces MDX files in `docs/api/`
 - [ ] Generated pages cover all tag groups
@@ -640,6 +728,7 @@ The existing `apps/web/scripts/generate-api-docs.ts` handles the generation. May
 **Implementation:**
 
 1. Update `docs/meta.json`:
+
 ```json
 {
   "title": "Documentation",
@@ -661,6 +750,7 @@ Changes: Added `cli`, removed `changelog`, reordered to Diataxis priority.
 2. Create subsection meta.json files:
 
 `docs/getting-started/meta.json`:
+
 ```json
 {
   "title": "Getting Started",
@@ -669,6 +759,7 @@ Changes: Added `cli`, removed `changelog`, reordered to Diataxis priority.
 ```
 
 `docs/concepts/meta.json`:
+
 ```json
 {
   "title": "Concepts",
@@ -677,6 +768,7 @@ Changes: Added `cli`, removed `changelog`, reordered to Diataxis priority.
 ```
 
 `docs/guides/meta.json`:
+
 ```json
 {
   "title": "Guides",
@@ -685,6 +777,7 @@ Changes: Added `cli`, removed `changelog`, reordered to Diataxis priority.
 ```
 
 `docs/integrations/meta.json`:
+
 ```json
 {
   "title": "Integrations",
@@ -693,15 +786,18 @@ Changes: Added `cli`, removed `changelog`, reordered to Diataxis priority.
 ```
 
 `docs/api/meta.json`:
+
 ```json
 {
   "title": "API Reference",
   "pages": ["..."]
 }
 ```
+
 Note: The `pages` array for API will need to include auto-generated page slugs after Task 1.5.
 
 `docs/cli/meta.json`:
+
 ```json
 {
   "title": "CLI Reference",
@@ -710,6 +806,7 @@ Note: The `pages` array for API will need to include auto-generated page slugs a
 ```
 
 `docs/self-hosting/meta.json`:
+
 ```json
 {
   "title": "Self-Hosting",
@@ -718,6 +815,7 @@ Note: The `pages` array for API will need to include auto-generated page slugs a
 ```
 
 `docs/contributing/meta.json`:
+
 ```json
 {
   "title": "Contributing",
@@ -726,11 +824,13 @@ Note: The `pages` array for API will need to include auto-generated page slugs a
 ```
 
 3. Create the directories:
+
 ```bash
 mkdir -p docs/getting-started docs/concepts docs/guides docs/integrations docs/cli docs/self-hosting docs/contributing
 ```
 
 **Acceptance Criteria:**
+
 - [ ] `docs/meta.json` updated with `cli` added and `changelog` removed
 - [ ] All 8 subsection directories exist
 - [ ] All 8 subsection `meta.json` files created with correct page ordering
@@ -747,6 +847,7 @@ mkdir -p docs/getting-started docs/concepts docs/guides docs/integrations docs/c
 **Implementation:**
 
 Create `docs/index.mdx` with:
+
 - Title and one-liner description of Loop
 - "No AI" value proposition paragraph (Loop is fully deterministic, no LLM calls)
 - System requirements (Node.js 20+, PostgreSQL)
@@ -765,6 +866,7 @@ Use Fumadocs components: `<Cards>`, `<Card>`, `<Callout>`.
 Content sources: `meta/loop-litepaper.md` for vision, `CLAUDE.md` for tech details.
 
 **Acceptance Criteria:**
+
 - [ ] `docs/index.mdx` has proper frontmatter (title, description)
 - [ ] One-liner + "no AI" value prop included
 - [ ] System requirements listed
@@ -784,6 +886,7 @@ Content sources: `meta/loop-litepaper.md` for vision, `CLAUDE.md` for tech detai
 **Pages:**
 
 **1. `docs/getting-started/index.mdx` — Overview**
+
 - What Loop is (autonomous improvement engine)
 - Prerequisites: Node.js 20+, PostgreSQL (Neon recommended), npm
 - What you'll learn in this section
@@ -791,6 +894,7 @@ Content sources: `meta/loop-litepaper.md` for vision, `CLAUDE.md` for tech detai
 
 **2. `docs/getting-started/quickstart.mdx` — 5-Minute Tutorial**
 Using `<Steps>` component:
+
 1. Clone repo and install deps (`git clone`, `npm install`)
 2. Set up Neon database + create `.env` with `DATABASE_URL`
 3. Run migrations (`npm run db:migrate -w apps/api`)
@@ -803,6 +907,7 @@ Using `<Steps>` component:
 Include `<Tabs>` for curl vs JavaScript (ky) examples where applicable.
 
 **3. `docs/getting-started/authentication.mdx` — Authentication**
+
 - Bearer token auth: `Authorization: Bearer <LOOP_API_KEY>`
 - Setting the API key env var
 - Webhook authentication:
@@ -815,6 +920,7 @@ Include `<Tabs>` for curl vs JavaScript (ky) examples where applicable.
 Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes/webhooks.ts` for webhook verification.
 
 **Acceptance Criteria:**
+
 - [ ] All 3 MDX files created in `docs/getting-started/`
 - [ ] Quickstart uses `<Steps>` component with 8 steps
 - [ ] All curl examples are syntactically correct and use placeholder tokens
@@ -832,6 +938,7 @@ Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes
 **Pages:**
 
 **1. `docs/concepts/index.mdx` — How Loop Works**
+
 - The core loop diagram (ASCII or mermaid):
   Signal -> Triage Issue -> Hypothesis -> Plan -> Tasks -> Monitor -> Validated/Invalidated
   Agent dispatches via /api/dispatch/next, receives issue + hydrated prompt
@@ -840,6 +947,7 @@ Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes
 - Overview of the 5 issue types and how they connect
 
 **2. `docs/concepts/issues.mdx` — Issues**
+
 - 5 issue types: signal, hypothesis, plan, task, monitor
 - Issue hierarchy (parent-child relationships)
 - Issue lifecycle (open -> in_progress -> closed/cancelled)
@@ -848,6 +956,7 @@ Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes
 - Soft-delete behavior
 
 **3. `docs/concepts/signals.mdx` — Signals**
+
 - What signals are (raw events from external sources)
 - Signal ingestion via POST /api/signals
 - Webhook sources: GitHub, Sentry, PostHog
@@ -856,6 +965,7 @@ Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes
 - Triage flow: signal -> triage issue -> human/agent review
 
 **4. `docs/concepts/dispatch.mdx` — Dispatch**
+
 - Priority scoring: how issues are ranked for dispatch
 - Template selection: matching conditions, specificity scoring
 - Atomic claiming: FOR UPDATE SKIP LOCKED prevents double-dispatch
@@ -864,6 +974,7 @@ Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes
 - What the agent receives (issue + prompt + metadata)
 
 **5. `docs/concepts/prompts.mdx` — Prompts**
+
 - Template structure: slug, name, active version
 - Version management: multiple versions per template, one active
 - Conditions object: `{ type, signalSource, labels, projectId, hasFailedSessions, hypothesisConfidence }`
@@ -872,6 +983,7 @@ Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes
 - Template promotion workflow
 
 **6. `docs/concepts/projects-and-goals.mdx` — Projects and Goals**
+
 - Projects: grouping issues, project-level views
 - Goals: tracking objectives with target dates
 - Relationship: goals belong to projects
@@ -880,6 +992,7 @@ Content sources: `CLAUDE.md` for env vars and auth details, `apps/api/src/routes
 Content sources: `meta/loop-mvp.md` for feature details, `meta/loop-litepaper.md` for vision, route files for accuracy.
 
 **Acceptance Criteria:**
+
 - [ ] All 6 MDX files created in `docs/concepts/`
 - [ ] Each page has 500-800 words of explanatory text
 - [ ] Concepts/index has the core loop diagram
@@ -913,6 +1026,7 @@ Create `docs/api/index.mdx` with:
 Include example request/response using `<Tabs>` (curl / JavaScript).
 
 **Acceptance Criteria:**
+
 - [ ] `docs/api/index.mdx` created
 - [ ] Covers base URL, auth, errors, pagination, soft delete, ID format
 - [ ] Includes example request/response
@@ -929,6 +1043,7 @@ Include example request/response using `<Tabs>` (curl / JavaScript).
 **Pages:**
 
 **1. `docs/cli/index.mdx` — CLI Overview**
+
 - Installation: `npm install -g @loop/cli`
 - Configuration: `looped config set url <url>`, `looped config set token <token>`
 - Config file: `~/.loop/config.json`
@@ -936,6 +1051,7 @@ Include example request/response using `<Tabs>` (curl / JavaScript).
 - Environment variables: `LOOP_API_URL`, `LOOP_API_TOKEN`
 
 **2. `docs/cli/issues.mdx` — Issue Commands**
+
 - `looped issues` — List issues (with filters)
 - `looped issues show <id>` — Show issue detail
 - `looped issues create` — Create issue interactively
@@ -943,28 +1059,33 @@ Include example request/response using `<Tabs>` (curl / JavaScript).
 - Example output for each command
 
 **3. `docs/cli/signals.mdx` — Signal Commands**
+
 - `looped signal` — Submit a signal
 - Required and optional flags
 - Example with JSON output
 
 **4. `docs/cli/triage.mdx` — Triage Commands**
+
 - `looped triage` — Interactive triage workflow
 - How triage relates to the signal -> issue flow
 - Example session
 
 **5. `docs/cli/templates.mdx` — Template Commands**
+
 - `looped templates` — List templates
 - `looped templates show <slug>` — Show template detail
 - Template version management commands
 - Example output
 
 **6. `docs/cli/dispatch.mdx` — Dispatch Commands**
+
 - `looped next` — Preview next dispatchable issue
 - `looped dispatch` — Claim and dispatch
 - Output format (issue + hydrated prompt)
 - Example session
 
 **7. `docs/cli/status.mdx` — Status Commands**
+
 - `looped status` — System overview
 - `looped projects` — List projects
 - `looped goals` — List goals
@@ -973,6 +1094,7 @@ Include example request/response using `<Tabs>` (curl / JavaScript).
 Content source: `apps/cli/src/commands/*.ts` for accurate command signatures and flags.
 
 **Acceptance Criteria:**
+
 - [ ] All 7 MDX files created in `docs/cli/`
 - [ ] Each command documented with usage, flags, examples, and sample output
 - [ ] Command signatures match actual CLI implementation
@@ -991,6 +1113,7 @@ Content source: `apps/cli/src/commands/*.ts` for accurate command signatures and
 **Pages:**
 
 **1. `docs/guides/dashboard.mdx` — Dashboard Tour**
+
 - 5 views: Issue List, Issue Detail, Activity Timeline, Goals Dashboard, Prompt Health
 - Keyboard shortcuts: `g+i` Issues, `g+a` Activity, `g+g` Goals, `g+p` Prompts, `Cmd+B` Toggle sidebar, `?` Help
 - Filters and search capabilities
@@ -998,6 +1121,7 @@ Content source: `apps/cli/src/commands/*.ts` for accurate command signatures and
 - Screenshots or descriptions of each view
 
 **2. `docs/guides/writing-templates.mdx` — Writing Templates**
+
 - Handlebars syntax basics (`{{variable}}`, `{{#if}}`, `{{#each}}`)
 - Available template variables: `issue.*`, `parent.*`, `children`, `labels`, `project.*`, `goal.*`
 - Shared partials: `{{> api_reference}}`, `{{> review_instructions}}`, `{{> parent_context}}`
@@ -1009,6 +1133,7 @@ Content source: `apps/cli/src/commands/*.ts` for accurate command signatures and
 Content sources: `meta/loop-mvp.md` for template details, `apps/api/src/lib/` for template engine implementation.
 
 **Acceptance Criteria:**
+
 - [ ] Both MDX files created in `docs/guides/`
 - [ ] Dashboard page covers all 5 views and keyboard shortcuts
 - [ ] Templates page includes Handlebars examples, variables, conditions, specificity
@@ -1025,6 +1150,7 @@ Content sources: `meta/loop-mvp.md` for template details, `apps/api/src/lib/` fo
 **Pages:**
 
 **1. `docs/integrations/index.mdx` — Integration Overview**
+
 - What integrations are (webhook-based signal sources)
 - Supported providers: GitHub, Sentry, PostHog
 - General webhook flow: provider sends event -> Loop ingests as signal -> creates triage issue
@@ -1032,6 +1158,7 @@ Content sources: `meta/loop-mvp.md` for template details, `apps/api/src/lib/` fo
 
 **2. `docs/integrations/github.mdx` — GitHub Webhook**
 Using `<Steps>`:
+
 1. Go to GitHub repo Settings > Webhooks > Add webhook
 2. Set Payload URL: `https://api.looped.me/api/signals/github`
 3. Set Content type: `application/json`
@@ -1045,6 +1172,7 @@ Using `<Steps>`:
 
 **3. `docs/integrations/sentry.mdx` — Sentry Webhook**
 Using `<Steps>`:
+
 1. Sentry project Settings > Integrations > Webhooks
 2. Set URL: `https://api.looped.me/api/signals/sentry`
 3. Configure `SENTRY_CLIENT_SECRET`
@@ -1055,6 +1183,7 @@ Using `<Steps>`:
 
 **4. `docs/integrations/posthog.mdx` — PostHog Webhook**
 Using `<Steps>`:
+
 1. PostHog project Settings > Actions > Webhooks
 2. Set URL: `https://api.looped.me/api/signals/posthog`
 3. Configure `POSTHOG_WEBHOOK_SECRET`
@@ -1066,6 +1195,7 @@ Using `<Steps>`:
 Content source: `apps/api/src/routes/webhooks.ts` for exact verification logic and payload mapping.
 
 **Acceptance Criteria:**
+
 - [ ] All 4 MDX files created in `docs/integrations/`
 - [ ] Each provider page has step-by-step setup with `<Steps>`
 - [ ] HMAC/secret verification explained for each
@@ -1083,6 +1213,7 @@ Content source: `apps/api/src/routes/webhooks.ts` for exact verification logic a
 **Pages:**
 
 **1. `docs/self-hosting/index.mdx` — Self-Hosting Overview**
+
 - What self-hosting means for Loop
 - System requirements: Node.js 20+, PostgreSQL 15+
 - Architecture overview: API server + PostgreSQL database
@@ -1091,13 +1222,13 @@ Content source: `apps/api/src/routes/webhooks.ts` for exact verification logic a
 **2. `docs/self-hosting/environment.mdx` — Environment Variables**
 Complete reference table for all env vars:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | Neon PostgreSQL connection string |
-| `LOOP_API_KEY` | Yes | Bearer token for API authentication |
-| `GITHUB_WEBHOOK_SECRET` | For webhooks | GitHub HMAC secret |
-| `SENTRY_CLIENT_SECRET` | For webhooks | Sentry HMAC secret |
-| `POSTHOG_WEBHOOK_SECRET` | For webhooks | PostHog shared secret |
+| Variable                 | Required     | Description                         |
+| ------------------------ | ------------ | ----------------------------------- |
+| `DATABASE_URL`           | Yes          | Neon PostgreSQL connection string   |
+| `LOOP_API_KEY`           | Yes          | Bearer token for API authentication |
+| `GITHUB_WEBHOOK_SECRET`  | For webhooks | GitHub HMAC secret                  |
+| `SENTRY_CLIENT_SECRET`   | For webhooks | Sentry HMAC secret                  |
+| `POSTHOG_WEBHOOK_SECRET` | For webhooks | PostHog shared secret               |
 
 App env vars:
 | `VITE_API_URL` | No | API base URL (defaults `http://localhost:4242`) |
@@ -1107,6 +1238,7 @@ App env vars:
 - `<Callout type="warning">` for never committing secrets
 
 **3. `docs/self-hosting/deployment.mdx` — Deployment Guide**
+
 - Vercel deployment (recommended):
   - Import monorepo
   - Configure root directory for each app
@@ -1121,6 +1253,7 @@ App env vars:
 Content source: `CLAUDE.md` for env vars and commands.
 
 **Acceptance Criteria:**
+
 - [ ] All 3 MDX files created in `docs/self-hosting/`
 - [ ] Complete env var reference table
 - [ ] Both Vercel and manual deployment paths documented
@@ -1161,6 +1294,7 @@ Create `docs/contributing/index.mdx` with:
 Content source: `CLAUDE.md` for commands and structure.
 
 **Acceptance Criteria:**
+
 - [ ] `docs/contributing/index.mdx` created
 - [ ] Dev setup, testing, code quality, ADR sections included
 - [ ] PGlite testing approach documented
@@ -1191,6 +1325,7 @@ Content source: `CLAUDE.md` for commands and structure.
    - No real credentials in any examples
 
 **Acceptance Criteria:**
+
 - [ ] Full build succeeds without errors
 - [ ] All tests pass
 - [ ] All 8 sections visible in sidebar

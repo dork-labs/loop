@@ -1,4 +1,4 @@
-import posthog from 'posthog-js'
+import posthog from 'posthog-js';
 
 posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
   api_host: '/ingest',
@@ -9,7 +9,7 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
   capture_exceptions: true,
   // Turn on debug in development mode
   debug: process.env.NODE_ENV === 'development',
-})
+});
 
 // IMPORTANT: Never combine this approach with other client-side PostHog initialization approaches,
 // especially components like a PostHogProvider. instrumentation-client.ts is the correct solution

@@ -61,12 +61,14 @@ status: ideation
 ## 3) Codebase Map
 
 **Primary Components/Modules:**
+
 - `apps/api/src/routes/*.ts` — All API route handlers the CLI will call (12 route files)
 - `apps/api/src/middleware/auth.ts` — Bearer token auth pattern the CLI must replicate
 - `apps/api/src/db/schema/*.ts` — Type enums and field definitions (CLI needs compatible types)
 - `apps/api/src/types.ts` — `AnyDb`, `AppEnv` types (internal to API, not shared)
 
 **Shared Dependencies:**
+
 - `ky` — HTTP client already used by `@loop/app`, should be reused by CLI
 - `zod` — Used for validation in both API and app (CLI could use for config validation)
 - Root ESLint 9 config + Prettier — CLI will inherit code quality tooling
@@ -75,11 +77,13 @@ status: ideation
 User types CLI command → Commander parses args/flags → API client (ky) sends HTTP request → Loop API processes → JSON response → CLI formats as table or JSON → stdout
 
 **Feature Flags/Config:**
+
 - `LOOP_API_URL` env var — overrides stored API base URL
 - `LOOP_API_TOKEN` env var — overrides stored auth token (for CI)
 - `~/.loop/config.json` — persistent config (custom implementation, all platforms)
 
 **Potential Blast Radius:**
+
 - Direct: New `apps/cli/` directory (all new files)
 - Indirect: `package-lock.json` (new dependencies), potentially `turbo.json` if CLI needs custom task config
 - Tests: New test files within `apps/cli/`
@@ -96,6 +100,7 @@ Research agent conducted 16 searches and 4 page fetches. Full research saved at 
 ### Potential Solutions
 
 **1. Commander.js v14 + Lean Stack**
+
 - Description: Commander for CLI framework, picocolors for colors, cli-table3 for tables, nanospinner for loading, @inquirer/prompts for interactive input, ky for HTTP, custom config at ~/.loop/config.json, tsup for bundling
 - Pros:
   - Commander has 238M weekly downloads — by far the most battle-tested
@@ -110,6 +115,7 @@ Research agent conducted 16 searches and 4 page fetches. Full research saved at 
 - Maintenance: Low
 
 **2. oclif Framework**
+
 - Description: Salesforce's full-featured CLI framework with plugin system, auto-generated help, class-based commands
 - Pros:
   - Rich built-in features (auto-generated help, plugin system, update notifications)
@@ -123,6 +129,7 @@ Research agent conducted 16 searches and 4 page fetches. Full research saved at 
 - Maintenance: Medium
 
 **3. citty (UnJS) Modern Approach**
+
 - Description: Zero-dependency CLI framework from UnJS, built on Node's native `util.parseArgs`
 - Pros:
   - Zero dependencies, 100% TypeScript
@@ -136,11 +143,13 @@ Research agent conducted 16 searches and 4 page fetches. Full research saved at 
 - Maintenance: Unknown (pre-1.0)
 
 ### Security Considerations
+
 - Token stored in config file should have restricted file permissions (0600)
 - Environment variable override pattern prevents config file from being the only auth source
 - CLI should never echo the full token in output (mask it in `loop auth status`)
 
 ### Performance Considerations
+
 - CLI startup time matters — Commander + picocolors + ky is lightweight (fast cold start)
 - tsup bundles to a single file, avoiding module resolution overhead at startup
 - ky's retry (2x on 429/500/503) handles transient API failures gracefully
@@ -153,6 +162,7 @@ Research agent conducted 16 searches and 4 page fetches. Full research saved at 
 Commander is the de facto standard for Node.js CLIs with proven stability across 238M weekly installs. Combined with ky (already in the monorepo), picocolors (7KB), and tsup (zero-config bundling), this stack delivers a fast, maintainable CLI with minimal dependencies. The functional API is cleaner than oclif's class-based pattern for a fixed-command set.
 
 **Caveats:**
+
 - Config is custom (`~/.loop/config.json`) — not using `conf` package, so we handle file I/O, permissions, and atomic writes ourselves
 - Commander's type inference on positional args is weaker than clipanion — use explicit type annotations where needed
 

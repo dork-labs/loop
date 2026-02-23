@@ -64,19 +64,19 @@ This phase establishes the complete schema for all 11 entities defined in the MV
 
 ## Technical Dependencies
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| `hono` | ^4 | HTTP framework (already installed) |
-| `@hono/node-server` | ^1 | Local dev server (already installed) |
-| `drizzle-orm` | ^0.38 | Type-safe ORM |
-| `@neondatabase/serverless` | ^1 | Neon PostgreSQL serverless driver |
-| `drizzle-kit` | ^0.30 | Schema migration generator (dev) |
-| `@electric-sql/pglite` | ^0.2 | In-memory Postgres for tests (dev) |
-| `@paralleldrive/cuid2` | ^2 | CUID2 ID generation |
-| `zod` | ^3 | Request validation schemas |
-| `@hono/zod-validator` | ^0.4 | Hono + Zod integration |
-| `ws` | ^8 | WebSocket for Neon Pool driver (Node.js) |
-| `dotenv` | ^16 | Environment variable loading |
+| Dependency                 | Version | Purpose                                  |
+| -------------------------- | ------- | ---------------------------------------- |
+| `hono`                     | ^4      | HTTP framework (already installed)       |
+| `@hono/node-server`        | ^1      | Local dev server (already installed)     |
+| `drizzle-orm`              | ^0.38   | Type-safe ORM                            |
+| `@neondatabase/serverless` | ^1      | Neon PostgreSQL serverless driver        |
+| `drizzle-kit`              | ^0.30   | Schema migration generator (dev)         |
+| `@electric-sql/pglite`     | ^0.2    | In-memory Postgres for tests (dev)       |
+| `@paralleldrive/cuid2`     | ^2      | CUID2 ID generation                      |
+| `zod`                      | ^3      | Request validation schemas               |
+| `@hono/zod-validator`      | ^0.4    | Hono + Zod integration                   |
+| `ws`                       | ^8      | WebSocket for Neon Pool driver (Node.js) |
+| `dotenv`                   | ^16     | Environment variable loading             |
 
 ---
 
@@ -137,19 +137,22 @@ apps/api/
 ```typescript
 // Reusable column definitions
 export const timestamps = {
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
-    .defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
-    .defaultNow().notNull().$onUpdate(() => new Date()),
-}
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+};
 
 export const softDelete = {
   deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-}
+};
 
 export const cuid2Id = {
-  id: text('id').primaryKey().$defaultFn(() => createId()),
-}
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+};
 ```
 
 #### 2.2 Issues Domain (`issues.ts`)
@@ -157,45 +160,53 @@ export const cuid2Id = {
 **Enums:**
 
 ```typescript
-export const issueTypeValues = ['signal', 'hypothesis', 'plan', 'task', 'monitor'] as const
-export const issueTypeEnum = pgEnum('issue_type', issueTypeValues)
+export const issueTypeValues = ['signal', 'hypothesis', 'plan', 'task', 'monitor'] as const;
+export const issueTypeEnum = pgEnum('issue_type', issueTypeValues);
 
-export const issueStatusValues = ['triage', 'backlog', 'todo', 'in_progress', 'done', 'canceled'] as const
-export const issueStatusEnum = pgEnum('issue_status', issueStatusValues)
+export const issueStatusValues = [
+  'triage',
+  'backlog',
+  'todo',
+  'in_progress',
+  'done',
+  'canceled',
+] as const;
+export const issueStatusEnum = pgEnum('issue_status', issueStatusValues);
 
-export const relationTypeValues = ['blocks', 'blocked_by', 'related', 'duplicate'] as const
-export const relationTypeEnum = pgEnum('relation_type', relationTypeValues)
+export const relationTypeValues = ['blocks', 'blocked_by', 'related', 'duplicate'] as const;
+export const relationTypeEnum = pgEnum('relation_type', relationTypeValues);
 
-export const authorTypeValues = ['human', 'agent'] as const
-export const authorTypeEnum = pgEnum('author_type', authorTypeValues)
+export const authorTypeValues = ['human', 'agent'] as const;
+export const authorTypeEnum = pgEnum('author_type', authorTypeValues);
 ```
 
 **Issues table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `number` | serial | unique, auto-increment, immutable |
-| `title` | text | not null |
-| `description` | text | nullable |
-| `type` | issue_type enum | not null |
-| `status` | issue_status enum | not null, default 'triage' |
-| `priority` | integer | not null, default 0 (0=none, 1=urgent, 2=high, 3=medium, 4=low) |
-| `parent_id` | text | FK → issues.id, nullable |
-| `project_id` | text | FK → projects.id, nullable |
-| `signal_source` | text | nullable |
-| `signal_payload` | jsonb | nullable, typed `SignalPayload` |
-| `hypothesis` | jsonb | nullable, typed `HypothesisData` |
-| `agent_session_id` | text | nullable |
-| `agent_summary` | text | nullable |
-| `commits` | jsonb | nullable, typed `CommitRef[]` |
-| `pull_requests` | jsonb | nullable, typed `PullRequestRef[]` |
-| `completed_at` | timestamptz | nullable |
-| `created_at` | timestamptz | not null, default now |
-| `updated_at` | timestamptz | not null, default now |
-| `deleted_at` | timestamptz | nullable (soft delete) |
+| Column             | Type              | Constraints                                                     |
+| ------------------ | ----------------- | --------------------------------------------------------------- |
+| `id`               | text (CUID2)      | PK                                                              |
+| `number`           | serial            | unique, auto-increment, immutable                               |
+| `title`            | text              | not null                                                        |
+| `description`      | text              | nullable                                                        |
+| `type`             | issue_type enum   | not null                                                        |
+| `status`           | issue_status enum | not null, default 'triage'                                      |
+| `priority`         | integer           | not null, default 0 (0=none, 1=urgent, 2=high, 3=medium, 4=low) |
+| `parent_id`        | text              | FK → issues.id, nullable                                        |
+| `project_id`       | text              | FK → projects.id, nullable                                      |
+| `signal_source`    | text              | nullable                                                        |
+| `signal_payload`   | jsonb             | nullable, typed `SignalPayload`                                 |
+| `hypothesis`       | jsonb             | nullable, typed `HypothesisData`                                |
+| `agent_session_id` | text              | nullable                                                        |
+| `agent_summary`    | text              | nullable                                                        |
+| `commits`          | jsonb             | nullable, typed `CommitRef[]`                                   |
+| `pull_requests`    | jsonb             | nullable, typed `PullRequestRef[]`                              |
+| `completed_at`     | timestamptz       | nullable                                                        |
+| `created_at`       | timestamptz       | not null, default now                                           |
+| `updated_at`       | timestamptz       | not null, default now                                           |
+| `deleted_at`       | timestamptz       | nullable (soft delete)                                          |
 
 **Indexes:**
+
 - `idx_issues_project_status` — composite `(project_id, status)` for filtered list queries
 - `idx_issues_parent_id` — for child lookups
 - `idx_issues_type` — for type-filtered queries
@@ -205,65 +216,67 @@ export const authorTypeEnum = pgEnum('author_type', authorTypeValues)
 **JSONB types:**
 
 ```typescript
-export type SignalPayload = Record<string, unknown>
+export type SignalPayload = Record<string, unknown>;
 
 export type HypothesisData = {
-  statement: string
-  confidence: number
-  evidence: string[]
-  validationCriteria: string
-  prediction?: string
-}
+  statement: string;
+  confidence: number;
+  evidence: string[];
+  validationCriteria: string;
+  prediction?: string;
+};
 
-export type CommitRef = { sha: string; message: string; url?: string }
-export type PullRequestRef = { number: number; url: string; status: string; merged: boolean }
+export type CommitRef = { sha: string; message: string; url?: string };
+export type PullRequestRef = { number: number; url: string; status: string; merged: boolean };
 ```
 
 **Labels table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `name` | text | not null, unique |
-| `color` | text | not null |
-| `created_at` | timestamptz | not null |
-| `deleted_at` | timestamptz | nullable |
+| Column       | Type         | Constraints      |
+| ------------ | ------------ | ---------------- |
+| `id`         | text (CUID2) | PK               |
+| `name`       | text         | not null, unique |
+| `color`      | text         | not null         |
+| `created_at` | timestamptz  | not null         |
+| `deleted_at` | timestamptz  | nullable         |
 
 **IssueLabels table (join):**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `issue_id` | text | FK → issues.id, not null |
-| `label_id` | text | FK → labels.id, not null |
-| Primary key | composite | (issue_id, label_id) |
+| Column      | Type      | Constraints              |
+| ----------- | --------- | ------------------------ |
+| `issue_id`  | text      | FK → issues.id, not null |
+| `label_id`  | text      | FK → labels.id, not null |
+| Primary key | composite | (issue_id, label_id)     |
 
 **IssueRelations table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `type` | relation_type enum | not null |
-| `issue_id` | text | FK → issues.id, not null |
-| `related_issue_id` | text | FK → issues.id, not null |
-| `created_at` | timestamptz | not null |
+| Column             | Type               | Constraints              |
+| ------------------ | ------------------ | ------------------------ |
+| `id`               | text (CUID2)       | PK                       |
+| `type`             | relation_type enum | not null                 |
+| `issue_id`         | text               | FK → issues.id, not null |
+| `related_issue_id` | text               | FK → issues.id, not null |
+| `created_at`       | timestamptz        | not null                 |
 
 **Indexes:**
+
 - `idx_relations_issue_id` — for looking up relations for an issue
 - `idx_relations_related_issue_id` — for reverse lookups
 
 **Comments table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `body` | text | not null |
-| `issue_id` | text | FK → issues.id, not null |
-| `author_name` | text | not null |
-| `author_type` | author_type enum | not null |
-| `parent_id` | text | FK → comments.id, nullable (threading) |
-| `created_at` | timestamptz | not null |
+| Column        | Type             | Constraints                            |
+| ------------- | ---------------- | -------------------------------------- |
+| `id`          | text (CUID2)     | PK                                     |
+| `body`        | text             | not null                               |
+| `issue_id`    | text             | FK → issues.id, not null               |
+| `author_name` | text             | not null                               |
+| `author_type` | author_type enum | not null                               |
+| `parent_id`   | text             | FK → comments.id, nullable (threading) |
+| `created_at`  | timestamptz      | not null                               |
 
 **Indexes:**
+
 - `idx_comments_issue_id` — for listing comments on an issue
 
 #### 2.3 Projects Domain (`projects.ts`)
@@ -271,70 +284,78 @@ export type PullRequestRef = { number: number; url: string; status: string; merg
 **Enums:**
 
 ```typescript
-export const projectStatusValues = ['backlog', 'planned', 'active', 'paused', 'completed', 'canceled'] as const
-export const projectStatusEnum = pgEnum('project_status', projectStatusValues)
+export const projectStatusValues = [
+  'backlog',
+  'planned',
+  'active',
+  'paused',
+  'completed',
+  'canceled',
+] as const;
+export const projectStatusEnum = pgEnum('project_status', projectStatusValues);
 
-export const projectHealthValues = ['on_track', 'at_risk', 'off_track'] as const
-export const projectHealthEnum = pgEnum('project_health', projectHealthValues)
+export const projectHealthValues = ['on_track', 'at_risk', 'off_track'] as const;
+export const projectHealthEnum = pgEnum('project_health', projectHealthValues);
 
-export const goalStatusValues = ['active', 'achieved', 'abandoned'] as const
-export const goalStatusEnum = pgEnum('goal_status', goalStatusValues)
+export const goalStatusValues = ['active', 'achieved', 'abandoned'] as const;
+export const goalStatusEnum = pgEnum('goal_status', goalStatusValues);
 ```
 
 **Projects table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `name` | text | not null |
-| `description` | text | nullable |
-| `status` | project_status enum | not null, default 'backlog' |
-| `health` | project_health enum | not null, default 'on_track' |
-| `goal_id` | text | FK → goals.id, nullable |
-| `created_at` | timestamptz | not null |
-| `updated_at` | timestamptz | not null |
-| `deleted_at` | timestamptz | nullable |
+| Column        | Type                | Constraints                  |
+| ------------- | ------------------- | ---------------------------- |
+| `id`          | text (CUID2)        | PK                           |
+| `name`        | text                | not null                     |
+| `description` | text                | nullable                     |
+| `status`      | project_status enum | not null, default 'backlog'  |
+| `health`      | project_health enum | not null, default 'on_track' |
+| `goal_id`     | text                | FK → goals.id, nullable      |
+| `created_at`  | timestamptz         | not null                     |
+| `updated_at`  | timestamptz         | not null                     |
+| `deleted_at`  | timestamptz         | nullable                     |
 
 **Goals table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `title` | text | not null |
-| `description` | text | nullable |
-| `metric` | text | nullable |
-| `target_value` | double precision | nullable |
-| `current_value` | double precision | nullable |
-| `unit` | text | nullable |
-| `status` | goal_status enum | not null, default 'active' |
-| `project_id` | text | FK → projects.id, nullable |
-| `created_at` | timestamptz | not null |
-| `updated_at` | timestamptz | not null |
-| `deleted_at` | timestamptz | nullable |
+| Column          | Type             | Constraints                |
+| --------------- | ---------------- | -------------------------- |
+| `id`            | text (CUID2)     | PK                         |
+| `title`         | text             | not null                   |
+| `description`   | text             | nullable                   |
+| `metric`        | text             | nullable                   |
+| `target_value`  | double precision | nullable                   |
+| `current_value` | double precision | nullable                   |
+| `unit`          | text             | nullable                   |
+| `status`        | goal_status enum | not null, default 'active' |
+| `project_id`    | text             | FK → projects.id, nullable |
+| `created_at`    | timestamptz      | not null                   |
+| `updated_at`    | timestamptz      | not null                   |
+| `deleted_at`    | timestamptz      | nullable                   |
 
 #### 2.4 Signals Domain (`signals.ts`)
 
 **Enums:**
 
 ```typescript
-export const signalSeverityValues = ['low', 'medium', 'high', 'critical'] as const
-export const signalSeverityEnum = pgEnum('signal_severity', signalSeverityValues)
+export const signalSeverityValues = ['low', 'medium', 'high', 'critical'] as const;
+export const signalSeverityEnum = pgEnum('signal_severity', signalSeverityValues);
 ```
 
 **Signals table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `source` | text | not null |
-| `source_id` | text | nullable |
-| `type` | text | not null |
-| `severity` | signal_severity enum | not null |
-| `payload` | jsonb | not null |
-| `issue_id` | text | FK → issues.id, not null |
-| `created_at` | timestamptz | not null |
+| Column       | Type                 | Constraints              |
+| ------------ | -------------------- | ------------------------ |
+| `id`         | text (CUID2)         | PK                       |
+| `source`     | text                 | not null                 |
+| `source_id`  | text                 | nullable                 |
+| `type`       | text                 | not null                 |
+| `severity`   | signal_severity enum | not null                 |
+| `payload`    | jsonb                | not null                 |
+| `issue_id`   | text                 | FK → issues.id, not null |
+| `created_at` | timestamptz          | not null                 |
 
 **Indexes:**
+
 - `idx_signals_issue_id` — for looking up signal by issue
 - `idx_signals_source` — for filtering by source
 - `idx_signals_payload_gin` — GIN index on payload for JSONB queries
@@ -344,63 +365,65 @@ export const signalSeverityEnum = pgEnum('signal_severity', signalSeverityValues
 **Enums:**
 
 ```typescript
-export const promptVersionStatusValues = ['active', 'draft', 'retired'] as const
-export const promptVersionStatusEnum = pgEnum('prompt_version_status', promptVersionStatusValues)
+export const promptVersionStatusValues = ['active', 'draft', 'retired'] as const;
+export const promptVersionStatusEnum = pgEnum('prompt_version_status', promptVersionStatusValues);
 ```
 
 **PromptTemplates table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `slug` | text | not null, unique |
-| `name` | text | not null |
-| `description` | text | nullable |
-| `conditions` | jsonb | not null, default `{}` |
-| `specificity` | integer | not null, default 10 |
-| `project_id` | text | FK → projects.id, nullable |
-| `active_version_id` | text | nullable (FK set after first version created) |
-| `created_at` | timestamptz | not null |
-| `updated_at` | timestamptz | not null |
-| `deleted_at` | timestamptz | nullable |
+| Column              | Type         | Constraints                                   |
+| ------------------- | ------------ | --------------------------------------------- |
+| `id`                | text (CUID2) | PK                                            |
+| `slug`              | text         | not null, unique                              |
+| `name`              | text         | not null                                      |
+| `description`       | text         | nullable                                      |
+| `conditions`        | jsonb        | not null, default `{}`                        |
+| `specificity`       | integer      | not null, default 10                          |
+| `project_id`        | text         | FK → projects.id, nullable                    |
+| `active_version_id` | text         | nullable (FK set after first version created) |
+| `created_at`        | timestamptz  | not null                                      |
+| `updated_at`        | timestamptz  | not null                                      |
+| `deleted_at`        | timestamptz  | nullable                                      |
 
 **PromptVersions table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `template_id` | text | FK → prompt_templates.id, not null |
-| `version` | integer | not null |
-| `content` | text | not null |
-| `changelog` | text | nullable |
-| `author_type` | author_type enum | not null |
-| `author_name` | text | not null |
-| `status` | prompt_version_status enum | not null, default 'draft' |
-| `usage_count` | integer | not null, default 0 |
-| `completion_rate` | double precision | nullable |
-| `avg_duration_ms` | double precision | nullable |
-| `review_score` | double precision | nullable |
-| `created_at` | timestamptz | not null |
+| Column            | Type                       | Constraints                        |
+| ----------------- | -------------------------- | ---------------------------------- |
+| `id`              | text (CUID2)               | PK                                 |
+| `template_id`     | text                       | FK → prompt_templates.id, not null |
+| `version`         | integer                    | not null                           |
+| `content`         | text                       | not null                           |
+| `changelog`       | text                       | nullable                           |
+| `author_type`     | author_type enum           | not null                           |
+| `author_name`     | text                       | not null                           |
+| `status`          | prompt_version_status enum | not null, default 'draft'          |
+| `usage_count`     | integer                    | not null, default 0                |
+| `completion_rate` | double precision           | nullable                           |
+| `avg_duration_ms` | double precision           | nullable                           |
+| `review_score`    | double precision           | nullable                           |
+| `created_at`      | timestamptz                | not null                           |
 
 **Indexes:**
+
 - `idx_prompt_versions_template_id` — for listing versions of a template
 - Unique constraint: `(template_id, version)` — no duplicate version numbers per template
 
 **PromptReviews table:**
 
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | text (CUID2) | PK |
-| `version_id` | text | FK → prompt_versions.id, not null |
-| `issue_id` | text | FK → issues.id, not null |
-| `clarity` | integer | not null, check 1-5 |
-| `completeness` | integer | not null, check 1-5 |
-| `relevance` | integer | not null, check 1-5 |
-| `feedback` | text | nullable |
-| `author_type` | author_type enum | not null |
-| `created_at` | timestamptz | not null |
+| Column         | Type             | Constraints                       |
+| -------------- | ---------------- | --------------------------------- |
+| `id`           | text (CUID2)     | PK                                |
+| `version_id`   | text             | FK → prompt_versions.id, not null |
+| `issue_id`     | text             | FK → issues.id, not null          |
+| `clarity`      | integer          | not null, check 1-5               |
+| `completeness` | integer          | not null, check 1-5               |
+| `relevance`    | integer          | not null, check 1-5               |
+| `feedback`     | text             | nullable                          |
+| `author_type`  | author_type enum | not null                          |
+| `created_at`   | timestamptz      | not null                          |
 
 **Indexes:**
+
 - `idx_prompt_reviews_version_id` — for listing reviews of a version
 
 ### 3. Database Connection
@@ -409,13 +432,13 @@ export const promptVersionStatusEnum = pgEnum('prompt_version_status', promptVer
 
 ```typescript
 // src/db/index.ts
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-import * as schema from './schema'
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema';
 
-const sql = neon(process.env.DATABASE_URL!)
-export const db = drizzle(sql, { schema })
-export type Database = typeof db
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql, { schema });
+export type Database = typeof db;
 ```
 
 #### 3.2 Transactions: Neon Pool Driver
@@ -424,45 +447,45 @@ For endpoints that require multi-table atomicity (signal ingestion), use the Poo
 
 ```typescript
 // src/db/pool.ts
-import { Pool, neonConfig } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-serverless'
-import ws from 'ws'
-import * as schema from './schema'
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from 'ws';
+import * as schema from './schema';
 
-neonConfig.webSocketConstructor = ws
+neonConfig.webSocketConstructor = ws;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-export const poolDb = drizzle(pool, { schema })
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const poolDb = drizzle(pool, { schema });
 ```
 
 #### 3.3 Migrations
 
 ```typescript
 // src/db/migrate.ts
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-import { migrate } from 'drizzle-orm/neon-http/migrator'
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { migrate } from 'drizzle-orm/neon-http/migrator';
 
-const sql = neon(process.env.DATABASE_URL!)
-const db = drizzle(sql)
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql);
 
-await migrate(db, { migrationsFolder: './drizzle/migrations' })
-console.log('Migrations complete')
-process.exit(0)
+await migrate(db, { migrationsFolder: './drizzle/migrations' });
+console.log('Migrations complete');
+process.exit(0);
 ```
 
 **Drizzle Kit config:**
 
 ```typescript
 // drizzle.config.ts
-import { defineConfig } from 'drizzle-kit'
+import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   dialect: 'postgresql',
   schema: './src/db/schema',
   out: './drizzle/migrations',
   dbCredentials: { url: process.env.DATABASE_URL! },
-})
+});
 ```
 
 **Migration scripts in `package.json`:**
@@ -486,71 +509,73 @@ Separate the Hono app from the server entry point for testability:
 
 ```typescript
 // src/app.ts
-import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { ZodError } from 'zod'
-import { apiKeyAuth } from './middleware/auth'
-import { issueRoutes } from './routes/issues'
-import { projectRoutes } from './routes/projects'
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { ZodError } from 'zod';
+import { apiKeyAuth } from './middleware/auth';
+import { issueRoutes } from './routes/issues';
+import { projectRoutes } from './routes/projects';
 // ... other route imports
 
 export type AppEnv = {
   Variables: {
     // Empty for now — db is imported directly
-  }
-}
+  };
+};
 
-const app = new Hono<AppEnv>()
+const app = new Hono<AppEnv>();
 
 // Global error handler
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    return c.json({ error: err.message }, err.status)
+    return c.json({ error: err.message }, err.status);
   }
   if (err instanceof ZodError) {
-    return c.json({ error: 'Validation error', details: err.flatten() }, 422)
+    return c.json({ error: 'Validation error', details: err.flatten() }, 422);
   }
-  console.error(err)
-  return c.json({ error: 'Internal server error' }, 500)
-})
+  console.error(err);
+  return c.json({ error: 'Internal server error' }, 500);
+});
 
 // Health check (no auth)
-app.get('/health', (c) => c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() }))
-app.get('/', (c) => c.json({ name: 'Loop API', version: '0.1.0' }))
+app.get('/health', (c) =>
+  c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() })
+);
+app.get('/', (c) => c.json({ name: 'Loop API', version: '0.1.0' }));
 
 // Protected API routes
-const api = new Hono<AppEnv>()
-api.use('*', apiKeyAuth)
-api.route('/issues', issueRoutes)
-api.route('/projects', projectRoutes)
-api.route('/goals', goalRoutes)
-api.route('/labels', labelRoutes)
-api.route('/templates', templateRoutes)
-api.route('/prompt-reviews', promptReviewRoutes)
+const api = new Hono<AppEnv>();
+api.use('*', apiKeyAuth);
+api.route('/issues', issueRoutes);
+api.route('/projects', projectRoutes);
+api.route('/goals', goalRoutes);
+api.route('/labels', labelRoutes);
+api.route('/templates', templateRoutes);
+api.route('/prompt-reviews', promptReviewRoutes);
 
-app.route('/api', api)
+app.route('/api', api);
 
 // Signal webhooks (separate auth — provider-specific verification)
-app.route('/api/signals', signalRoutes)
+app.route('/api/signals', signalRoutes);
 
-export { app }
+export { app };
 ```
 
 #### 4.2 Server Entry Point (`index.ts`)
 
 ```typescript
 // src/index.ts
-import { serve } from '@hono/node-server'
-import { app } from './app'
+import { serve } from '@hono/node-server';
+import { app } from './app';
 
 if (process.env.NODE_ENV !== 'production') {
-  const port = parseInt(process.env.PORT || '4242', 10)
+  const port = parseInt(process.env.PORT || '4242', 10);
   serve({ fetch: app.fetch, port }, (info) => {
-    console.log(`Loop API running at http://localhost:${info.port}`)
-  })
+    console.log(`Loop API running at http://localhost:${info.port}`);
+  });
 }
 
-export default app
+export default app;
 ```
 
 ### 5. Authentication Middleware
@@ -560,33 +585,33 @@ export default app
 Simple environment variable comparison using `crypto.timingSafeEqual`:
 
 ```typescript
-import { createMiddleware } from 'hono/factory'
-import { HTTPException } from 'hono/http-exception'
-import { timingSafeEqual } from 'node:crypto'
-import type { AppEnv } from '../app'
+import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
+import { timingSafeEqual } from 'node:crypto';
+import type { AppEnv } from '../app';
 
 export const apiKeyAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const authHeader = c.req.header('Authorization')
+  const authHeader = c.req.header('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
-    throw new HTTPException(401, { message: 'Missing or malformed Authorization header' })
+    throw new HTTPException(401, { message: 'Missing or malformed Authorization header' });
   }
 
-  const token = authHeader.slice(7)
-  const expected = process.env.LOOP_API_KEY
+  const token = authHeader.slice(7);
+  const expected = process.env.LOOP_API_KEY;
 
   if (!expected) {
-    throw new HTTPException(500, { message: 'LOOP_API_KEY not configured' })
+    throw new HTTPException(500, { message: 'LOOP_API_KEY not configured' });
   }
 
-  const tokenBuf = Buffer.from(token)
-  const expectedBuf = Buffer.from(expected)
+  const tokenBuf = Buffer.from(token);
+  const expectedBuf = Buffer.from(expected);
 
   if (tokenBuf.length !== expectedBuf.length || !timingSafeEqual(tokenBuf, expectedBuf)) {
-    throw new HTTPException(401, { message: 'Invalid API key' })
+    throw new HTTPException(401, { message: 'Invalid API key' });
   }
 
-  await next()
-})
+  await next();
+});
 ```
 
 #### 5.2 Webhook Verification (`middleware/webhooks.ts`)
@@ -604,27 +629,30 @@ All comparisons use `crypto.timingSafeEqual`.
 #### 6.1 Shared Patterns
 
 All list endpoints support:
+
 - **Pagination**: `?limit=50&offset=0` (default limit 50, max 200)
 - **Soft delete filtering**: Automatically exclude `deleted_at IS NOT NULL`
 - **Response format**: `{ data: T[], total: number }` for lists, `{ data: T }` for single items
 - **Error format**: `{ error: string, details?: object }` with appropriate HTTP status
 
 All mutation endpoints:
+
 - Validate request body with Zod via `@hono/zod-validator`
 - Return 201 for creates, 200 for updates, 204 for deletes
 - Soft delete: set `deletedAt = new Date()` instead of removing the row
 
 #### 6.2 Issues (`/api/issues`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/issues` | List issues with filtering |
-| `POST` | `/api/issues` | Create issue (enforces 1-level hierarchy) |
-| `GET` | `/api/issues/:id` | Get issue with parent, children, relations, labels |
-| `PATCH` | `/api/issues/:id` | Update issue fields |
-| `DELETE` | `/api/issues/:id` | Soft delete issue |
+| Method   | Path              | Description                                        |
+| -------- | ----------------- | -------------------------------------------------- |
+| `GET`    | `/api/issues`     | List issues with filtering                         |
+| `POST`   | `/api/issues`     | Create issue (enforces 1-level hierarchy)          |
+| `GET`    | `/api/issues/:id` | Get issue with parent, children, relations, labels |
+| `PATCH`  | `/api/issues/:id` | Update issue fields                                |
+| `DELETE` | `/api/issues/:id` | Soft delete issue                                  |
 
 **Filters (query params):**
+
 - `status` — filter by status (comma-separated for multiple)
 - `type` — filter by type (comma-separated)
 - `projectId` — filter by project
@@ -637,6 +665,7 @@ All mutation endpoints:
 **Hierarchy constraint enforcement:**
 
 On `POST /api/issues` with a `parentId`:
+
 1. Look up the parent issue
 2. If the parent has a `parentId` itself (i.e., it's a child), reject with 422: `"Cannot create a child of an issue that already has a parent (1-level hierarchy limit)"`
 3. Otherwise, allow the creation
@@ -654,15 +683,17 @@ const createIssueSchema = z.object({
   projectId: z.string().optional(),
   signalSource: z.string().optional(),
   signalPayload: z.record(z.unknown()).optional(),
-  hypothesis: z.object({
-    statement: z.string(),
-    confidence: z.number().min(0).max(1),
-    evidence: z.array(z.string()),
-    validationCriteria: z.string(),
-    prediction: z.string().optional(),
-  }).optional(),
+  hypothesis: z
+    .object({
+      statement: z.string(),
+      confidence: z.number().min(0).max(1),
+      evidence: z.array(z.string()),
+      validationCriteria: z.string(),
+      prediction: z.string().optional(),
+    })
+    .optional(),
   labelIds: z.array(z.string()).optional(),
-})
+});
 ```
 
 **GET `/api/issues/:id` response shape:**
@@ -680,7 +711,13 @@ const createIssueSchema = z.object({
     "children": [{ "id": "...", "number": 43, "title": "...", "status": "todo" }],
     "project": { "id": "...", "name": "Improve onboarding" },
     "labels": [{ "id": "...", "name": "bug", "color": "#ff0000" }],
-    "relations": [{ "id": "...", "type": "blocks", "relatedIssue": { "id": "...", "number": 46, "title": "..." } }],
+    "relations": [
+      {
+        "id": "...",
+        "type": "blocks",
+        "relatedIssue": { "id": "...", "number": 46, "title": "..." }
+      }
+    ],
     "signalSource": null,
     "signalPayload": null,
     "hypothesis": null,
@@ -697,37 +734,37 @@ const createIssueSchema = z.object({
 
 #### 6.3 Projects (`/api/projects`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/projects` | List projects |
-| `POST` | `/api/projects` | Create project |
-| `GET` | `/api/projects/:id` | Get project with goal and issue counts |
-| `PATCH` | `/api/projects/:id` | Update project |
-| `DELETE` | `/api/projects/:id` | Soft delete project |
+| Method   | Path                | Description                            |
+| -------- | ------------------- | -------------------------------------- |
+| `GET`    | `/api/projects`     | List projects                          |
+| `POST`   | `/api/projects`     | Create project                         |
+| `GET`    | `/api/projects/:id` | Get project with goal and issue counts |
+| `PATCH`  | `/api/projects/:id` | Update project                         |
+| `DELETE` | `/api/projects/:id` | Soft delete project                    |
 
 #### 6.4 Goals (`/api/goals`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/goals` | List goals |
-| `POST` | `/api/goals` | Create goal |
-| `PATCH` | `/api/goals/:id` | Update goal (currentValue, status) |
-| `DELETE` | `/api/goals/:id` | Soft delete goal |
+| Method   | Path             | Description                        |
+| -------- | ---------------- | ---------------------------------- |
+| `GET`    | `/api/goals`     | List goals                         |
+| `POST`   | `/api/goals`     | Create goal                        |
+| `PATCH`  | `/api/goals/:id` | Update goal (currentValue, status) |
+| `DELETE` | `/api/goals/:id` | Soft delete goal                   |
 
 #### 6.5 Labels (`/api/labels`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/labels` | List labels |
-| `POST` | `/api/labels` | Create label |
+| Method   | Path              | Description       |
+| -------- | ----------------- | ----------------- |
+| `GET`    | `/api/labels`     | List labels       |
+| `POST`   | `/api/labels`     | Create label      |
 | `DELETE` | `/api/labels/:id` | Soft delete label |
 
 #### 6.6 Relations (`/api/issues/:id/relations`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/issues/:id/relations` | Create relation |
-| `DELETE` | `/api/relations/:id` | Delete relation (hard delete — relations are not soft deleted) |
+| Method   | Path                        | Description                                                    |
+| -------- | --------------------------- | -------------------------------------------------------------- |
+| `POST`   | `/api/issues/:id/relations` | Create relation                                                |
+| `DELETE` | `/api/relations/:id`        | Delete relation (hard delete — relations are not soft deleted) |
 
 **Create relation schema:**
 
@@ -735,15 +772,15 @@ const createIssueSchema = z.object({
 const createRelationSchema = z.object({
   type: z.enum(relationTypeValues),
   relatedIssueId: z.string(),
-})
+});
 ```
 
 #### 6.7 Comments (`/api/issues/:id/comments`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/issues/:id/comments` | List comments (threaded) |
-| `POST` | `/api/issues/:id/comments` | Add comment |
+| Method | Path                       | Description              |
+| ------ | -------------------------- | ------------------------ |
+| `GET`  | `/api/issues/:id/comments` | List comments (threaded) |
+| `POST` | `/api/issues/:id/comments` | Add comment              |
 
 **Create comment schema:**
 
@@ -753,19 +790,19 @@ const createCommentSchema = z.object({
   authorName: z.string().min(1),
   authorType: z.enum(authorTypeValues),
   parentId: z.string().optional(),
-})
+});
 ```
 
 #### 6.8 Signals (`/api/signals`)
 
 Signal endpoints use webhook-specific auth instead of Bearer token auth:
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/api/signals` | Bearer token | Generic signal ingestion |
-| `POST` | `/api/signals/posthog` | PostHog shared secret | PostHog webhook |
-| `POST` | `/api/signals/github` | GitHub HMAC | GitHub webhook |
-| `POST` | `/api/signals/sentry` | Sentry HMAC | Sentry webhook |
+| Method | Path                   | Auth                  | Description              |
+| ------ | ---------------------- | --------------------- | ------------------------ |
+| `POST` | `/api/signals`         | Bearer token          | Generic signal ingestion |
+| `POST` | `/api/signals/posthog` | PostHog shared secret | PostHog webhook          |
+| `POST` | `/api/signals/github`  | GitHub HMAC           | GitHub webhook           |
+| `POST` | `/api/signals/sentry`  | Sentry HMAC           | Sentry webhook           |
 
 **Generic signal create schema:**
 
@@ -777,7 +814,7 @@ const createSignalSchema = z.object({
   severity: z.enum(signalSeverityValues),
   payload: z.record(z.unknown()),
   projectId: z.string().optional(),
-})
+});
 ```
 
 **Signal ingestion flow (atomic transaction):**
@@ -799,17 +836,17 @@ const createSignalSchema = z.object({
 
 #### 6.9 Templates (`/api/templates`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/templates` | List templates with active version info |
-| `POST` | `/api/templates` | Create template |
-| `PATCH` | `/api/templates/:id` | Update template metadata |
-| `DELETE` | `/api/templates/:id` | Soft delete template |
-| `GET` | `/api/templates/:id/versions` | List versions for a template |
-| `POST` | `/api/templates/:id/versions` | Create new version |
-| `PATCH` | `/api/templates/:id/versions/:vid` | Update version (promote/retire) |
-| `POST` | `/api/prompt-reviews` | Submit a prompt review |
-| `GET` | `/api/templates/:id/reviews` | List reviews for a template |
+| Method   | Path                               | Description                             |
+| -------- | ---------------------------------- | --------------------------------------- |
+| `GET`    | `/api/templates`                   | List templates with active version info |
+| `POST`   | `/api/templates`                   | Create template                         |
+| `PATCH`  | `/api/templates/:id`               | Update template metadata                |
+| `DELETE` | `/api/templates/:id`               | Soft delete template                    |
+| `GET`    | `/api/templates/:id/versions`      | List versions for a template            |
+| `POST`   | `/api/templates/:id/versions`      | Create new version                      |
+| `PATCH`  | `/api/templates/:id/versions/:vid` | Update version (promote/retire)         |
+| `POST`   | `/api/prompt-reviews`              | Submit a prompt review                  |
+| `GET`    | `/api/templates/:id/reviews`       | List reviews for a template             |
 
 ### 7. Environment Variables
 
@@ -863,26 +900,26 @@ it('POST /api/issues creates an issue', async () => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TEST_KEY}` },
     body: JSON.stringify({ title: 'Test issue', type: 'task' }),
-  })
-  expect(res.status).toBe(201)
-  const body = await res.json()
-  expect(body.data).toMatchObject({ title: 'Test issue', type: 'task' })
-  expect(body.data.number).toBeGreaterThan(0)
-})
+  });
+  expect(res.status).toBe(201);
+  const body = await res.json();
+  expect(body.data).toMatchObject({ title: 'Test issue', type: 'task' });
+  expect(body.data.number).toBeGreaterThan(0);
+});
 ```
 
 ### Test Coverage
 
-| Test File | Covers |
-|-----------|--------|
-| `issues.test.ts` | CRUD, filtering, hierarchy constraint enforcement, soft delete, pagination, label association |
-| `projects.test.ts` | CRUD, soft delete, goal linking |
-| `goals.test.ts` | CRUD, currentValue update, soft delete |
-| `labels.test.ts` | CRUD, uniqueness constraint |
-| `comments.test.ts` | Create, list, threading (parentId) |
-| `relations.test.ts` | Create, delete, duplicate prevention |
-| `signals.test.ts` | Generic signal ingestion (atomic Signal + Issue creation), webhook payload normalization |
-| `templates.test.ts` | Template CRUD, version creation/promotion, review submission |
+| Test File           | Covers                                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| `issues.test.ts`    | CRUD, filtering, hierarchy constraint enforcement, soft delete, pagination, label association |
+| `projects.test.ts`  | CRUD, soft delete, goal linking                                                               |
+| `goals.test.ts`     | CRUD, currentValue update, soft delete                                                        |
+| `labels.test.ts`    | CRUD, uniqueness constraint                                                                   |
+| `comments.test.ts`  | Create, list, threading (parentId)                                                            |
+| `relations.test.ts` | Create, delete, duplicate prevention                                                          |
+| `signals.test.ts`   | Generic signal ingestion (atomic Signal + Issue creation), webhook payload normalization      |
+| `templates.test.ts` | Template CRUD, version creation/promotion, review submission                                  |
 
 ### Key Test Scenarios
 
@@ -993,6 +1030,7 @@ _None — all clarifications resolved during ideation._
 - **ADR-002**: Deploy as two Vercel projects (`decisions/0002-deploy-two-vercel-projects.md`) — API deploys as Vercel Functions
 
 New ADRs to extract from this spec:
+
 - Use Neon PostgreSQL as the database provider
 - Use Drizzle ORM for database access
 - Use CUID2 text primary keys

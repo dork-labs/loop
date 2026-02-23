@@ -1,27 +1,27 @@
-import { Command } from 'commander'
-import Table from 'cli-table3'
-import pc from 'picocolors'
-import { createApiClient } from '../lib/api-client.js'
-import { withErrorHandler } from '../lib/errors.js'
-import { output, formatDate } from '../lib/output.js'
-import type { GlobalOptions } from '../lib/config.js'
-import type { Goal, GoalStatus, PaginatedResponse } from '../types.js'
+import { Command } from 'commander';
+import Table from 'cli-table3';
+import pc from 'picocolors';
+import { createClient } from '../lib/client.js';
+import { withErrorHandler } from '../lib/errors.js';
+import { output, formatDate } from '../lib/output.js';
+import type { GlobalOptions } from '../lib/config.js';
+import type { Goal, GoalStatus } from '@dork-labs/loop-types';
 
 /** Color map for goal statuses. */
 const GOAL_STATUS_COLOR: Record<GoalStatus, (s: string) => string> = {
   active: pc.blue,
   achieved: pc.green,
   abandoned: pc.dim,
-}
+};
 
 /**
  * Format a goal's progress as "currentValue/targetValue unit".
  * Returns "-" when values are not set.
  */
 function formatProgress(goal: Goal): string {
-  if (goal.currentValue == null || goal.targetValue == null) return '-'
-  const unit = goal.unit ?? ''
-  return `${goal.currentValue}/${goal.targetValue}${unit ? ` ${unit}` : ''}`
+  if (goal.currentValue == null || goal.targetValue == null) return '-';
+  const unit = goal.unit ?? '';
+  return `${goal.currentValue}/${goal.targetValue}${unit ? ` ${unit}` : ''}`;
 }
 
 /**
@@ -29,23 +29,23 @@ function formatProgress(goal: Goal): string {
  * Returns null when values are not set or target is zero.
  */
 function calcPercent(goal: Goal): number | null {
-  if (goal.currentValue == null || goal.targetValue == null) return null
-  if (goal.targetValue === 0) return null
-  return Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100))
+  if (goal.currentValue == null || goal.targetValue == null) return null;
+  if (goal.targetValue === 0) return null;
+  return Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100));
 }
 
 /** Render a compact progress bar with percentage. */
 function renderProgressBar(goal: Goal): string {
-  const pct = calcPercent(goal)
-  if (pct == null) return pc.dim('n/a')
+  const pct = calcPercent(goal);
+  if (pct == null) return pc.dim('n/a');
 
-  const WIDTH = 15
-  const filled = Math.round((pct / 100) * WIDTH)
-  const empty = WIDTH - filled
+  const WIDTH = 15;
+  const filled = Math.round((pct / 100) * WIDTH);
+  const empty = WIDTH - filled;
 
-  const colorFn = pct >= 75 ? pc.green : pct >= 25 ? pc.yellow : pc.red
-  const bar = colorFn('\u2588'.repeat(filled)) + pc.dim('\u2591'.repeat(empty))
-  return `${bar} ${pct}%`
+  const colorFn = pct >= 75 ? pc.green : pct >= 25 ? pc.yellow : pc.red;
+  const bar = colorFn('\u2588'.repeat(filled)) + pc.dim('\u2591'.repeat(empty));
+  return `${bar} ${pct}%`;
 }
 
 /** Render goals as a formatted table. */
@@ -53,11 +53,11 @@ function renderGoalTable(goals: Goal[]): void {
   const table = new Table({
     head: ['TITLE', 'STATUS', 'METRIC', 'PROGRESS', 'BAR', 'PROJECT', 'CREATED'],
     style: { head: ['cyan'] },
-  })
+  });
 
   for (const goal of goals) {
-    const status = goal.status
-    const colorStatus = (GOAL_STATUS_COLOR[status] ?? pc.white)(status)
+    const status = goal.status;
+    const colorStatus = (GOAL_STATUS_COLOR[status] ?? pc.white)(status);
 
     table.push([
       goal.title,
@@ -67,17 +67,15 @@ function renderGoalTable(goals: Goal[]): void {
       renderProgressBar(goal),
       goal.projectId ?? '-',
       formatDate(goal.createdAt),
-    ])
+    ]);
   }
 
-  console.log(table.toString())
+  console.log(table.toString());
 }
 
 /** Register the `goals` command group on the given program. */
 export function registerGoalsCommand(program: Command): void {
-  const goals = program
-    .command('goals')
-    .description('Manage goals')
+  const goals = program.command('goals').description('Manage goals');
 
   goals
     .command('list')
@@ -85,29 +83,45 @@ export function registerGoalsCommand(program: Command): void {
     .option('--status <status>', 'Filter by status (active, achieved, abandoned)')
     .option('--limit <n>', 'Maximum number of results', '50')
     .option('--offset <n>', 'Pagination offset', '0')
-    .action(async (opts) => {
-      const globalOpts = program.opts<GlobalOptions>()
+    .action(async (opts, cmd) => {
+      const globalOpts = cmd.optsWithGlobals() as GlobalOptions;
       await withErrorHandler(async () => {
-        const api = createApiClient(globalOpts)
+        const client = createClient(globalOpts);
 
-        const params: Record<string, string> = {
-          limit: opts.limit,
-          offset: opts.offset,
-        }
-        if (opts.status) params.status = opts.status
+        const params: Record<string, unknown> = {
+          limit: Number(opts.limit),
+          offset: Number(opts.offset),
+        };
+        if (opts.status) params.status = opts.status;
 
-        const result = await api
-          .get('api/goals', { searchParams: params })
-          .json<PaginatedResponse<Goal>>()
+        const result = await client.goals.list(params);
 
-        output(result, globalOpts, () => {
-          if (result.data.length === 0) {
-            console.log(pc.dim('No goals found.'))
-            return
+        output(
+          result,
+          globalOpts,
+          () => {
+            if (result.data.length === 0) {
+              console.log(pc.dim('No goals found.'));
+              return;
+            }
+            renderGoalTable(result.data);
+            console.log(pc.dim(`\nShowing ${result.data.length} of ${result.total} goals`));
+          },
+          () => {
+            for (const g of result.data) {
+              console.log(
+                [
+                  g.id,
+                  g.title,
+                  g.status,
+                  g.currentValue ?? '',
+                  g.targetValue ?? '',
+                  g.unit ?? '',
+                ].join('\t')
+              );
+            }
           }
-          renderGoalTable(result.data)
-          console.log(pc.dim(`\nShowing ${result.data.length} of ${result.total} goals`))
-        })
-      })
-    })
+        );
+      });
+    });
 }

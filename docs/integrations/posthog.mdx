@@ -29,12 +29,12 @@ This is simpler than the HMAC-based verification used by GitHub and Sentry. Post
 
 Loop derives severity from the absolute percentage change in the metric:
 
-| Change Magnitude | Severity |
-|---|---|
-| >= 50% | `critical` |
-| >= 25% | `high` |
-| >= 10% | `medium` |
-| < 10% | `low` |
+| Change Magnitude | Severity   |
+| ---------------- | ---------- |
+| >= 50%           | `critical` |
+| >= 25%           | `high`     |
+| >= 10%           | `medium`   |
+| < 10%            | `low`      |
 
 ## What Gets Created
 
@@ -59,6 +59,7 @@ openssl rand -hex 32
 ```
 
 Save this value for both PostHog and your Loop environment.
+
 </Step>
 
 <Step>
@@ -71,6 +72,7 @@ POSTHOG_WEBHOOK_SECRET=your_generated_secret_here
 ```
 
 This variable must be available to the Loop API process at runtime.
+
 </Step>
 
 <Step>
@@ -85,7 +87,7 @@ This variable must be available to the Loop API process at runtime.
 4. Configure the webhook to include the header `X-PostHog-Secret` with the same secret value you used for `POSTHOG_WEBHOOK_SECRET`.
 5. Select which actions or alerts should trigger the webhook (e.g., metric threshold alerts).
 6. Save and enable the destination.
-</Step>
+   </Step>
 
 <Step>
 ### Verify the connection
@@ -100,6 +102,7 @@ curl -X POST https://your-loop-api.example.com/api/signals/posthog \
 ```
 
 Check your Loop instance for a new signal with source `posthog`.
+
 </Step>
 
 </Steps>

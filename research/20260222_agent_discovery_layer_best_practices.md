@@ -51,12 +51,14 @@ The spec is a convention, not an enforced schema. The winning strategy is to mat
 #### Real-World Implementation Patterns
 
 **Anthropic** uses two files:
+
 - `llms.txt` (~8,000 tokens): curated index of top pages
 - `llms-full.txt` (~480,000 tokens): every API doc, full content
 
 This index/full-export pattern is now standard. Slim for real-time assistants; full for IDE integrations and RAG pipelines.
 
 **Cloudflare** (`developers.cloudflare.com/llms.txt`):
+
 - Single H1: "Cloudflare Developer Documentation"
 - ~15 H2 sections, one per product (Agents, AI Gateway, Workers, R2, etc.)
 - Each section: 20-100 links
@@ -64,11 +66,13 @@ This index/full-export pattern is now standard. Slim for real-time assistants; f
 - Links point directly to `.md` versions of pages (e.g., `https://developers.cloudflare.com/path/to/page/index.md`)
 
 **Stripe** organizes by product vertical:
+
 - H2 sections per product area (Checkout, Payments, Link, Billing)
 - Includes a brief product description sentence before the link list
 - Uses an `Optional` H2 for specialized/niche tools
 
 **Langfuse** (critical reference for Loop — same developer-tool profile):
+
 - Has both `llms.txt` and supports `.md` suffix on any doc URL for clean markdown output
 - Its own SKILL.md references `https://langfuse.com/llms.txt` as the first step in documentation discovery
 - This creates a reinforcing loop: agents learn to fetch llms.txt from the skill instructions
@@ -76,6 +80,7 @@ This index/full-export pattern is now standard. Slim for real-time assistants; f
 #### How Products Link to Markdown Docs
 
 Two strategies observed:
+
 1. **Suffix pattern**: Any doc URL + `.md` returns clean markdown (Langfuse, Mintlify-hosted sites)
 2. **Parallel URL tree**: `/llms-full.txt` contains the full text inline; individual pages are referenced by their standard URL
 
@@ -133,6 +138,7 @@ For Loop, the suffix pattern (`/docs/some-page.md`) is the better developer expe
 ```
 
 **Notes:**
+
 - Serve this at `https://www.looped.me/llms.txt`
 - Also serve at `https://app.looped.me/llms.txt` for API-first discovery
 - Implement `.md` suffix support on all doc pages
@@ -147,10 +153,11 @@ For Loop, the suffix pattern (`/docs/some-page.md`) is the better developer expe
 The spec is well-defined. Key points:
 
 **Frontmatter (required):**
+
 ```yaml
 ---
-name: loop                          # max 64 chars, lowercase+hyphens, matches dir name
-description: |                      # max 1024 chars — this is the ALWAYS-LOADED part
+name: loop # max 64 chars, lowercase+hyphens, matches dir name
+description: | # max 1024 chars — this is the ALWAYS-LOADED part
   Interact with Loop (looped.me), the autonomous improvement engine.
   Use when creating issues, ingesting signals, fetching the next work item
   for an agent, managing projects and goals, or accessing prompt templates.
@@ -159,11 +166,12 @@ license: MIT
 compatibility: Requires internet access to reach https://app.looped.me
 metadata:
   author: dork-labs
-  version: "1.0"
+  version: '1.0'
 ---
 ```
 
 **Body (loaded on activation):**
+
 - No format restrictions
 - Recommended: step-by-step instructions, examples, edge cases
 - **Hard limit: keep under 500 lines / 5000 tokens**
@@ -171,6 +179,7 @@ metadata:
 - Use relative paths: `See [references/api.md](references/api.md)`
 
 **Directory structure:**
+
 ```
 loop/
 ├── SKILL.md                  # Required
@@ -201,7 +210,7 @@ Langfuse's `langfuse/SKILL.md` is the best real-world analog for Loop. Its patte
 
 #### Auth Configuration Pattern (from Langfuse)
 
-```markdown
+````markdown
 ## Authentication
 
 Set these environment variables before making API calls:
@@ -209,15 +218,18 @@ Set these environment variables before making API calls:
 ```bash
 export LOOP_API_KEY=loop_...
 ```
+````
 
 If not set, ask the user for their API key. It is found in the Loop dashboard
 under Settings → API Keys, or at https://app.looped.me/settings/api-keys.
 
 The API base URL is https://app.looped.me/api. All protected endpoints require:
+
 ```
 Authorization: Bearer $LOOP_API_KEY
 ```
-```
+
+````
 
 #### Recommended SKILL.md Body Structure for Loop
 
@@ -234,7 +246,7 @@ Set before making calls:
 
 ```bash
 export LOOP_API_KEY=loop_...
-```
+````
 
 Base URL: `https://app.looped.me/api`. All `/api/*` endpoints require:
 `Authorization: Bearer $LOOP_API_KEY`
@@ -244,12 +256,14 @@ Get a key at https://app.looped.me/settings/api-keys.
 ## Common Tasks
 
 ### Get the next issue for an agent to work on
+
 ```bash
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
   https://app.looped.me/api/issues?status=open&limit=1
 ```
 
 ### Create an issue
+
 ```bash
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
   -H "Content-Type: application/json" \
@@ -258,6 +272,7 @@ curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
 ```
 
 ### Ingest a signal (creates signal + triage issue automatically)
+
 ```bash
 curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
   -H "Content-Type: application/json" \
@@ -266,6 +281,7 @@ curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
 ```
 
 ### Close an issue
+
 ```bash
 curl -X PATCH -H "Authorization: Bearer $LOOP_API_KEY" \
   -H "Content-Type: application/json" \
@@ -282,7 +298,8 @@ curl -X PATCH -H "Authorization: Bearer $LOOP_API_KEY" \
 ## Endpoints Reference
 
 For complete API docs, see [references/api.md](references/api.md).
-```
+
+````
 
 **Distribution:**
 - Publish to `github.com/dork-labs/loop-skill` (mirrors `agentskills.io` pattern)
@@ -352,13 +369,14 @@ curl -X POST -H "Authorization: Bearer $LOOP_API_KEY" \
 # Get dashboard stats
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
   https://app.looped.me/api/dashboard/stats
-```
+````
 
 ### Documentation
 
 Full API reference: https://www.looped.me/docs
 Machine-readable: https://www.looped.me/llms.txt
-```
+
+````
 
 #### Distribution Mechanism
 
@@ -383,22 +401,22 @@ description: "When to apply this rule — written for the agent to read"
 alwaysApply: false
 globs: []
 ---
-```
+````
 
-| Field | Type | Effect |
-|-------|------|--------|
-| `description` | string | Agent reads this to decide if rule is relevant (Agent-Requested mode) |
-| `alwaysApply` | boolean | `true` = always injected into context (use sparingly — costs tokens) |
-| `globs` | array of strings | Auto-attach when a matching file is mentioned in chat |
+| Field         | Type             | Effect                                                                |
+| ------------- | ---------------- | --------------------------------------------------------------------- |
+| `description` | string           | Agent reads this to decide if rule is relevant (Agent-Requested mode) |
+| `alwaysApply` | boolean          | `true` = always injected into context (use sparingly — costs tokens)  |
+| `globs`       | array of strings | Auto-attach when a matching file is mentioned in chat                 |
 
 **Four modes:**
 
-| Mode | Frontmatter | When it fires |
-|------|-------------|---------------|
-| Always Apply | `alwaysApply: true` | Every chat session |
-| Auto-Attached | `globs: ["*.ts"]` | When a matching file is referenced in chat |
+| Mode            | Frontmatter                                          | When it fires                                   |
+| --------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| Always Apply    | `alwaysApply: true`                                  | Every chat session                              |
+| Auto-Attached   | `globs: ["*.ts"]`                                    | When a matching file is referenced in chat      |
 | Agent-Requested | `description: "..."`, no globs, `alwaysApply: false` | Agent reads description, pulls rule if relevant |
-| Manual | No frontmatter fields set | Only via `@rule-name` in chat |
+| Manual          | No frontmatter fields set                            | Only via `@rule-name` in chat                   |
 
 #### Loop's Correct Mode: Agent-Requested
 
@@ -408,7 +426,7 @@ Loop's context is valuable when the agent is working on anything that involves c
 
 #### Recommended loop.mdc Content
 
-```markdown
+````markdown
 ---
 description: >
   Use when working with Loop (looped.me), the autonomous improvement engine.
@@ -426,6 +444,7 @@ alwaysApply: false
 # Required env var
 export LOOP_API_KEY=loop_...
 ```
+````
 
 All `/api/*` endpoints: `Authorization: Bearer $LOOP_API_KEY`
 Get your key: https://app.looped.me/settings/api-keys
@@ -466,7 +485,8 @@ Machine-readable: https://www.looped.me/llms.txt
 ## Status Values
 
 `triage` | `open` | `in_progress` | `done` | `cancelled` | `snoozed`
-```
+
+````
 
 #### Publishing to cursor.directory
 
@@ -481,9 +501,10 @@ Provide a one-line install command:
 ```bash
 mkdir -p .cursor/rules/loop && \
   curl -s https://www.looped.me/cursor-rule > .cursor/rules/loop/RULE.md
-```
+````
 
 Or via the Loop CLI:
+
 ```bash
 npx looped install-cursor-rule
 ```
@@ -506,6 +527,7 @@ For a publicly distributed knowledge microagent (like Loop providing one for any
 #### Frontmatter Variants
 
 **Keyword-triggered knowledge microagent (what Loop needs):**
+
 ```yaml
 ---
 name: loop
@@ -522,6 +544,7 @@ triggers:
 ```
 
 **Always-loaded repository context (alternative):**
+
 ```yaml
 ---
 name: loop-context
@@ -531,6 +554,7 @@ trigger_type: always
 ```
 
 **Legacy format (still widely used in `.openhands/microagents/*.md`):**
+
 ```yaml
 ---
 triggers:
@@ -542,6 +566,7 @@ triggers:
 #### Trigger Keyword Strategy for Loop
 
 The trigger system fires when any listed keyword appears in the **user's message or the agent's own output**. This means keywords should match:
+
 - What developers naturally type: "loop", "looped", "create a loop issue"
 - API domain terms: "loop api", "ingest signal"
 - The product URL: "looped.me"
@@ -572,10 +597,11 @@ Loop is an open-source REST API for managing issues, signals, projects, and
 prompt templates in an autonomous development workflow.
 
 ## API Base URL
+```
 
-```
 https://app.looped.me/api
-```
+
+````
 
 All protected endpoints require: `Authorization: Bearer $LOOP_API_KEY`
 
@@ -600,9 +626,10 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"title":"Fix login flow","type":"bug","projectId":"proj_..."}' \
   https://app.looped.me/api/issues
-```
+````
 
 ### Ingest a signal
+
 ```bash
 curl -X POST \
   -H "Authorization: Bearer $LOOP_API_KEY" \
@@ -612,6 +639,7 @@ curl -X POST \
 ```
 
 ### List open issues
+
 ```bash
 curl -H "Authorization: Bearer $LOOP_API_KEY" \
   "https://app.looped.me/api/issues?status=open"
@@ -621,7 +649,8 @@ curl -H "Authorization: Bearer $LOOP_API_KEY" \
 
 Full docs: https://www.looped.me/docs
 Machine-readable index: https://www.looped.me/llms.txt
-```
+
+````
 
 #### How to Distribute
 
@@ -630,7 +659,8 @@ Machine-readable index: https://www.looped.me/llms.txt
    ```bash
    mkdir -p .agents/skills/loop && \
      curl -s https://www.looped.me/openhands-skill > .agents/skills/loop/SKILL.md
-   ```
+````
+
 3. The Loop docs should include a "Use Loop with OpenHands" guide
 
 ---
@@ -653,30 +683,31 @@ Core nucleus:
   - Status values enum
 ```
 
-| Artifact | Uses nucleus how |
-|----------|-----------------|
-| `llms.txt` | Links only — minimal prose, navigation structure |
-| `SKILL.md` | Full nucleus as imperative instructions + auth flow |
-| `AGENTS.md snippet` | Condensed nucleus + copy-paste curl examples |
-| `loop.mdc` | Condensed nucleus + frontmatter trigger description |
-| `OpenHands microagent` | Table-format endpoint list + curl examples |
+| Artifact               | Uses nucleus how                                    |
+| ---------------------- | --------------------------------------------------- |
+| `llms.txt`             | Links only — minimal prose, navigation structure    |
+| `SKILL.md`             | Full nucleus as imperative instructions + auth flow |
+| `AGENTS.md snippet`    | Condensed nucleus + copy-paste curl examples        |
+| `loop.mdc`             | Condensed nucleus + frontmatter trigger description |
+| `OpenHands microagent` | Table-format endpoint list + curl examples          |
 
 #### Token Budget Per Artifact
 
-| Artifact | Target | Hard limit | Notes |
-|----------|--------|-----------|-------|
-| `llms.txt` | 2,000-5,000 tokens | None | Index only; full content in `llms-full.txt` |
-| `SKILL.md` description | ~200 tokens | 1,024 chars | Always loaded — every token costs |
-| `SKILL.md` body | ~2,000 tokens | 5,000 tokens | Only loaded when skill is invoked |
-| `AGENTS.md snippet` | ~300-400 tokens | ~600 tokens | Loaded every session in integrated repos |
-| `loop.mdc` | ~400 tokens | ~1,000 tokens | Loaded when agent determines relevance |
-| `OpenHands microagent` | ~500 tokens | ~1,500 tokens | Loaded when trigger keyword fires |
+| Artifact               | Target             | Hard limit    | Notes                                       |
+| ---------------------- | ------------------ | ------------- | ------------------------------------------- |
+| `llms.txt`             | 2,000-5,000 tokens | None          | Index only; full content in `llms-full.txt` |
+| `SKILL.md` description | ~200 tokens        | 1,024 chars   | Always loaded — every token costs           |
+| `SKILL.md` body        | ~2,000 tokens      | 5,000 tokens  | Only loaded when skill is invoked           |
+| `AGENTS.md snippet`    | ~300-400 tokens    | ~600 tokens   | Loaded every session in integrated repos    |
+| `loop.mdc`             | ~400 tokens        | ~1,000 tokens | Loaded when agent determines relevance      |
+| `OpenHands microagent` | ~500 tokens        | ~1,500 tokens | Loaded when trigger keyword fires           |
 
 #### Maintenance Strategy
 
 Low-maintenance approach: treat each artifact as a template with a few variable slots, regenerated from `meta/agent-discovery.yaml` when the API changes. The regeneration step can be a script that runs in CI on any change to the API docs.
 
 Expected change frequency:
+
 - `llms.txt`: changes when new doc pages are added (weekly/monthly)
 - `SKILL.md`: changes when API surface changes or auth mechanism changes (rare)
 - `AGENTS.md snippet`: changes when core auth or base URL changes (very rare)
@@ -702,6 +733,7 @@ They are not redundant — each fires at a different discovery moment. An agent 
 #### Auto-Discovery via `llms.txt`
 
 A virtuous cycle is available: include the SKILL.md install command in `llms.txt` and in the Loop docs. Langfuse does this — their SKILL.md references `langfuse.com/llms.txt` and their `llms.txt` is listed as the first step in the skill's documentation workflow. This means:
+
 1. An agent fetches `llms.txt` to understand Loop
 2. `llms.txt` mentions that a SKILL.md is available via `npx openskills install loop`
 3. The agent installs the skill, which itself references `llms.txt` for docs discovery

@@ -1,8 +1,8 @@
-import { z } from 'zod'
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { z } from 'zod';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-import type { ApiClient } from '../types.js'
-import { handleToolCall } from './error-handler.js'
+import type { ApiClient } from '../types.js';
+import { handleToolCall } from './error-handler.js';
 
 /**
  * Register the `loop_create_comment` tool on the MCP server.
@@ -30,8 +30,8 @@ export function registerCreateComment(server: McpServer, client: ApiClient): voi
           .post(`api/issues/${issueId}/comments`, {
             json: { body, authorName: 'agent', authorType: 'agent' },
           })
-          .json<{ data: Record<string, unknown> }>()
-        const comment = commentRes.data
+          .json<{ data: Record<string, unknown> }>();
+        const comment = commentRes.data;
 
         return {
           content: [
@@ -45,12 +45,12 @@ export function registerCreateComment(server: McpServer, client: ApiClient): voi
                   createdAt: comment.createdAt,
                 },
                 null,
-                2,
+                2
               ),
             },
           ],
-        }
-      })
-    },
-  )
+        };
+      });
+    }
+  );
 }

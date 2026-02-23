@@ -3,16 +3,17 @@ title: Quickstart
 description: Go from zero to your first dispatched issue in 5 minutes. Clone the repo, start the API, ingest a signal, and dispatch it to an AI agent.
 ---
 
-import { Steps, Step } from 'fumadocs-ui/components/steps'
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
-import { Callout } from 'fumadocs-ui/components/callout'
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
 
 # Quickstart
 
 This tutorial walks you through the core Loop workflow: ingest a signal, see it become a triage issue, and dispatch it with a hydrated prompt for an AI agent.
 
 <Callout type="info">
-  This guide assumes you have Node.js 20+, npm, and Docker installed. No external database needed — Docker provides a local PostgreSQL instance.
+  This guide assumes you have Node.js 20+, npm, and Docker installed. No external database needed —
+  Docker provides a local PostgreSQL instance.
 </Callout>
 
 <Steps>
@@ -29,7 +30,8 @@ npm run setup
 ```
 
 <Callout type="info">
-  The `.env.example` files contain pre-filled defaults that work immediately for local development. No manual editing required.
+  The `.env.example` files contain pre-filled defaults that work immediately for local development.
+  No manual editing required.
 </Callout>
 
 <Callout type="warning">
@@ -47,18 +49,11 @@ npm run dev -w apps/api
 The API starts on `http://localhost:4242`. Verify it is running:
 
 <Tabs items={['curl', 'JavaScript']}>
-<Tab value="curl">
-```bash
-curl http://localhost:4242/health
-```
-</Tab>
-<Tab value="JavaScript">
-```js
-const res = await fetch("http://localhost:4242/health");
-const data = await res.json();
-console.log(data);
-```
-</Tab>
+  <Tab value="curl">```bash curl http://localhost:4242/health ```</Tab>
+  <Tab value="JavaScript">
+    ```js const res = await fetch("http://localhost:4242/health"); const data = await res.json();
+    console.log(data); ```
+  </Tab>
 </Tabs>
 
 You should see:
@@ -66,6 +61,7 @@ You should see:
 ```json
 { "ok": true, "service": "loop-api", "timestamp": "2026-02-20T..." }
 ```
+
 </Step>
 
 <Step>
@@ -116,6 +112,7 @@ The response includes the new project with a generated CUID2 `id`. Save this ID 
   }
 }
 ```
+
 </Step>
 
 <Step>
@@ -187,6 +184,7 @@ The response contains both the signal and the automatically created triage issue
   }
 }
 ```
+
 </Step>
 
 <Step>
@@ -231,6 +229,7 @@ You should see your signal-generated issue in the response:
   "total": 1
 }
 ```
+
 </Step>
 
 <Step>
@@ -239,7 +238,8 @@ You should see your signal-generated issue in the response:
 The dispatch endpoint atomically claims the highest-priority unblocked issue, sets it to `in_progress`, and returns a hydrated prompt for an AI agent.
 
 <Callout type="info">
-  Dispatch uses `FOR UPDATE SKIP LOCKED` to prevent multiple agents from claiming the same issue. If no issues are available, you receive a `204 No Content` response.
+  Dispatch uses `FOR UPDATE SKIP LOCKED` to prevent multiple agents from claiming the same issue. If
+  no issues are available, you receive a `204 No Content` response.
 </Callout>
 
 <Tabs items={['curl', 'JavaScript']}>
@@ -258,12 +258,13 @@ const res = await fetch("http://localhost:4242/api/dispatch/next", {
 });
 
 if (res.status === 204) {
-  console.log("No issues available for dispatch");
+console.log("No issues available for dispatch");
 } else {
-  const data = await res.json();
-  console.log(data);
+const data = await res.json();
+console.log(data);
 }
-```
+
+````
 </Tab>
 </Tabs>
 
@@ -288,9 +289,10 @@ If a matching prompt template exists, the response includes the issue, the hydra
     "reviewUrl": "POST /api/prompt-reviews"
   }
 }
-```
+````
 
 If no template matches, `prompt` and `meta` will be `null`, but you still receive the claimed issue.
+
 </Step>
 
 </Steps>

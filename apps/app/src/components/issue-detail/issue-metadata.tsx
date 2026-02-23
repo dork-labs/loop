@@ -1,8 +1,8 @@
-import { Link } from '@tanstack/react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import type { Issue, IssueType, IssueStatus } from '@/types/issues'
+import { Link } from '@tanstack/react-router';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import type { Issue, IssueType, IssueStatus } from '@/types/issues';
 
 const TYPE_COLORS: Record<IssueType, string> = {
   signal: 'bg-amber-500/20 text-amber-400',
@@ -10,7 +10,7 @@ const TYPE_COLORS: Record<IssueType, string> = {
   plan: 'bg-blue-500/20 text-blue-400',
   task: 'bg-emerald-500/20 text-emerald-400',
   monitor: 'bg-cyan-500/20 text-cyan-400',
-}
+};
 
 const STATUS_COLORS: Record<IssueStatus, string> = {
   triage: 'bg-yellow-500/20 text-yellow-400',
@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<IssueStatus, string> = {
   in_progress: 'bg-indigo-500/20 text-indigo-400',
   done: 'bg-green-500/20 text-green-400',
   canceled: 'bg-red-500/20 text-red-400',
-}
+};
 
 /** Priority label mapping P0-P4. */
 const PRIORITY_LABELS: Record<number, string> = {
@@ -28,23 +28,23 @@ const PRIORITY_LABELS: Record<number, string> = {
   2: 'P2 — Medium',
   3: 'P3 — Low',
   4: 'P4 — Minimal',
-}
+};
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  })
+  });
 }
 
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-xs">{label}</span>
       <div className="text-sm">{children}</div>
     </div>
-  )
+  );
 }
 
 /** Sidebar metadata card: priority, status, type, labels, parent, timestamps. */
@@ -52,19 +52,19 @@ export function IssueMetadata({ issue }: { issue: Issue }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <CardTitle className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
           Details
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <MetaRow label="Priority">
-          <span className="font-mono">{PRIORITY_LABELS[issue.priority] ?? `P${issue.priority}`}</span>
+          <span className="font-mono">
+            {PRIORITY_LABELS[issue.priority] ?? `P${issue.priority}`}
+          </span>
         </MetaRow>
 
         <MetaRow label="Status">
-          <Badge className={STATUS_COLORS[issue.status]}>
-            {issue.status.replace('_', ' ')}
-          </Badge>
+          <Badge className={STATUS_COLORS[issue.status]}>{issue.status.replace('_', ' ')}</Badge>
         </MetaRow>
 
         <MetaRow label="Type">
@@ -92,7 +92,7 @@ export function IssueMetadata({ issue }: { issue: Issue }) {
             <Link
               to="/issues/$issueId"
               params={{ issueId: issue.parent.id }}
-              className="text-sm text-primary hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               #{issue.parent.number} {issue.parent.title}
             </Link>
@@ -116,5 +116,5 @@ export function IssueMetadata({ issue }: { issue: Issue }) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

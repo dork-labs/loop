@@ -15,16 +15,17 @@ For local development, pre-filled `.env.example` files with working defaults are
 
 These variables configure the Hono API server.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string. Format: `postgresql://user:password@host:port/dbname`. For Neon, use the pooled connection string from your dashboard. |
-| `LOOP_API_KEY` | Yes | Bearer token used to authenticate all `/api/*` requests. Clients send this as `Authorization: Bearer <token>`. |
-| `GITHUB_WEBHOOK_SECRET` | No | HMAC-SHA256 secret for verifying GitHub webhook payloads. Required only if you use the GitHub integration. |
-| `SENTRY_CLIENT_SECRET` | No | HMAC-SHA256 secret for verifying Sentry webhook payloads. Required only if you use the Sentry integration. |
-| `POSTHOG_WEBHOOK_SECRET` | No | Shared secret for verifying PostHog webhook payloads. Required only if you use the PostHog integration. |
+| Variable                 | Required | Description                                                                                                                                          |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`           | Yes      | PostgreSQL connection string. Format: `postgresql://user:password@host:port/dbname`. For Neon, use the pooled connection string from your dashboard. |
+| `LOOP_API_KEY`           | Yes      | Bearer token used to authenticate all `/api/*` requests. Clients send this as `Authorization: Bearer <token>`.                                       |
+| `GITHUB_WEBHOOK_SECRET`  | No       | HMAC-SHA256 secret for verifying GitHub webhook payloads. Required only if you use the GitHub integration.                                           |
+| `SENTRY_CLIENT_SECRET`   | No       | HMAC-SHA256 secret for verifying Sentry webhook payloads. Required only if you use the Sentry integration.                                           |
+| `POSTHOG_WEBHOOK_SECRET` | No       | Shared secret for verifying PostHog webhook payloads. Required only if you use the PostHog integration.                                              |
 
 <Callout type="warn">
-Never commit secrets to version control. Use your platform's secret management (Vercel Environment Variables, AWS Secrets Manager, etc.) or a `.env` file that is listed in `.gitignore`.
+  Never commit secrets to version control. Use your platform's secret management (Vercel Environment
+  Variables, AWS Secrets Manager, etc.) or a `.env` file that is listed in `.gitignore`.
 </Callout>
 
 ### `DATABASE_URL`
@@ -81,13 +82,15 @@ Each webhook integration has its own secret for payload verification. These are 
 
 These variables configure the React dashboard SPA. Variables prefixed with `VITE_` are embedded at build time.
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `VITE_API_URL` | No | `http://localhost:4242` | Base URL of the Loop API server. Set this to your production API URL when deploying. |
-| `VITE_LOOP_API_KEY` | Yes | -- | Bearer token for authenticating dashboard API requests. Must match the `LOOP_API_KEY` set on the API server. |
+| Variable            | Required | Default                 | Description                                                                                                  |
+| ------------------- | -------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `VITE_API_URL`      | No       | `http://localhost:4242` | Base URL of the Loop API server. Set this to your production API URL when deploying.                         |
+| `VITE_LOOP_API_KEY` | Yes      | --                      | Bearer token for authenticating dashboard API requests. Must match the `LOOP_API_KEY` set on the API server. |
 
 <Callout type="warn">
-Since `VITE_` variables are embedded into the client-side JavaScript bundle at build time, they are visible to anyone who can access the dashboard. The `VITE_LOOP_API_KEY` grants full API access. Only deploy the dashboard behind authentication or on a trusted network.
+  Since `VITE_` variables are embedded into the client-side JavaScript bundle at build time, they
+  are visible to anyone who can access the dashboard. The `VITE_LOOP_API_KEY` grants full API
+  access. Only deploy the dashboard behind authentication or on a trusted network.
 </Callout>
 
 ### `VITE_API_URL`

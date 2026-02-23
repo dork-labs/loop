@@ -14,10 +14,12 @@
 ### Session 1 - 2026-02-20
 
 **Batch 1 (2 tasks parallel):**
+
 - Task #19: Install zod-to-openapi and create OpenAPI schemas
 - Task #24: Update docs/meta.json and create subsection meta.json files
 
 **Batch 2 (9 tasks parallel):**
+
 - Task #20: Create OpenAPI registry (consolidated into openapi-schemas.ts, fixed TS errors)
 - Task #25: Write docs welcome page (`docs/index.mdx`)
 - Task #26: Write Getting Started docs (3 pages)
@@ -29,16 +31,20 @@
 - Task #33: Write Contributing docs (1 page)
 
 **Batch 3 (2 tasks parallel):**
+
 - Task #21: Create export script and runtime endpoint
 - Task #22: Write OpenAPI registry tests (86 tests)
 
 **Batch 4 (1 task):**
+
 - Task #23: Generate API reference MDX pages (44 pages via fumadocs-openapi)
 
 **Batch 5 (1 task):**
+
 - Task #28: Write API reference index page
 
 **Batch 6 (1 task):**
+
 - Task #34: Build verification and final review
 
 ## Files Modified/Created

@@ -61,6 +61,7 @@ _(None)_
 ### Session 1
 
 All 11 tasks completed in 3 parallel batches:
+
 - Batch 1 (2 tasks): Package scaffold + llms.txt route handler
 - Batch 2 (6 tasks): All artifact content files (SKILL.md, api.md, README, AGENTS.md, loop.mdc, openhands)
 - Batch 3 (3 tasks): Dogfooding copies + all tests

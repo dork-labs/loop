@@ -91,6 +91,7 @@ Research document: `research/20260220_mvp-homepage-update.md`
 ### Potential Solutions
 
 **1. Targeted Content Replacement (Recommended)**
+
 - Keep existing component architecture and animation patterns
 - Replace content in LoopHero (new copy, remove "Coming Soon", update CTAs)
 - Replace content in LoopValueProps (4 real product pillars instead of Analyze/Plan/Execute)
@@ -102,6 +103,7 @@ Research document: `research/20260220_mvp-homepage-update.md`
 - Maintenance: Low
 
 **2. Full Page Rebuild**
+
 - Design and build entirely new homepage sections from scratch
 - Pros: Could create a more cohesive narrative
 - Cons: Much higher effort, risks breaking existing design quality, unnecessary given good component shells
@@ -109,6 +111,7 @@ Research document: `research/20260220_mvp-homepage-update.md`
 - Maintenance: Medium
 
 **3. Minimal Copy Patch**
+
 - Only update hero text and CTA — leave everything else
 - Pros: Very fast (< 1 hour)
 - Cons: Rest of page still describes wrong product, incoherent

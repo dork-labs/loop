@@ -1,180 +1,184 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { HTTPError } from 'ky'
-
-// We test withErrorHandler by importing it directly (no module mocking needed)
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { LoopError, LoopNotFoundError } from '@dork-labs/loop-sdk';
 
 async function loadModule() {
-  vi.resetModules()
-  return import('../../src/lib/errors.js')
-}
-
-/** Create a mock HTTPError with the given status and optional JSON body. */
-function createHTTPError(status: number, body?: Record<string, string>): HTTPError {
-  const response = {
-    status,
-    json: body ? vi.fn().mockResolvedValue(body) : vi.fn().mockRejectedValue(new Error('no body')),
-  } as unknown as Response
-
-  const request = {} as Request
-  const options = {} as RequestInit
-
-  return new HTTPError(response, request, options)
+  vi.resetModules();
+  return import('../../src/lib/errors.js');
 }
 
 afterEach(() => {
-  vi.restoreAllMocks()
-})
+  vi.restoreAllMocks();
+});
 
 describe('withErrorHandler', () => {
   it('runs the function normally when no error occurs', async () => {
-    const { withErrorHandler } = await loadModule()
-    const fn = vi.fn().mockResolvedValue(undefined)
+    const { withErrorHandler } = await loadModule();
+    const fn = vi.fn().mockResolvedValue(undefined);
 
-    await withErrorHandler(fn)
+    await withErrorHandler(fn);
 
-    expect(fn).toHaveBeenCalledOnce()
-  })
+    expect(fn).toHaveBeenCalledOnce();
+  });
 
   it('prints auth failure message for 401 status', async () => {
-    const { withErrorHandler } = await loadModule()
+    const { withErrorHandler } = await loadModule();
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      throw new Error('process.exit called');
+    });
+    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       withErrorHandler(async () => {
-        throw createHTTPError(401, { error: 'Unauthorized' })
+        throw new LoopError('Unauthorized', 401, 'HTTP_401');
       })
-    ).rejects.toThrow('process.exit called')
+    ).rejects.toThrow('process.exit called');
 
     expect(mockError).toHaveBeenCalledWith(
-      'Authentication failed. Run: looped config set token <your-token>'
-    )
-    expect(mockExit).toHaveBeenCalledWith(1)
+      'Authentication failed. Run: loop auth login'
+    );
+    expect(mockExit).toHaveBeenCalledWith(1);
 
-    mockExit.mockRestore()
-    mockError.mockRestore()
-  })
+    mockExit.mockRestore();
+    mockError.mockRestore();
+  });
 
   it('prints auth failure message for 403 status', async () => {
-    const { withErrorHandler } = await loadModule()
+    const { withErrorHandler } = await loadModule();
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      throw new Error('process.exit called');
+    });
+    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       withErrorHandler(async () => {
-        throw createHTTPError(403, { error: 'Forbidden' })
+        throw new LoopError('Forbidden', 403, 'HTTP_403');
       })
-    ).rejects.toThrow('process.exit called')
+    ).rejects.toThrow('process.exit called');
 
     expect(mockError).toHaveBeenCalledWith(
-      'Authentication failed. Run: looped config set token <your-token>'
-    )
-    expect(mockExit).toHaveBeenCalledWith(1)
+      'Authentication failed. Run: loop auth login'
+    );
+    expect(mockExit).toHaveBeenCalledWith(1);
 
-    mockExit.mockRestore()
-    mockError.mockRestore()
-  })
+    mockExit.mockRestore();
+    mockError.mockRestore();
+  });
 
-  it('prints "Not found" message for 404 status', async () => {
-    const { withErrorHandler } = await loadModule()
+  it('prints "Not found" message for LoopNotFoundError', async () => {
+    const { withErrorHandler } = await loadModule();
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      throw new Error('process.exit called');
+    });
+    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       withErrorHandler(async () => {
-        throw createHTTPError(404, { error: 'Issue not found' })
+        throw new LoopNotFoundError('Issue not found');
       })
-    ).rejects.toThrow('process.exit called')
+    ).rejects.toThrow('process.exit called');
 
-    expect(mockError).toHaveBeenCalledWith('Not found: Issue not found')
-    expect(mockExit).toHaveBeenCalledWith(1)
+    expect(mockError).toHaveBeenCalledWith('Not found: Issue not found');
+    expect(mockExit).toHaveBeenCalledWith(1);
 
-    mockExit.mockRestore()
-    mockError.mockRestore()
-  })
+    mockExit.mockRestore();
+    mockError.mockRestore();
+  });
 
-  it('prints status code and message for other HTTP errors', async () => {
-    const { withErrorHandler } = await loadModule()
+  it('prints status code and message for other LoopError statuses', async () => {
+    const { withErrorHandler } = await loadModule();
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      throw new Error('process.exit called');
+    });
+    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       withErrorHandler(async () => {
-        throw createHTTPError(500, { error: 'Internal server error' })
+        throw new LoopError('Internal server error', 500, 'HTTP_500');
       })
-    ).rejects.toThrow('process.exit called')
+    ).rejects.toThrow('process.exit called');
 
-    expect(mockError).toHaveBeenCalledWith('API error (500): Internal server error')
-    expect(mockExit).toHaveBeenCalledWith(1)
+    expect(mockError).toHaveBeenCalledWith('API error (500): Internal server error');
+    expect(mockExit).toHaveBeenCalledWith(1);
 
-    mockExit.mockRestore()
-    mockError.mockRestore()
-  })
+    mockExit.mockRestore();
+    mockError.mockRestore();
+  });
 
-  it('falls back to error.message when response body has no error field', async () => {
-    const { withErrorHandler } = await loadModule()
+  it('prints generic API error for LoopError with no specific handler', async () => {
+    const { withErrorHandler } = await loadModule();
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      throw new Error('process.exit called');
+    });
+    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       withErrorHandler(async () => {
-        throw createHTTPError(502)
+        throw new LoopError('Bad Gateway', 502, 'HTTP_502');
       })
-    ).rejects.toThrow('process.exit called')
+    ).rejects.toThrow('process.exit called');
 
-    // When json() rejects, falls back to error.message from HTTPError
-    expect(mockError).toHaveBeenCalledWith(expect.stringContaining('API error (502):'))
-    expect(mockExit).toHaveBeenCalledWith(1)
+    expect(mockError).toHaveBeenCalledWith('API error (502): Bad Gateway');
+    expect(mockExit).toHaveBeenCalledWith(1);
 
-    mockExit.mockRestore()
-    mockError.mockRestore()
-  })
+    mockExit.mockRestore();
+    mockError.mockRestore();
+  });
 
-  it('prints error message for non-HTTP errors', async () => {
-    const { withErrorHandler } = await loadModule()
+  it('prints error message for non-SDK errors', async () => {
+    const { withErrorHandler } = await loadModule();
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      throw new Error('process.exit called');
+    });
+    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       withErrorHandler(async () => {
-        throw new Error('Network timeout')
+        throw new Error('Network timeout');
       })
-    ).rejects.toThrow('process.exit called')
+    ).rejects.toThrow('process.exit called');
 
-    expect(mockError).toHaveBeenCalledWith('Error: Network timeout')
-    expect(mockExit).toHaveBeenCalledWith(1)
+    expect(mockError).toHaveBeenCalledWith('Error: Network timeout');
+    expect(mockExit).toHaveBeenCalledWith(1);
 
-    mockExit.mockRestore()
-    mockError.mockRestore()
-  })
+    mockExit.mockRestore();
+    mockError.mockRestore();
+  });
+
+  it('handles non-Error objects gracefully', async () => {
+    const { withErrorHandler } = await loadModule();
+    const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called');
+    });
+    const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await expect(
+      withErrorHandler(async () => {
+        throw 'string error';
+      })
+    ).rejects.toThrow('process.exit called');
+
+    expect(mockError).toHaveBeenCalledWith('An unexpected error occurred');
+    expect(mockExit).toHaveBeenCalledWith(1);
+
+    mockExit.mockRestore();
+    mockError.mockRestore();
+  });
 
   it('exits with code 1 for all errors', async () => {
-    const { withErrorHandler } = await loadModule()
+    const { withErrorHandler } = await loadModule();
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called')
-    })
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+      throw new Error('process.exit called');
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       withErrorHandler(async () => {
-        throw new TypeError('Unexpected type')
+        throw new TypeError('Unexpected type');
       })
-    ).rejects.toThrow('process.exit called')
+    ).rejects.toThrow('process.exit called');
 
-    expect(mockExit).toHaveBeenCalledWith(1)
+    expect(mockExit).toHaveBeenCalledWith(1);
 
-    mockExit.mockRestore()
-  })
-})
+    mockExit.mockRestore();
+  });
+});

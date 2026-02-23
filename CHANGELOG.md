@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include docs/ as Turborepo global dependency so Vercel rebuilds on documentation changes
 - Switch API to tsx runner and remap dev ports to LOOP keypad layout (5667-5669)
 - Fix process.env usage in migrate.ts for Node.js ESM compatibility
-- Load dotenv in API env.ts and rename DX scripts to db:dev:* namespace
+- Load dotenv in API env.ts and rename DX scripts to db:dev:\* namespace
 
 ### Changed
 

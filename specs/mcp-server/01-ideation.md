@@ -146,17 +146,17 @@ N/A — This is a new feature, not a bug fix.
 
 The 9 tools follow the "outcomes over operations" principle. Each tool is designed around what an agent needs to accomplish:
 
-| Tool | Purpose | Key Design Decision |
-|------|---------|---------------------|
-| `loop_get_next_task` | Core dispatch — returns issue + prompt | Atomic claim, includes hydrated instructions |
-| `loop_complete_task` | Report completion with outcome | Sets status to done, adds outcome comment |
-| `loop_create_issue` | Create new issue | Flat args: title, type, priority, projectId |
-| `loop_update_issue` | Update status/priority/fields | Partial update, flat args |
-| `loop_list_issues` | Filtered listing | Pagination with has_more, default limit 20 |
-| `loop_get_issue` | Full detail with context | Includes parent chain, labels, comments |
-| `loop_ingest_signal` | Push signal to triage | Creates signal + linked triage issue |
-| `loop_create_comment` | Agent progress report | Threaded comment support |
-| `loop_get_dashboard` | System health | Issue counts, goal progress, dispatch stats |
+| Tool                  | Purpose                                | Key Design Decision                          |
+| --------------------- | -------------------------------------- | -------------------------------------------- |
+| `loop_get_next_task`  | Core dispatch — returns issue + prompt | Atomic claim, includes hydrated instructions |
+| `loop_complete_task`  | Report completion with outcome         | Sets status to done, adds outcome comment    |
+| `loop_create_issue`   | Create new issue                       | Flat args: title, type, priority, projectId  |
+| `loop_update_issue`   | Update status/priority/fields          | Partial update, flat args                    |
+| `loop_list_issues`    | Filtered listing                       | Pagination with has_more, default limit 20   |
+| `loop_get_issue`      | Full detail with context               | Includes parent chain, labels, comments      |
+| `loop_ingest_signal`  | Push signal to triage                  | Creates signal + linked triage issue         |
+| `loop_create_comment` | Agent progress report                  | Threaded comment support                     |
+| `loop_get_dashboard`  | System health                          | Issue counts, goal progress, dispatch stats  |
 
 **Tool Description Budget:** Each description should be 2-4 sentences. Total across all tools: <1,000 tokens.
 
@@ -186,6 +186,7 @@ The 9 tools follow the "outcomes over operations" principle. Each tool is design
 **Recommended Approach:** Dual-transport single package in `packages/mcp/`.
 
 **Implementation Priority:**
+
 1. `loop_get_next_task` + `loop_complete_task` first — these two form a complete autonomous dispatch cycle
 2. `loop_create_issue` + `loop_list_issues` + `loop_get_issue` — basic issue operations
 3. `loop_update_issue` + `loop_create_comment` — issue management

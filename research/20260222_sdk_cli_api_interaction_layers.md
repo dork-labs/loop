@@ -19,14 +19,15 @@ Developer tools follow a consistent maturity arc: REST API first, then TypeScrip
 
 The industry follows a clear progression from MVP to full developer platform:
 
-| Layer | Who Has It | What It Enables |
-|-------|-----------|-----------------|
-| REST API only | Early-stage products, all startups at launch | Direct integration, only path available |
-| REST API + SDK | Stripe, Twilio, SendGrid, OpenAI, Anthropic, Resend | Reduced boilerplate, type safety, faster integration |
-| REST API + SDK + CLI | Vercel, Supabase, Railway, Fly.io, Neon, GitHub | Power user workflows, CI/CD, local dev, scripting |
-| REST API + SDK + CLI + MCP | GitHub, Stripe, Linear (community), Neon (toolkit) | AI agent consumption without custom integration work |
+| Layer                      | Who Has It                                          | What It Enables                                      |
+| -------------------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| REST API only              | Early-stage products, all startups at launch        | Direct integration, only path available              |
+| REST API + SDK             | Stripe, Twilio, SendGrid, OpenAI, Anthropic, Resend | Reduced boilerplate, type safety, faster integration |
+| REST API + SDK + CLI       | Vercel, Supabase, Railway, Fly.io, Neon, GitHub     | Power user workflows, CI/CD, local dev, scripting    |
+| REST API + SDK + CLI + MCP | GitHub, Stripe, Linear (community), Neon (toolkit)  | AI agent consumption without custom integration work |
 
 Notable patterns:
+
 - **GitHub** has the most mature multi-layer story: REST API + GraphQL API + Octokit SDK + `gh` CLI + GitHub MCP server
 - **Linear** has a REST/GraphQL API + official `@linear/sdk` TypeScript SDK + **no official CLI** (the community has built 8+ of them, several explicitly agent-friendly)
 - **Stripe** now has a regular SDK (`stripe-node`) + dedicated agent toolkit (`@stripe/agent-toolkit`) — they separated the two concerns deliberately
@@ -39,6 +40,7 @@ Notable patterns:
 The gold standard for developer CLI design. Command grammar: `gh <resource> <action> [flags]`.
 
 Key patterns:
+
 - `gh issue list` — filter by `--state`, `--label`, `--assignee`, `--author`; supports `--json <fields>`, `--jq <expression>`, `--template` for formatting output
 - `gh issue create` — interactive by default, but all fields passable as flags for scripting
 - `gh issue view` — terminal render + `--web` flag to open in browser
@@ -62,6 +64,7 @@ The Linear CLI gap is a product signal: **when users build multiple CLIs for you
 #### Jira CLI (`jira-cli` by ankitpokhrel)
 
 The most feature-complete community Jira CLI. Design patterns:
+
 - Interactive table view as default (arrow keys, vim navigation)
 - `--plain`, `--raw` (JSON), `--csv` output modes
 - Supports `issue create`, `issue move`, `issue assign`, `issue view`, `issue link`
@@ -77,6 +80,7 @@ tool <resource> <action> [identifier] [--flags]
 ```
 
 Examples across tools:
+
 ```bash
 gh issue list --state open --json number,title,labels
 linear issue start ABC-123
@@ -85,6 +89,7 @@ loop issue list --status=triage --json
 ```
 
 Three tiers of output:
+
 1. **Human default**: colored, formatted table or card
 2. **Script mode**: `--plain` or `--no-color`
 3. **Machine mode**: `--json [fields]` (optionally with `--jq` filter)
@@ -97,12 +102,13 @@ Three tiers of output:
 
 The most significant finding in this research is that leading developer platforms are **splitting their SDKs into two distinct products**:
 
-| SDK Type | Designed For | Example |
-|----------|-------------|---------|
-| Regular SDK | Human developers writing application code | `stripe-node`, `@linear/sdk` |
+| SDK Type      | Designed For                                   | Example                                          |
+| ------------- | ---------------------------------------------- | ------------------------------------------------ |
+| Regular SDK   | Human developers writing application code      | `stripe-node`, `@linear/sdk`                     |
 | Agent Toolkit | AI agents consuming tools via function calling | `@stripe/agent-toolkit`, `@neondatabase/toolkit` |
 
 This split exists because the needs are genuinely different:
+
 - Human SDKs optimize for **idiomatic code, IDE completion, type safety, fluent chaining**
 - Agent SDKs optimize for **tool definitions, minimal token surface, clear descriptions, permission scoping**
 
@@ -125,6 +131,7 @@ Based on the Stripe, Neon, and Linear examples:
 #### How the Major SDKs Are Designed
 
 **Stripe (`stripe-node`)**:
+
 - Class-based resource pattern: `stripe.customers.create()`, `stripe.invoices.list()`
 - Resources are namespaced on the main client instance
 - Built-in retry with exponential backoff (configurable `maxNetworkRetries`)
@@ -133,6 +140,7 @@ Based on the Stripe, Neon, and Linear examples:
 - Idempotency keys passed per-request or set globally
 
 **OpenAI SDK**:
+
 - Client-based initialization: `const openai = new OpenAI({ apiKey, maxRetries })`
 - Resource namespacing: `openai.chat.completions.create()`
 - Per-request option overrides (timeouts, retries, headers)
@@ -140,6 +148,7 @@ Based on the Stripe, Neon, and Linear examples:
 - Same SDK team that built Stripe's — very similar design
 
 **Linear SDK (`@linear/sdk`)**:
+
 - Client-based: `new LinearClient({ apiKey })`
 - Model-centric: returns objects with methods — `me.assignedIssues()`, `issue.update()`
 - Object-oriented with method chaining on returned models
@@ -147,6 +156,7 @@ Based on the Stripe, Neon, and Linear examples:
 - Built on top of the GraphQL API but hides GraphQL from the consumer
 
 **Neon Toolkit (`@neondatabase/toolkit`)**:
+
 - Explicitly designed for AI agents
 - Minimal surface: `createProject()`, `sql()`, `deleteProject()`
 - Wraps the full SDK but exposes only ephemeral-db patterns agents actually need
@@ -164,15 +174,17 @@ const issue = await client.issues.create({ title: '...', type: 'bug' });
 ```
 
 Not the flat function pattern:
+
 ```typescript
 // Less common, harder to tree-shake, no shared config
 import { listIssues, createIssue } from '@loop/sdk';
 ```
 
 Not the deep chain pattern (explicitly called out as anti-pattern in SDK design literature):
+
 ```typescript
 // Anti-pattern: too deep
-client.projects(id).goals(goalId).issues.list()
+client.projects(id).goals(goalId).issues.list();
 ```
 
 #### Thin Wrapper vs Convenience Layer
@@ -194,11 +206,13 @@ Based on the research, here is the prioritized build order for Loop at its curre
 #### Priority 1: TypeScript SDK (`@loop/sdk`) — **Build This Now**
 
 **Why:** Loop's REST API is the core product, but every integration requires re-implementing auth, error handling, pagination, and type definitions. A thin TypeScript SDK eliminates this friction and enables:
+
 - Direct consumption by AI agents running Node.js (Claude Code, Codex, etc.)
 - Type-safe programmatic use in user applications
 - A foundation that the CLI and agent toolkit are built on top of
 
 **Design:**
+
 ```typescript
 const loop = new LoopClient({ apiKey: process.env.LOOP_API_KEY });
 
@@ -249,6 +263,7 @@ loop projects view PROJECT-ID
 The `loop next` command is Loop's unique CLI moment. No other tool has this. It's the pull-based dispatch mechanism made into a one-liner that any agent or developer can call.
 
 **Design principles:**
+
 - Human-readable default, `--json` flag for everything
 - `--no-color` / `--plain` for CI environments
 - Auth via `LOOP_API_KEY` env var or `~/.loop/config.toml`
@@ -288,23 +303,25 @@ A separate npm package that wraps the SDK's capabilities as tool definitions com
 
 #### Real-World Examples of Agent-First Design
 
-| Product | Regular SDK | Agent SDK | Key Difference |
-|---------|-------------|-----------|----------------|
-| Stripe | `stripe-node` | `@stripe/agent-toolkit` | Tool definitions vs fluent client; permission scoping |
-| Neon | `@neondatabase/api-client` | `@neondatabase/toolkit` | Ephemeral lifecycle methods; 3 operations vs ~100 |
-| Linear | `@linear/sdk` | `czottmann/linearis` (community) | JSON-only output; <1,000 token usage surface |
-| Anthropic | `@anthropic-ai/sdk` | Agent SDK | Structured outputs; tool definitions; defer_loading |
+| Product   | Regular SDK                | Agent SDK                        | Key Difference                                        |
+| --------- | -------------------------- | -------------------------------- | ----------------------------------------------------- |
+| Stripe    | `stripe-node`              | `@stripe/agent-toolkit`          | Tool definitions vs fluent client; permission scoping |
+| Neon      | `@neondatabase/api-client` | `@neondatabase/toolkit`          | Ephemeral lifecycle methods; 3 operations vs ~100     |
+| Linear    | `@linear/sdk`              | `czottmann/linearis` (community) | JSON-only output; <1,000 token usage surface          |
+| Anthropic | `@anthropic-ai/sdk`        | Agent SDK                        | Structured outputs; tool definitions; defer_loading   |
 
 #### What's Structurally Different
 
 **1. Tool definitions instead of methods**
 
 Human SDK:
+
 ```typescript
 const issues = await loop.issues.list({ status: 'triage' });
 ```
 
 Agent SDK (MCP / function calling):
+
 ```json
 {
   "name": "loop_list_issues",
@@ -328,11 +345,17 @@ Agents don't benefit from comprehensive API coverage. They benefit from a small 
 **3. Structured error objects**
 
 Agents need errors they can act on:
+
 ```json
-{ "error": "ISSUE_NOT_FOUND", "issue_id": "abc-123", "suggestion": "Use loop_list_issues to find valid IDs" }
+{
+  "error": "ISSUE_NOT_FOUND",
+  "issue_id": "abc-123",
+  "suggestion": "Use loop_list_issues to find valid IDs"
+}
 ```
 
 Not:
+
 ```
 Error: Request failed with status code 404
 ```
@@ -344,6 +367,7 @@ Agents should not have write access unless they need it. An agent that only tria
 **5. Token-efficient responses**
 
 Default response shapes for human SDKs often include rich metadata. Agent responses should be leaner:
+
 ```json
 // Human SDK response
 { "id": "abc", "title": "...", "status": "...", "createdAt": "...", "updatedAt": "...", "creator": { ... }, "labels": [...], "comments": [...] }
@@ -395,6 +419,7 @@ This is the gap Loop can close natively. Loop is designed from the ground up for
 At Loop's stage, generating the SDK from the OpenAPI spec is the pragmatic path:
 
 **Generation tools:**
+
 - **Stainless** — built the SDKs for OpenAI, Cloudflare, Anthropic; produces idiomatic code with retries, pagination, types; Loop already has OpenAPI integration
 - **Fern** — combines SDK generation + docs generation; good for multi-language
 - **Speakeasy** — alternative to Stainless with multi-language support
@@ -420,18 +445,21 @@ The research surfaced a genuine debate about when to build MCP:
 ### Sequenced Build Plan
 
 **Week 1-2: TypeScript SDK**
+
 - Generate from OpenAPI spec using Stainless
 - Hand-write the dispatch client (`loop.dispatch.next()`) since this is Loop's unique endpoint
 - Publish as `@loop/sdk` on npm
 - Primary use case: AI agents running in Node.js environments (Claude Code, Codex)
 
 **Week 3-4: MCP Server (auto-generated)**
+
 - Use OpenAPI-to-MCP tooling to generate quickly
 - Expose as `npx @loop/mcp` or Docker image
 - Test with Claude Code's MCP integration immediately
 - Purpose: unblock the DorkOS integration and validate agent workflows
 
 **Month 2: `loop` CLI**
+
 - Build on top of the TypeScript SDK
 - Lead with the `loop next` command — this is the killer feature
 - Follow `gh` grammar for everything else
@@ -439,6 +467,7 @@ The research surfaced a genuine debate about when to build MCP:
 - Auth via env var + config file
 
 **Month 3+: Agent Toolkit + refined MCP**
+
 - `@loop/agent-toolkit` for LangChain/OpenAI Agents SDK/Vercel AI SDK integration
 - Redesign MCP with minimal surface (<10 tools, <1,000 token description surface)
 - Permission scoping via restricted API key patterns
@@ -455,14 +484,14 @@ const loop = new LoopClient({
 });
 
 // Resource namespacing
-loop.issues        // CRUD + relations + comments
-loop.projects      // CRUD + goals
-loop.goals         // CRUD
-loop.signals       // ingest
-loop.labels        // CRUD
-loop.templates     // CRUD + versions + reviews
-loop.dispatch      // next() — Loop's unique endpoint
-loop.dashboard     // stats(), activity(), prompts()
+loop.issues; // CRUD + relations + comments
+loop.projects; // CRUD + goals
+loop.goals; // CRUD
+loop.signals; // ingest
+loop.labels; // CRUD
+loop.templates; // CRUD + versions + reviews
+loop.dispatch; // next() — Loop's unique endpoint
+loop.dashboard; // stats(), activity(), prompts()
 ```
 
 ### CLI Command Design

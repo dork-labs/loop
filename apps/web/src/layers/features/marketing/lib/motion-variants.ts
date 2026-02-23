@@ -1,4 +1,4 @@
-import type { Variants, Transition } from 'motion/react'
+import type { Variants, Transition } from 'motion/react';
 
 /** Overdamped spring — physics-based, no bounce. */
 export const SPRING: Transition = {
@@ -6,10 +6,10 @@ export const SPRING: Transition = {
   stiffness: 100,
   damping: 20,
   mass: 1,
-}
+};
 
 /** Standard viewport trigger config — fires once at 20% visible. */
-export const VIEWPORT = { once: true, amount: 0.2 } as const
+export const VIEWPORT = { once: true, amount: 0.2 } as const;
 
 /** Fade + slide up reveal for individual elements. */
 export const REVEAL: Variants = {
@@ -19,7 +19,7 @@ export const REVEAL: Variants = {
     y: 0,
     transition: SPRING,
   },
-}
+};
 
 /** Container variant that staggers children at 80ms intervals. */
 export const STAGGER: Variants = {
@@ -29,7 +29,7 @@ export const STAGGER: Variants = {
       staggerChildren: 0.08,
     },
   },
-}
+};
 
 /** Scale-in variant for SVG nodes. */
 export const SCALE_IN: Variants = {
@@ -39,7 +39,7 @@ export const SCALE_IN: Variants = {
     scale: 1,
     transition: SPRING,
   },
-}
+};
 
 /** Path drawing variant using pathLength. */
 export const DRAW_PATH: Variants = {
@@ -49,4 +49,4 @@ export const DRAW_PATH: Variants = {
     opacity: 1,
     transition: { duration: 1.2, ease: 'easeInOut' },
   },
-}
+};

@@ -18,4 +18,7 @@ _openapi:
 
 Atomically claims the highest-priority unblocked todo issue using FOR UPDATE SKIP LOCKED, sets it to in_progress, selects the best matching template, and returns a hydrated prompt. Returns 204 when queue is empty.
 
-<APIPage document={"../../docs/api/openapi.json"} operations={[{"path":"/api/dispatch/next","method":"get"}]} />
+<APIPage
+  document={'../../docs/api/openapi.json'}
+  operations={[{ path: '/api/dispatch/next', method: 'get' }]}
+/>

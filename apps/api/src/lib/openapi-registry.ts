@@ -7,8 +7,8 @@
  * - `apps/api/src/app.ts` (`GET /api/openapi.json` runtime endpoint)
  * - `apps/api/src/__tests__/openapi-registry.test.ts` (registry tests)
  */
-export { registry } from './openapi-schemas'
-import { generateOpenApiDocument } from './openapi-schemas'
+export { registry } from './openapi-schemas';
+import { generateOpenApiDocument } from './openapi-schemas';
 
 /**
  * Generate the complete OpenAPI 3.1 document from the registry.
@@ -19,5 +19,5 @@ import { generateOpenApiDocument } from './openapi-schemas'
  * @returns OpenAPI 3.1 document object ready for serialization to JSON or YAML.
  */
 export function generateOpenAPISpec() {
-  return generateOpenApiDocument()
+  return generateOpenApiDocument();
 }

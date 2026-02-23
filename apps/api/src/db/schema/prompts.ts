@@ -1,12 +1,21 @@
-import { text, integer, doublePrecision, jsonb, index, unique, check, pgEnum } from 'drizzle-orm/pg-core'
-import { pgTable } from 'drizzle-orm/pg-core'
-import { relations, sql } from 'drizzle-orm'
-import { timestamp } from 'drizzle-orm/pg-core'
-import { cuid2Id, timestamps, softDelete } from './_helpers'
-import { authorTypeEnum } from './issues'
+import {
+  text,
+  integer,
+  doublePrecision,
+  jsonb,
+  index,
+  unique,
+  check,
+  pgEnum,
+} from 'drizzle-orm/pg-core';
+import { pgTable } from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
+import { timestamp } from 'drizzle-orm/pg-core';
+import { cuid2Id, timestamps, softDelete } from './_helpers';
+import { authorTypeEnum } from './issues';
 
-export const promptVersionStatusValues = ['active', 'draft', 'retired'] as const
-export const promptVersionStatusEnum = pgEnum('prompt_version_status', promptVersionStatusValues)
+export const promptVersionStatusValues = ['active', 'draft', 'retired'] as const;
+export const promptVersionStatusEnum = pgEnum('prompt_version_status', promptVersionStatusValues);
 
 /** PromptTemplates table — named, versioned prompt templates scoped to projects. */
 export const promptTemplates = pgTable('prompt_templates', {
@@ -20,7 +29,7 @@ export const promptTemplates = pgTable('prompt_templates', {
   activeVersionId: text('active_version_id'),
   ...timestamps,
   ...softDelete,
-})
+});
 
 /** PromptVersions table — immutable content snapshots of a prompt template. */
 export const promptVersions = pgTable(
@@ -45,8 +54,8 @@ export const promptVersions = pgTable(
   (table) => [
     unique('uq_prompt_versions_template_version').on(table.templateId, table.version),
     index('idx_prompt_versions_template_id').on(table.templateId),
-  ],
-)
+  ]
+);
 
 /** PromptReviews table — agent or human quality reviews for a specific prompt version. */
 export const promptReviews = pgTable(
@@ -69,8 +78,8 @@ export const promptReviews = pgTable(
     check('chk_clarity_range', sql`${table.clarity} BETWEEN 1 AND 5`),
     check('chk_completeness_range', sql`${table.completeness} BETWEEN 1 AND 5`),
     check('chk_relevance_range', sql`${table.relevance} BETWEEN 1 AND 5`),
-  ],
-)
+  ]
+);
 
 /** Relations for promptTemplates ↔ promptVersions ↔ promptReviews. */
 export const promptTemplatesRelations = relations(promptTemplates, ({ many, one }) => ({
@@ -80,7 +89,7 @@ export const promptTemplatesRelations = relations(promptTemplates, ({ many, one 
     references: [promptVersions.id],
     relationName: 'activeVersion',
   }),
-}))
+}));
 
 export const promptVersionsRelations = relations(promptVersions, ({ one, many }) => ({
   template: one(promptTemplates, {
@@ -88,11 +97,11 @@ export const promptVersionsRelations = relations(promptVersions, ({ one, many })
     references: [promptTemplates.id],
   }),
   reviews: many(promptReviews),
-}))
+}));
 
 export const promptReviewsRelations = relations(promptReviews, ({ one }) => ({
   version: one(promptVersions, {
     fields: [promptReviews.versionId],
     references: [promptVersions.id],
   }),
-}))
+}));

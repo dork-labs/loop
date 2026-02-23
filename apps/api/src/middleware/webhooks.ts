@@ -1,7 +1,7 @@
-import { createMiddleware } from 'hono/factory'
-import { HTTPException } from 'hono/http-exception'
-import { createHmac, timingSafeEqual } from 'node:crypto'
-import type { AppEnv } from '../types'
+import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import type { AppEnv } from '../types';
 
 /**
  * Compares two strings using timing-safe equality to prevent timing attacks.
@@ -11,10 +11,10 @@ import type { AppEnv } from '../types'
  * @returns true if strings are equal
  */
 function safeCompare(a: string, b: string): boolean {
-  const bufA = Buffer.from(a)
-  const bufB = Buffer.from(b)
-  if (bufA.length !== bufB.length) return false
-  return timingSafeEqual(bufA, bufB)
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
 }
 
 /**
@@ -25,7 +25,7 @@ function safeCompare(a: string, b: string): boolean {
  * @returns Hex-encoded HMAC-SHA256 digest
  */
 function computeHmacSha256(secret: string, payload: string): string {
-  return createHmac('sha256', secret).update(payload).digest('hex')
+  return createHmac('sha256', secret).update(payload).digest('hex');
 }
 
 /**
@@ -36,25 +36,25 @@ function computeHmacSha256(secret: string, payload: string): string {
  * header value using `crypto.timingSafeEqual`.
  */
 export const verifyGitHubWebhook = createMiddleware<AppEnv>(async (c, next) => {
-  const secret = process.env.GITHUB_WEBHOOK_SECRET
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
   if (!secret) {
-    throw new HTTPException(500, { message: 'GITHUB_WEBHOOK_SECRET not configured' })
+    throw new HTTPException(500, { message: 'GITHUB_WEBHOOK_SECRET not configured' });
   }
 
-  const signature = c.req.header('X-Hub-Signature-256')
+  const signature = c.req.header('X-Hub-Signature-256');
   if (!signature) {
-    throw new HTTPException(401, { message: 'Missing X-Hub-Signature-256 header' })
+    throw new HTTPException(401, { message: 'Missing X-Hub-Signature-256 header' });
   }
 
-  const rawBody = await c.req.text()
-  const expected = `sha256=${computeHmacSha256(secret, rawBody)}`
+  const rawBody = await c.req.text();
+  const expected = `sha256=${computeHmacSha256(secret, rawBody)}`;
 
   if (!safeCompare(expected, signature)) {
-    throw new HTTPException(401, { message: 'Invalid webhook signature' })
+    throw new HTTPException(401, { message: 'Invalid webhook signature' });
   }
 
-  await next()
-})
+  await next();
+});
 
 /**
  * Middleware that verifies Sentry webhook signatures using HMAC-SHA256.
@@ -64,27 +64,27 @@ export const verifyGitHubWebhook = createMiddleware<AppEnv>(async (c, next) => {
  * `crypto.timingSafeEqual`.
  */
 export const verifySentryWebhook = createMiddleware<AppEnv>(async (c, next) => {
-  const secret = process.env.SENTRY_CLIENT_SECRET
+  const secret = process.env.SENTRY_CLIENT_SECRET;
   if (!secret) {
-    throw new HTTPException(500, { message: 'SENTRY_CLIENT_SECRET not configured' })
+    throw new HTTPException(500, { message: 'SENTRY_CLIENT_SECRET not configured' });
   }
 
-  const signature = c.req.header('Sentry-Hook-Signature')
+  const signature = c.req.header('Sentry-Hook-Signature');
   if (!signature) {
-    throw new HTTPException(401, { message: 'Missing Sentry-Hook-Signature header' })
+    throw new HTTPException(401, { message: 'Missing Sentry-Hook-Signature header' });
   }
 
-  const body = await c.req.text()
+  const body = await c.req.text();
   // Re-serialize through JSON.parse/stringify to match Sentry's canonical form
-  const canonical = JSON.stringify(JSON.parse(body))
-  const expected = computeHmacSha256(secret, canonical)
+  const canonical = JSON.stringify(JSON.parse(body));
+  const expected = computeHmacSha256(secret, canonical);
 
   if (!safeCompare(expected, signature)) {
-    throw new HTTPException(401, { message: 'Invalid webhook signature' })
+    throw new HTTPException(401, { message: 'Invalid webhook signature' });
   }
 
-  await next()
-})
+  await next();
+});
 
 /**
  * Middleware that verifies PostHog webhooks via shared secret comparison.
@@ -94,19 +94,19 @@ export const verifySentryWebhook = createMiddleware<AppEnv>(async (c, next) => {
  * sends the raw secret in the header.
  */
 export const verifyPostHogWebhook = createMiddleware<AppEnv>(async (c, next) => {
-  const secret = process.env.POSTHOG_WEBHOOK_SECRET
+  const secret = process.env.POSTHOG_WEBHOOK_SECRET;
   if (!secret) {
-    throw new HTTPException(500, { message: 'POSTHOG_WEBHOOK_SECRET not configured' })
+    throw new HTTPException(500, { message: 'POSTHOG_WEBHOOK_SECRET not configured' });
   }
 
-  const headerSecret = c.req.header('X-PostHog-Secret')
+  const headerSecret = c.req.header('X-PostHog-Secret');
   if (!headerSecret) {
-    throw new HTTPException(401, { message: 'Missing X-PostHog-Secret header' })
+    throw new HTTPException(401, { message: 'Missing X-PostHog-Secret header' });
   }
 
   if (!safeCompare(secret, headerSecret)) {
-    throw new HTTPException(401, { message: 'Invalid webhook secret' })
+    throw new HTTPException(401, { message: 'Invalid webhook secret' });
   }
 
-  await next()
-})
+  await next();
+});

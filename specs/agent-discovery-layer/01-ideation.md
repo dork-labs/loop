@@ -186,6 +186,7 @@ N/A — this is a new feature, not a bug fix.
 7. **Langfuse as primary reference:** Their SKILL.md (CLI access + docs retrieval pattern) is the closest analog to Loop's SKILL.md (dispatch workflow + API access).
 
 **Caveats:**
+
 - llms.txt links to `.md` doc pages require those pages to exist or be creatable — Fumadocs MDX pages may need a `.md` export route
 - OpenHands is migrating from `.openhands/microagents/` to `.agents/skills/` format — ship the legacy format for now, note the migration path
 - The dispatch endpoint (`GET /api/dispatch/next`) doesn't exist yet (Feature 2) — SKILL.md should reference it as "coming soon" or use existing endpoints

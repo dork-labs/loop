@@ -27,6 +27,6 @@ npm run dev
 ## Structure
 
 apps/
-  api/     # Hono API
-  app/     # React dashboard → app.looped.me
-  web/     # Marketing site → www.looped.me
+api/ # Hono API
+app/ # React dashboard → app.looped.me
+web/ # Marketing site → www.looped.me

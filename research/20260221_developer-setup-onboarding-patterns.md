@@ -20,6 +20,7 @@ The most effective open source projects reduce time-to-first-run through a small
 CLI wizards like `npx create-t3-app` are scaffolding tools, not dev-environment tools. They work once, at project creation, and are not appropriate for ongoing developer onboarding.
 
 **How create-t3-app works:**
+
 - Uses **Commander.js** for argument parsing and **@clack/prompts** for interactive terminal UI
 - Uses **execa** to run package manager commands and **fs-extra** for file operations
 - Prompts are conditional: later questions only appear based on earlier answers
@@ -27,6 +28,7 @@ CLI wizards like `npx create-t3-app` are scaffolding tools, not dev-environment 
 - Key questions: project name, TypeScript, Tailwind, tRPC, NextAuth, Drizzle/Prisma, database type, ESLint/Biome, git init, dependency install
 
 **How create-payload-app works:**
+
 - Templates: blank, website, ecommerce, plugin
 - Flags: `-n` (name), `-t` (template), `--use-npm/yarn/pnpm`
 - Creates Payload config, admin panel at `src/app/(payload)`, collections directory
@@ -41,40 +43,48 @@ CLI wizards like `npx create-t3-app` are scaffolding tools, not dev-environment 
 This is the single most impactful pattern across every project examined.
 
 **Documenso's `npm run dx` (best small-project example):**
+
 ```
 cp .env.example .env   # .env.example has working defaults pre-filled
 npm run dx             # docker compose up for: postgres:54320, inbucket mail:9000, S3:9001
 npm run dev            # start the app
 ```
+
 Three steps. The `.env.example` already has valid values for local dev — contributors do not need to fill anything in to get started. The `dx` script name is an alias for `docker compose up -d`.
 
 **Cal.com's `yarn dx`:**
+
 ```
 cp .env.example .env
 openssl rand -base64 32  # manual secret generation step
 yarn workspace @calcom/prisma db-deploy
 yarn dx                  # starts local postgres + test users, logs credentials to console
 ```
+
 Cal.com uses the same `dx` convention but still requires a manual secret generation step. Their docker setup seeds test users and logs the credentials automatically.
 
 **Supabase's self-hosting pattern:**
+
 - Clone repo, `cd docker`, `cp .env.example .env`
 - Requires manual JWT secret generation (at least 32 chars) plus deriving ANON_KEY and SERVICE_KEY
 - Complex because it orchestrates 8+ services (Postgres, GoTrue, PostgREST, Realtime, Storage, Studio, Kong, Logflare)
 - The complexity here is inherent to Supabase's scope — not a model for small projects
 
 **Formbricks' docker-compose.dev.yml:**
+
 - Single command starts: PostgreSQL, Valkey (Redis), MinIO, Mailhog
 - Redirects to signup on first visit — no credentials needed
 - The dev compose file is distinct from the production compose file
 
 **Pros for a small monorepo (Loop's scale):**
+
 - One command replaces "install postgres, create a database, configure pg_hba.conf"
 - Compose file is checked in, so the environment is reproducible
 - Works on macOS, Linux, and Windows (WSL2)
 - Can pre-seed schema and sample data in the container's init scripts
 
 **Cons:**
+
 - Requires Docker Desktop (licensing cost for large companies, but fine for open source contributors)
 - Slightly slower first start than native postgres
 - Adds a file to maintain
@@ -89,19 +99,20 @@ Cal.com uses the same `dx` convention but still requires a manual secret generat
 
 ```typescript
 // apps/api/src/env.ts
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
-  DATABASE_URL: z.string().url("DATABASE_URL must be a valid PostgreSQL connection string"),
-  LOOP_API_KEY: z.string().min(1, "LOOP_API_KEY is required"),
+  DATABASE_URL: z.string().url('DATABASE_URL must be a valid PostgreSQL connection string'),
+  LOOP_API_KEY: z.string().min(1, 'LOOP_API_KEY is required'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-})
+});
 
 // Throws immediately on startup if any variable is invalid
-export const env = schema.parse(process.env)
+export const env = schema.parse(process.env);
 ```
 
 When `schema.parse(process.env)` throws, Zod produces output like:
+
 ```
 ZodError: [
   {
@@ -117,12 +128,13 @@ ZodError: [
 **The t3-env upgrade for better DX:**
 
 `@t3-oss/env-core` adds two critical behaviors:
+
 1. `onValidationError` callback — intercept the raw ZodError and print something human-readable before throwing
 2. `onInvalidAccess` callback — catches server env accessed on the client with a named variable in the message
 
 ```typescript
-import { createEnv } from "@t3-oss/env-core"
-import { z } from "zod"
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 export const env = createEnv({
   server: {
@@ -131,17 +143,18 @@ export const env = createEnv({
   },
   runtimeEnv: process.env,
   onValidationError: (issues) => {
-    console.error("\n  Invalid environment variables:\n")
-    issues.forEach(issue => {
-      console.error(`  - ${issue.path.join('.')}: ${issue.message}`)
-    })
-    console.error("\n  Check .env against .env.example\n")
-    process.exit(1)
+    console.error('\n  Invalid environment variables:\n');
+    issues.forEach((issue) => {
+      console.error(`  - ${issue.path.join('.')}: ${issue.message}`);
+    });
+    console.error('\n  Check .env against .env.example\n');
+    process.exit(1);
   },
-})
+});
 ```
 
 **What good error output looks like:**
+
 ```
   Invalid environment variables:
 
@@ -152,6 +165,7 @@ export const env = createEnv({
 ```
 
 **Key practices seen across projects:**
+
 - `emptyStringAsUndefined: true` so `VARIABLE=` (empty) is treated as missing, not as an empty string that passes `z.string()`
 - Validate at import time (module load), not inside request handlers
 - Keep `.env.example` always up to date — it is the canonical list of required variables
@@ -164,6 +178,7 @@ export const env = createEnv({
 **The conventional pattern (Rails-derived, widely adopted):**
 
 `scripts/setup.sh` or `bin/setup`:
+
 1. Check node/npm version against `.node-version` or `package.json#engines`
 2. Copy `.env.example` to `.env` if `.env` does not exist
 3. Generate secrets (`openssl rand -base64 32`) and patch them into `.env`
@@ -172,6 +187,7 @@ export const env = createEnv({
 6. Optionally seed sample data
 
 **Cal.com example (manual, documented in docs):**
+
 ```bash
 cp .env.example .env
 openssl rand -base64 32  # -> paste as NEXTAUTH_SECRET
@@ -224,6 +240,7 @@ echo "Setup complete. Run 'npm run dev' to start."
 ```
 
 **Observations:**
+
 - Most projects skip this script and rely on documented steps — that is acceptable if the steps are minimal
 - The highest-value parts are step 2 (copy env) and step 3 (generate secrets automatically)
 - Secret generation via `openssl rand -base64 32` is the universal pattern across projects
@@ -234,12 +251,14 @@ echo "Setup complete. Run 'npm run dev' to start."
 ### 5. Dev Containers / GitHub Codespaces
 
 **How they work:**
+
 - `.devcontainer/devcontainer.json` defines the container image, VS Code extensions, and `postCreateCommand`
 - `postCreateCommand` runs after the container is built — typically installs deps and starts services
 - Port forwarding is declared in the config — VS Code prompts to open in browser
 - Extensions are standardized across all contributors (ESLint, Prettier, etc.)
 
 **Example configuration:**
+
 ```json
 {
   "name": "Loop",
@@ -248,11 +267,7 @@ echo "Setup complete. Run 'npm run dev' to start."
   "postCreateCommand": "npm install && cp -n apps/api/.env.example apps/api/.env && npm run dx && sleep 5 && cd apps/api && npm run db:migrate",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "ms-playwright.playwright"
-      ]
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "ms-playwright.playwright"]
     }
   }
 }
@@ -261,12 +276,14 @@ echo "Setup complete. Run 'npm run dev' to start."
 **The key principle:** "Things like linters are good to standardize on and require everyone to have installed. Things like UI decorators or themes are personal choices that should not be in devcontainer.json."
 
 **Value proposition:**
+
 - A new contributor opens the repo in Codespaces and has a running environment in 3-5 minutes with zero local installs
 - The postCreateCommand runs your setup script automatically
 - Eliminates "works on my machine" entirely
 - Free for public repos (GitHub provides Codespaces minutes free for open source)
 
 **Cost/complexity:**
+
 - `devcontainer.json` is roughly 20-30 lines
 - Maintains itself if your `postCreateCommand` calls `npm install`
 - The main work is ensuring `.env.example` has working local defaults — which you need anyway
@@ -278,6 +295,7 @@ echo "Setup complete. Run 'npm run dev' to start."
 **What good setup docs look like:**
 
 Cal.com's local development docs are the best example examined. They:
+
 - List exact prerequisites with versions (`Node.js 18.x or higher`)
 - Provide copy-pasteable commands in code blocks
 - Have a "Quick Start" section (`yarn dx`) and a "Manual Setup" section
@@ -285,6 +303,7 @@ Cal.com's local development docs are the best example examined. They:
 - Include verification steps so contributors can confirm setup succeeded
 
 **Common anti-patterns:**
+
 - CONTRIBUTING.md says "see README" with no further detail
 - Prerequisites listed without version numbers
 - Secret generation not mentioned or left as an exercise
@@ -302,11 +321,13 @@ Ranked by **impact-to-effort ratio** for a 3-app Turborepo with PostgreSQL.
 ---
 
 ### Rank 1: Pre-filled `.env.example` with working local defaults
+
 **Effort: 30 minutes | Impact: Very High**
 
 The single highest-leverage change. Every project that does this well (Documenso being the best example) lets contributors run `cp .env.example .env` and proceed immediately without filling anything in for local dev.
 
 **For Loop's `apps/api/.env.example`:**
+
 - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/loop_dev` (matches the docker compose container)
 - `LOOP_API_KEY=dev-api-key-change-in-production` (a static string that works for local testing)
 - `NODE_ENV=development`
@@ -318,6 +339,7 @@ This change costs 30 minutes and eliminates one of the most common new-contribut
 ---
 
 ### Rank 2: `docker-compose.dev.yml` + `npm run dx`
+
 **Effort: 2-3 hours | Impact: Very High**
 
 Eliminates the "install and configure PostgreSQL" prerequisite entirely.
@@ -332,11 +354,11 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: loop_dev
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - loop_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -346,6 +368,7 @@ volumes:
 ```
 
 In root `package.json`:
+
 ```json
 "scripts": {
   "dx": "docker compose -f docker-compose.dev.yml up -d",
@@ -354,6 +377,7 @@ In root `package.json`:
 ```
 
 Combined getting-started flow:
+
 ```
 git clone https://github.com/dork-labs/loop
 cd loop
@@ -369,38 +393,44 @@ Six steps. No postgres installation. No database creation. No `pg_hba.conf`.
 ---
 
 ### Rank 3: Zod env validation with actionable error messages
+
 **Effort: 1-2 hours | Impact: High**
 
 The API should fail at startup — not at first request — when env vars are missing, with a message naming the missing variable. This uses Zod which Loop already depends on.
 
 Extract env validation to `apps/api/src/env.ts`:
+
 ```typescript
-import { z } from 'zod'
+import { z } from 'zod';
 
 const schema = z.object({
-  DATABASE_URL: z.string({
-    required_error: "DATABASE_URL is required — set it in apps/api/.env"
-  }).url("DATABASE_URL must be a valid PostgreSQL connection string"),
-  LOOP_API_KEY: z.string({
-    required_error: "LOOP_API_KEY is required — set it in apps/api/.env"
-  }).min(1),
+  DATABASE_URL: z
+    .string({
+      required_error: 'DATABASE_URL is required — set it in apps/api/.env',
+    })
+    .url('DATABASE_URL must be a valid PostgreSQL connection string'),
+  LOOP_API_KEY: z
+    .string({
+      required_error: 'LOOP_API_KEY is required — set it in apps/api/.env',
+    })
+    .min(1),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   SENTRY_CLIENT_SECRET: z.string().optional(),
   POSTHOG_WEBHOOK_SECRET: z.string().optional(),
-})
+});
 
-const result = schema.safeParse(process.env)
+const result = schema.safeParse(process.env);
 if (!result.success) {
-  console.error('\nMissing or invalid environment variables:')
-  result.error.issues.forEach(issue => {
-    console.error(`  ${issue.path.join('.')}: ${issue.message}`)
-  })
-  console.error('\nCopy apps/api/.env.example to apps/api/.env\n')
-  process.exit(1)
+  console.error('\nMissing or invalid environment variables:');
+  result.error.issues.forEach((issue) => {
+    console.error(`  ${issue.path.join('.')}: ${issue.message}`);
+  });
+  console.error('\nCopy apps/api/.env.example to apps/api/.env\n');
+  process.exit(1);
 }
 
-export const env = result.data
+export const env = result.data;
 ```
 
 This is ~25 lines, no new dependencies, and eliminates the "why is the app crashing" class of new-contributor confusion.
@@ -408,6 +438,7 @@ This is ~25 lines, no new dependencies, and eliminates the "why is the app crash
 ---
 
 ### Rank 4: `scripts/setup.sh`
+
 **Effort: 2-3 hours | Impact: Medium**
 
 A setup script is valuable but optional if ranks 1-3 are in place. If added, keep it simple. The highest-value elements are: checking node version, copying env only if not present, running `npm install`, starting docker services, and running migrations.
@@ -417,6 +448,7 @@ Consider a Node.js script (`.mjs`) instead of bash for cross-platform compatibil
 ---
 
 ### Rank 5: `.devcontainer/devcontainer.json`
+
 **Effort: 1 hour | Impact: Medium for open source**
 
 Adds a zero-local-setup path for contributors using GitHub Codespaces or VS Code Dev Containers. Low effort because it composes on top of ranks 1-4 — it just calls `npm run dx` and `npm run db:migrate` in `postCreateCommand`.

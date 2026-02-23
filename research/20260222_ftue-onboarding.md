@@ -15,16 +15,21 @@ Best-in-class developer tool onboarding converges on two non-negotiable principl
 ## Key Findings
 
 ### 1. The "Anti-Onboarding" Principle (Linear)
+
 Linear's FTUE is the most-studied in developer tooling. Rather than lengthy walkthroughs, it completes in 60 seconds by pre-populating the workspace with demo data that models ideal behavior. Empty states use subtle animations and a single, clear CTA rather than walls of instructional text. The philosophy: teach through structure, not tutorials. The take-away for Loop: expose a pre-populated dashboard with sample issues/signals so the user can see what success looks like, then overlay the setup checklist.
 
 ### 2. Pre-Populated Credentials Kill the Biggest Friction Point (Stripe)
+
 Stripe's most cited developer experience innovation is inserting the user's real API key directly into code samples. The developer copies the snippet and it runs immediately — no manual credential lookup, no token substitution. This single decision is widely credited for Stripe's exceptional developer activation rate. For Loop, every code snippet shown during onboarding must have the user's `LOOP_API_KEY` pre-injected.
 
 ### 3. Persistent Non-Modal Checklists Outperform Wizards for Developer Tools
+
 Research consistently shows that full-screen wizards are dismissed "almost instinctively" by developers. The winning pattern is a persistent, collapsible checklist (non-modal, never blocks the UI) with up to 7 accordions. Notion uses this pattern; Loom and Intercom have documented 15-30% activation lift from it. The checklist can be hidden and restored. Progress is tracked in localStorage. For a developer who wants to read docs in one tab and return to the dashboard in another, this is superior to a modal flow.
 
 ### 4. "Waiting for First Event" is a Solved UX Pattern
+
 Products like Hookdeck, Sentry, and Segment all implement a live detection state:
+
 - **Display:** spinner or pulsing indicator + "Listening for events..." copy
 - **Detection mechanism:** polling at 3-5 second intervals using `refetchInterval` in TanStack Query (already in Loop's stack) — no SSE or WebSocket infrastructure needed at this stage
 - **Trigger:** the API endpoint `/api/issues` returns a non-empty list = first event detected
@@ -33,9 +38,11 @@ Products like Hookdeck, Sentry, and Segment all implement a live detection state
 Sentry's wizard explicitly adds an intentional error to the project and then waits for it to appear in the dashboard. This exact pattern maps to Loop: instruct the user to run a `curl` POST to `/api/issues`, then poll until it appears.
 
 ### 5. Success Celebration is Expected and Increases Retention
+
 Confetti and animation upon completing setup creates a positive emotional anchor associated with the product. `canvas-confetti` (4.4KB gzipped, zero dependencies) is the standard choice in the React ecosystem. Magic UI has a pre-built Confetti component that wraps it. Linear uses a "first issue created" celebration. The celebration should be brief (2-3 seconds), then auto-resolve to the populated dashboard.
 
 ### 6. TanStack Query's `refetchInterval` is the Right Technical Choice for Polling
+
 Loop already uses TanStack Query for data fetching. The `refetchInterval` option accepts a function that receives the latest data, enabling conditional polling: poll every 3 seconds until data exists, then stop. This requires zero new infrastructure — no SSE endpoint, no WebSocket, no additional server code. A simple GET to `/api/issues?limit=1` reveals whether any data has arrived.
 
 ```typescript
@@ -47,7 +54,7 @@ useQuery({
     if (data?.issues?.length > 0) return false;
     return 3000; // Poll every 3 seconds while empty
   },
-})
+});
 ```
 
 ---
@@ -57,6 +64,7 @@ useQuery({
 ### Analyzed Products
 
 #### Linear — Anti-Onboarding + Pre-Populated Demo Data
+
 - **FTUE duration:** ~60 seconds
 - **Approach:** No role selection, no tutorial, no wizard. Pre-populated workspace with correctly structured sample projects and issues.
 - **Empty states:** Each empty state has one CTA and a subtle animation (pulsing icon, rotating elements). Never more than one action.
@@ -64,30 +72,35 @@ useQuery({
 - **Lesson for Loop:** Show a pre-populated view of what a healthy Loop looks like (sample issues, signals, activity). Let the user delete sample data after setup is complete.
 
 #### Stripe — Pre-Injected API Keys in Code Samples
+
 - **Key innovation:** Code samples in documentation and onboarding contain the developer's actual API key, not a placeholder.
 - **Effect:** Developer copies snippet, pastes into terminal, it works. Zero steps between "I got my key" and "my first API call succeeded."
 - **Test mode:** Full sandbox before production. Mistakes are safe.
 - **Lesson for Loop:** Pre-inject `LOOP_API_KEY` into every `curl` and `fetch` example shown during onboarding. The user should be able to copy-paste the curl command exactly and have it work.
 
 #### Sentry — CLI Wizard + Verification Step
+
 - **Flow:** CLI wizard (`npx @sentry/wizard`) automates SDK installation → instructs user to trigger a test error → polls dashboard for first event → confirms "Your installation is working"
 - **Empty state:** "Listening for events..." with a spinner while waiting
 - **Key pattern:** The wizard deliberately causes an error in the user's project to prove the integration works. The deliberate test event is the key teaching moment.
 - **Lesson for Loop:** The onboarding should instruct users to run a specific `curl` command (a known test issue creation) rather than waiting passively for their agent to send something. The deliberate, guided first event beats "set up your agent and wait."
 
 #### Hookdeck — Immediate Feedback via Test Webhook
+
 - **Flow:** Create a source → send a POST to source URL → immediately see the event in the Requests section
 - **What's great:** No "waiting for first event" state — they give the user a test URL and show results within seconds of the setup step
 - **Progressive complexity:** Mock API destination for testing, real destination for production
 - **Lesson for Loop:** Give users a test command immediately after showing the API URL. Don't make them configure an agent first. The `curl` test comes before the "connect your agent" instruction.
 
 #### Notion — Functional Checklist as the Getting Started Page
+
 - **FTUE:** A fully functional checklist (not a modal, not a wizard) embedded in the workspace as a document
 - **Contextual tooltips:** High-contrast tooltips on hover, not interrupting flow
 - **Personalization:** Templates filtered by role entered during signup
 - **Lesson for Loop:** The onboarding widget should be a collapsible sidebar card (or panel), not a full-page modal. Developers need to be able to reference docs in another tab without losing their place.
 
 #### PostHog — First Event as Activation Metric
+
 - Built dedicated infrastructure (`first-time-event-tracker` library) for knowing when a user's first event arrives
 - Onboarding explicitly waits for the first captured event before unlocking full functionality
 - Planned to enable first-event tracking plugin by default during onboarding
@@ -98,14 +111,17 @@ useQuery({
 ### Approach Comparison
 
 #### Approach 1: Full-Page Wizard (Dedicated setup flow, blocks dashboard)
+
 **Description:** A multi-step wizard occupies the full viewport. The dashboard is inaccessible until setup completes. Steps: Welcome → API Key → Copy Code → Verify → Done.
 
 **Pros:**
+
 - Highest completion rates when it works — no distractions
 - Clear linear progress
 - Simple to implement
 
 **Cons:**
+
 - Developers resist blocked UIs intensely — abandonment rate is high if any step is confusing
 - Can't reference the product while setting it up
 - If the user's agent isn't ready yet, they're stuck — no way to "come back later"
@@ -116,14 +132,17 @@ useQuery({
 ---
 
 #### Approach 2: Inline Empty States (Each page has its own contextual empty state)
+
 **Description:** The dashboard works immediately. Each page (Issues, Signals, Activity) has a contextual empty state with relevant setup guidance. No wizard. No checklist. Users discover onboarding content by navigating around.
 
 **Pros:**
+
 - Zero friction — dashboard is immediately usable
 - Context-appropriate guidance (Issues empty state explains how to create issues)
 - Best approach for experienced developers who prefer self-directed exploration
 
 **Cons:**
+
 - No guided sequence — users may miss critical steps
 - No sense of progress toward "you're set up"
 - Doesn't work for Loop's specific problem: users need to configure an external agent, not just learn the UI
@@ -134,9 +153,11 @@ useQuery({
 ---
 
 #### Approach 3: Persistent Sidebar Checklist (Non-modal, collapsible, alongside real UI)
+
 **Description:** A checklist widget (card or panel) appears in the dashboard for new users. Steps: Welcome ✓ → Copy API key ✓ → Copy curl command ✓ → Waiting for first issue... → Complete ✓. The checklist is collapsible and persists across page navigation. The dashboard is fully functional behind it.
 
 **Pros:**
+
 - Never blocks the product — developer can switch tabs and return
 - Clear progress — psychological "completion pull" effect
 - Can be hidden and restored (localStorage)
@@ -144,6 +165,7 @@ useQuery({
 - Pairs well with inline empty states
 
 **Cons:**
+
 - Requires more implementation work than a simple modal
 - Checklist widget competes for screen real estate
 - Must be carefully designed so it's dismissible without losing progress
@@ -153,14 +175,17 @@ useQuery({
 ---
 
 #### Approach 4: Modal Overlay (Welcome modal with steps, dismissible)
+
 **Description:** A modal dialog with steps appears on first login. Users progress through steps (or dismiss). Steps: Welcome → Show API key → Show curl example → Done button.
 
 **Pros:**
+
 - Simple to implement
 - Immediately visible — can't miss it
 - Good for a very short, 2-3 step flow
 
 **Cons:**
+
 - Developers dismiss modals reflexively before reading them
 - Dismissal = lost onboarding state
 - Can't return to modal if dismissed accidentally without a trigger mechanism
@@ -171,12 +196,15 @@ useQuery({
 ---
 
 #### Approach 5: Hybrid (Welcome modal → Persistent checklist → Success celebration)
+
 **Description:** Three phases:
+
 1. **Welcome modal** (one screen): Brief intro, what Loop does, single CTA "Get started" → transitions to checklist
 2. **Persistent sidebar checklist**: Collapsible, tracks progress step by step through API key copy, curl test, and "waiting for first issue"
 3. **Success screen / confetti**: Fires when first issue is detected by polling, auto-resolves to the normal dashboard with a populated state
 
 **Pros:**
+
 - Combines the attention-grabbing quality of a modal (only for the first ~3 seconds) with the persistent, non-blocking checklist
 - The welcome modal sets framing without trapping the user
 - The checklist gives clear progress and can be dismissed and restored
@@ -184,6 +212,7 @@ useQuery({
 - The whole thing completes in under 5 minutes for a developer who's ready
 
 **Cons:**
+
 - More implementation complexity
 - Three pieces to build and coordinate
 - Welcome modal must be very short (1 screen) or users will dismiss it
@@ -195,18 +224,20 @@ useQuery({
 ### Technical Pattern Recommendations
 
 #### Real-Time Detection: Polling via TanStack Query
+
 For "waiting for first event," polling beats SSE and WebSockets for this specific use case:
 
-| Factor | Polling | SSE | WebSocket |
-|--------|---------|-----|-----------|
-| Infrastructure cost | Zero — uses existing `/api/issues` endpoint | Requires SSE endpoint in Hono | Requires WebSocket server |
-| Implementation complexity | Low — 5 lines of TanStack Query config | Medium | High |
-| Appropriate for | Low-frequency events (first API call) | Continuous streams | Bidirectional real-time |
-| Already in Loop's stack | Yes | No | No |
+| Factor                    | Polling                                     | SSE                           | WebSocket                 |
+| ------------------------- | ------------------------------------------- | ----------------------------- | ------------------------- |
+| Infrastructure cost       | Zero — uses existing `/api/issues` endpoint | Requires SSE endpoint in Hono | Requires WebSocket server |
+| Implementation complexity | Low — 5 lines of TanStack Query config      | Medium                        | High                      |
+| Appropriate for           | Low-frequency events (first API call)       | Continuous streams            | Bidirectional real-time   |
+| Already in Loop's stack   | Yes                                         | No                            | No                        |
 
 **Polling interval:** 3 seconds during setup. The user is watching the screen, so 3-second feedback is acceptable. After first event arrives, `refetchInterval` returns `false` to stop.
 
 #### Step Tracking: localStorage
+
 ```typescript
 // Onboarding state management
 const ONBOARDING_KEY = 'loop_onboarding_v1';
@@ -225,19 +256,24 @@ type OnboardingState = {
 No server state needed. The "first event received" step is verified by polling the API, not by a user click. The checklist auto-advances when the API returns data.
 
 #### Code Snippet Display: Shiki or Prism
+
 For syntax-highlighted, copy-able code snippets:
+
 - `shiki` — server-side, best quality highlighting, can highlight Hono/TypeScript syntax
 - `react-syntax-highlighter` — simpler, client-side
 - Recommendation: A simple pre-formatted `<pre>` block with a copy button is sufficient for curl examples. Full syntax highlighting is a nice-to-have, not a requirement.
 
 #### Success Celebration: canvas-confetti
+
 ```bash
 npm install canvas-confetti
 npm install -D @types/canvas-confetti
 ```
+
 Trigger once when polling detects the first issue. Duration: 2-3 seconds. Then redirect or animate to the normal dashboard. `magicui` has a pre-built `<Confetti>` component if MagicUI is added to the stack.
 
 #### Stepper Component: Stepperize (shadcn-compatible)
+
 The project uses shadcn/ui. Stepperize is a shadcn-compatible stepper library with a simple `defineStepper` + `useStepper` API. Alternative: build a simple custom stepper using shadcn `Card` components with state-driven styling (not worth adding a dependency for a one-time flow).
 
 ---
@@ -247,6 +283,7 @@ The project uses shadcn/ui. Stepperize is a shadcn-compatible stepper library wi
 ### The Four Phases
 
 **Phase 1: Welcome Modal (first login only)**
+
 - Single modal dialog, ~300px wide
 - Headline: "Welcome to Loop"
 - 2-sentence description of what Loop does and what they're about to do
@@ -255,6 +292,7 @@ The project uses shadcn/ui. Stepperize is a shadcn-compatible stepper library wi
 - Show once, never again (localStorage flag)
 
 **Phase 2: Persistent Setup Checklist**
+
 - Collapsible card fixed to the bottom-right of the dashboard (or top of sidebar)
 - Header: "Connect your agent" with progress indicator (e.g., "2 of 4 complete")
 - 4 steps:
@@ -268,6 +306,7 @@ Steps 1 and 2 auto-complete on copy click. Step 3 auto-completes on copy click (
 The checklist persists across page navigation. User can minimize it. Clicking the minimized pill restores it.
 
 **Phase 3: Waiting for First Event**
+
 - Step 4 of the checklist enters an animated "listening" state
 - Pulsing indicator + copy: "Listening for your first issue..."
 - Sub-copy: "Run the curl command above. It should appear here in seconds."
@@ -275,6 +314,7 @@ The checklist persists across page navigation. User can minimize it. Clicking th
 - If 10 minutes pass with no event, show a help link: "Need help? See the docs →"
 
 **Phase 4: Success Celebration**
+
 - When polling returns data, trigger:
   1. Confetti (canvas-confetti, 2-3 second burst)
   2. Checklist step 4 checks off with a green animation
@@ -283,6 +323,7 @@ The checklist persists across page navigation. User can minimize it. Clicking th
   5. The dashboard is now fully populated and functional
 
 ### The curl Command to Show
+
 This is the exact command users need to see with their credentials pre-injected:
 
 ```bash
@@ -303,6 +344,7 @@ This should render with the actual API key substituted. The user can run it from
 ## Content Recommendations
 
 ### Welcome Modal Copy
+
 ```
 Headline: "Loop is ready."
 Body: "Loop collects signals from your stack and turns them into prioritized work for your AI agent. Connect your agent in the next few steps."
@@ -310,12 +352,14 @@ CTA: "Connect my agent →"
 ```
 
 ### Step 1: API URL
+
 ```
 Heading: "Your API endpoint"
 Sub: "Your agent will POST issues and signals here."
 ```
 
 ### Step 2: API Key
+
 ```
 Heading: "Your API key"
 Sub: "Pass this as a Bearer token. Keep it secret."
@@ -323,6 +367,7 @@ Warning: "Never commit this to version control."
 ```
 
 ### Step 3: First API Call
+
 ```
 Heading: "Make your first call"
 Sub: "Run this from any terminal to verify your connection:"
@@ -331,12 +376,14 @@ Sub: "Or skip ahead and configure your agent directly."
 ```
 
 ### Step 4: Waiting
+
 ```
 Heading: "Listening for your first issue..."
 Sub: "Run the command above or have your agent POST to /api/issues."
 ```
 
 ### Success
+
 ```
 Toast: "Your first issue arrived. Loop is connected."
 Dashboard headline: "Loop is live."

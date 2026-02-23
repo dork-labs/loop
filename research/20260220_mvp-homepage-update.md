@@ -35,6 +35,7 @@ The `ActivityFeedHero` component is the most production-ready hero and closest t
 Based on analysis of 100+ dev tool landing pages (Evil Martians study) and case studies of Linear, PostHog, Sentry, Vercel, Supabase, and comparable tools:
 
 **Hero section patterns that perform:**
+
 - Centered or split-panel layout (both work; split gives more room to show the product)
 - Bold specific headline (not generic — names the exact problem or user type)
 - Eyebrow label for context-setting (launch status, open-source badge, category)
@@ -43,6 +44,7 @@ Based on analysis of 100+ dev tool landing pages (Evil Martians study) and case 
 - Sub-3-second load for above-the-fold content
 
 **Sections that follow the hero (priority order for new tools):**
+
 1. "How it works" — 3-step or flow diagram, keeps it concrete and fast
 2. Feature pillars — 3-4 cards mapping to real capabilities, not aspirations
 3. Integration logos — shows maturity, answers "does it work with my stack"
@@ -50,6 +52,7 @@ Based on analysis of 100+ dev tool landing pages (Evil Martians study) and case 
 5. Honest CTA — for open source tools with no social proof, transparency is a feature not a bug
 
 **What NOT to include (early stage):**
+
 - Testimonials from real customers (you have none yet — fake or generic testimonials destroy trust with developers)
 - Pricing tables (unless freemium/self-serve is a key differentiator)
 - Heavy animations that block perceived load time
@@ -58,24 +61,28 @@ Based on analysis of 100+ dev tool landing pages (Evil Martians study) and case 
 ### 3. How Comparable Tools Structure Their Homepages
 
 **PostHog** — Most relevant comparison (open-source, developer-facing, novel category)
+
 - Hero: "Dev tools for product engineers" — avoids narrow categorization, names the audience not the product
-- Strategy: walks visitors through a *realization* rather than a features list
+- Strategy: walks visitors through a _realization_ rather than a features list
 - Narrative arc: What is this? → Show breadth → Challenge existing approaches → You need infrastructure, not dashboards
 - Does NOT lead with social proof; leads with category education
 - Transparency and "engineering-led company" signals substitute for testimonials
 
 **Linear** — Aspirational comparison (dark theme, dev-focused, premium positioning)
+
 - "Purpose-built tool for planning and building products"
 - Uses product screenshots with animation rather than illustrations
 - Dark theme conveys technical seriousness
 - "Start building" primary CTA — verb-first, specific
 
 **Supabase** — Open source comparable
+
 - "Open-source Firebase alternative" — anchors to known category for instant context
 - Install command in the hero
 - Docs link as strong secondary CTA
 
 **Vercel** — Aspirational for developer platform positioning
+
 - "No-fluff entry point optimized for developer decision speed"
 - "Start building" as primary CTA
 - Performance metrics front and center
@@ -90,7 +97,7 @@ Loop is building a new category: "feedback loop infrastructure for AI-agent-powe
 - **"We're X for Y" framing**: Anchoring helps. Loop is closest to "Linear for AI agent work items" or "Sentry for the AI agent feedback loop" — but this undersells the data layer aspect.
 - **Show the loop, don't describe it**: A diagram or animation that shows signal → issue → prompt → agent → outcome → signal closes the abstraction gap faster than any description.
 
-The MightyBot example is instructive: they position around the *feedback loop concept* itself ("agents execute → humans review → feedback updates policy → agents execute better"), which is very close to what Loop does. Their homepage messaging focuses on the closed-loop architecture as the differentiator.
+The MightyBot example is instructive: they position around the _feedback loop concept_ itself ("agents execute → humans review → feedback updates policy → agents execute better"), which is very close to what Loop does. Their homepage messaging focuses on the closed-loop architecture as the differentiator.
 
 ### 5. Social Proof Strategy Without Testimonials
 
@@ -106,11 +113,13 @@ When there's no social proof yet, these substitutes work for developer tools:
 ### 6. Performance and Technical Considerations for Next.js 16 + Fumadocs
 
 **Rendering strategy:**
+
 - Homepage should be statically generated (SSG) — no dynamic data required
 - Use `next/image` for all illustrations/screenshots
 - Keep above-the-fold JS bundle minimal — defer animated components with `loading="lazy"` or dynamic imports with `ssr: false`
 
 **Animation approach:**
+
 - The codebase already uses `motion/react` (Motion library) — stay consistent
 - Framer Motion (now Motion) is correct choice for React — don't add GSAP
 - Scroll-triggered animations: use `whileInView` with `once: true` (already done in existing components — maintain this pattern)
@@ -118,12 +127,14 @@ When there's no social proof yet, these substitutes work for developer tools:
 - `prefers-reduced-motion`: ensure all animations respect this; add `useReducedMotion()` hook where needed
 
 **SEO:**
+
 - Implement JSON-LD structured data for the homepage (SoftwareApplication schema)
 - Populate `metadata` export in `apps/web/src/app/(marketing)/page.tsx` with explicit `title`, `description`, `openGraph`, and `twitter` fields
 - The current `opengraph-image.tsx` and `twitter-image.tsx` exist — ensure they use updated copy
 - Target keywords: "AI agent feedback loop", "autonomous improvement engine", "developer tool signal ingestion", "prompt dispatch engine open source"
 
 **Bundle size:**
+
 - The `ActivityFeedHero` is already client-only (`'use client'`) — this is correct for animated components
 - Keep hero visual components in their own files for code splitting
 - `CredibilityBar` component exists but appears unused on the homepage — evaluate whether to use it for integration logos
@@ -137,16 +148,19 @@ When there's no social proof yet, these substitutes work for developer tools:
 Four approaches were evaluated against Loop's specific constraints (open-source, MVP-stage, novel concept, technical audience, no social proof):
 
 #### Option A: Minimal (Hero + Features + CTA)
+
 ```
 [Hero: headline + tagline + 2 CTAs]
 [3-column feature grid]
 [Bottom CTA]
 ```
+
 **Pros:** Fast to ship, loads instantly, lets copy do the heavy lifting
 **Cons:** Doesn't explain the novel concept, no visual proof the product works, likely to result in high bounce rates for people who don't immediately "get it"
 **Verdict:** Too thin for a novel-category tool. Works for established categories (Linear, Stripe). Not for Loop.
 
 #### Option B: Feature Showcase (Hero + Detailed Features + Social Proof + CTA)
+
 ```
 [Hero: headline + visual + 2 CTAs]
 [How it works: 3-step flow]
@@ -154,27 +168,32 @@ Four approaches were evaluated against Loop's specific constraints (open-source,
 [Integration logos]
 [Bottom CTA]
 ```
+
 **Pros:** Educational, builds understanding, lets each capability tell its own story
 **Cons:** Long page, social proof section will be empty or weak, risks feeling aspirational rather than real
 **Verdict:** Good structure but needs honest social proof substitutes (GitHub stars, integration logos, commit activity).
 
 #### Option C: Interactive Demo (Hero with Live Demo + Features + CTA)
+
 ```
 [Hero: headline + embedded playground/sandbox]
 [Feature sections]
 [CTA]
 ```
+
 **Pros:** Most convincing for technical audiences — "show don't tell"
 **Cons:** Extremely expensive to build a real embedded demo; a fake one destroys trust; the product is a backend API + CLI, not a UI you can easily demo inline
 **Verdict:** Wrong fit for Loop's architecture. The ActivityFeedHero's simulated feed is the right abstraction here — an honest simulation labeled as such.
 
 #### Option D: Documentation-First (Hero + Quick Start Code + Features + Docs Link)
+
 ```
 [Hero: headline + install command + "copy" button]
 [Quick start code block]
 [Feature pillars]
 [Docs →]
 ```
+
 **Pros:** Most developer-authentic, respects developer time, drives straight to docs
 **Cons:** Assumes visitors already know they want this tool; doesn't educate on the novel concept
 **Verdict:** Good secondary pattern — the install command and "Read the docs" CTA should be present, but can't be the only structure.
@@ -193,6 +212,7 @@ Four approaches were evaluated against Loop's specific constraints (open-source,
 ```
 
 This structure:
+
 1. Leads with what it is and who it's for (hero)
 2. Establishes trust via integrations they already use (no testimonials needed)
 3. Explains the loop concept visually (how it works)
@@ -203,9 +223,11 @@ This structure:
 ### Hero Copy Recommendation
 
 **Current (wrong product):**
+
 > "An autonomous engine that continuously analyzes your codebase, identifies improvements, and executes them — so your software gets better while you sleep."
 
 **Recommended:**
+
 > Headline: "Close the feedback loop on AI-powered development."
 > Subhead: "Loop collects signals from your stack — errors, metrics, user feedback — organizes them into prioritized issues, and tells your agents exactly what to fix next."
 > Eyebrow: "Open source · MIT · MVP"
@@ -214,6 +236,7 @@ This structure:
 > Install hint: `npm install -g @loop/cli`
 
 **Rationale:**
+
 - "Close the feedback loop" is the core concept in 5 words — developers immediately understand "feedback loop" as a system concept
 - Subhead names the specific integrations (errors, metrics, user feedback) — grounds the abstraction
 - "Tells your agents exactly what to fix next" — specific, evocative, correct
@@ -232,6 +255,7 @@ The `ActivityFeedHero` component exists and is well-built but references wrong m
 The existing `SystemArchitecture` SVG animation pattern (draw-in paths, traveling particles, SMIL animation) is the right technical approach. The `DRAW_PATH` and traveling particle pattern should be reused for a feedback loop diagram.
 
 Alternatively, a code-focused right panel showing:
+
 ```
 // Signal received from Sentry
 POST /api/signals/sentry → issue created
@@ -240,28 +264,31 @@ POST /api/signals/sentry → issue created
 GET /api/dispatch/next
 → { template: "fix-error", context: {...}, priority: 94 }
 ```
+
 ...is also a strong option for a more technical first impression.
 
 ### Section-Level Copy Updates Required
 
-| Component | Current State | What's Needed |
-|-----------|--------------|---------------|
-| `LoopHero` | "Coming Soon" + codebase scanner copy | Replace with new hero or promote `ActivityFeedHero` with corrected content |
-| `LoopValueProps` | "Analyze / Plan / Execute" (wrong product) | Replace with real 4 pillars: Data Layer, Prompt Engine, Dashboard, CLI |
-| `HowItWorksSection` | `npm install -g loop` + wrong steps | Replace with real Loop flow: Signal → Issue → Score → Dispatch |
-| `ActivityFeedHero` | Good structure, wrong module names | Update `ACTIVITY_POOL` to reflect real Loop actions; update module names to match real system |
-| `SystemArchitecture` | "Six modules" (wrong architecture) | Remove or replace with real 4-component architecture diagram |
-| `HonestySection` | References Claude Code and local agent — wrong product | Remove (that's a different product) or rewrite for actual Loop honesty (API key required, signals sent to server, etc.) |
-| `ProblemSection` | "cloud vs. local" positioning — wrong product | Remove entirely |
+| Component            | Current State                                          | What's Needed                                                                                                           |
+| -------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `LoopHero`           | "Coming Soon" + codebase scanner copy                  | Replace with new hero or promote `ActivityFeedHero` with corrected content                                              |
+| `LoopValueProps`     | "Analyze / Plan / Execute" (wrong product)             | Replace with real 4 pillars: Data Layer, Prompt Engine, Dashboard, CLI                                                  |
+| `HowItWorksSection`  | `npm install -g loop` + wrong steps                    | Replace with real Loop flow: Signal → Issue → Score → Dispatch                                                          |
+| `ActivityFeedHero`   | Good structure, wrong module names                     | Update `ACTIVITY_POOL` to reflect real Loop actions; update module names to match real system                           |
+| `SystemArchitecture` | "Six modules" (wrong architecture)                     | Remove or replace with real 4-component architecture diagram                                                            |
+| `HonestySection`     | References Claude Code and local agent — wrong product | Remove (that's a different product) or rewrite for actual Loop honesty (API key required, signals sent to server, etc.) |
+| `ProblemSection`     | "cloud vs. local" positioning — wrong product          | Remove entirely                                                                                                         |
 
 ---
 
 ## Potential Solutions (Ranked)
 
 ### Solution 1: Targeted Content Replacement (Recommended)
+
 **Effort:** Medium | **Risk:** Low | **Time:** 1-2 days
 
 Keep the existing component architecture. Replace content:
+
 - Swap `LoopHero` for a new `LoopHeroV2` with correct copy, or repurpose `ActivityFeedHero` with corrected content
 - Rewrite `LoopValueProps` with the 4 real pillars (Data Layer, Prompt Engine, Dashboard, CLI)
 - Replace `HowItWorksSection` steps with the real signal → dispatch flow
@@ -271,11 +298,13 @@ Keep the existing component architecture. Replace content:
 - Update `page.tsx` to compose the right sections in the right order
 
 ### Solution 2: New Section Composition from Scratch
+
 **Effort:** High | **Risk:** Medium | **Time:** 3-5 days
 
 Build entirely new sections with a fresh design direction. Only worthwhile if brand direction has changed significantly.
 
 ### Solution 3: Minimal Patch
+
 **Effort:** Low | **Risk:** High | **Time:** 2-4 hours
 
 Update only the hero copy to match the real product. Leave other sections in place even if misaligned. Creates a less coherent page but gets something more accurate live immediately. Use only if there's a time constraint.
@@ -333,11 +362,12 @@ export default function HomePage() {
       <MarketingFooter />
       <MarketingNav />
     </>
-  )
+  );
 }
 ```
 
 **Priority order for implementation:**
+
 1. Update hero copy immediately — this is the highest-impact, lowest-risk change
 2. Rewrite `LoopValueProps` with real product pillars
 3. Rewrite `HowItWorksSection` with real flow (Signal → Issue → Score → Dispatch)

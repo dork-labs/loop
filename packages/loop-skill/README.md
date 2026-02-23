@@ -27,6 +27,7 @@ npx openskills install @dork-labs/loop
 ```
 
 This will:
+
 - Download the package
 - Copy SKILL.md to your agent's skill directory
 - Register the skill for discovery
@@ -60,6 +61,7 @@ The primary agent skill definition in agentskills.io format. This file teaches a
 A ready-to-paste snippet for your repository's AGENTS.md file. Follows the Linux Foundation agents.md standard.
 
 Includes:
+
 - Auth configuration (LOOP_API_KEY)
 - When to create issues
 - Quick reference curl commands
@@ -72,6 +74,7 @@ Includes:
 A Cursor rule file in MDC (Markdown with Config) format. Place in `.cursor/rules/loop.mdc`.
 
 Includes:
+
 - When to apply the rule (on request, not auto-applied)
 - Auth setup
 - Common operations
@@ -87,6 +90,7 @@ An OpenHands microagent definition with keyword triggers (`loop`, `looped`, `loo
 Place in `.openhands/microagents/loop.md`.
 
 Includes:
+
 - Key endpoints table
 - Create issue example
 - Ingest signal example
@@ -99,6 +103,7 @@ Includes:
 A complete API endpoint reference loaded on-demand by agents who need full technical details.
 
 Includes:
+
 - All protected endpoints (`/api/*`)
 - Webhook endpoints (`/api/signals/*`)
 - Public endpoints

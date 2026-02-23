@@ -1,6 +1,6 @@
-import ky, { type KyInstance } from 'ky'
+import ky, { type KyInstance } from 'ky';
 
-import type { ApiClientConfig } from './types.js'
+import type { ApiClientConfig } from './types.js';
 
 /**
  * Create a ky HTTP client pre-configured for the Loop API.
@@ -17,5 +17,5 @@ export function createApiClient(config: ApiClientConfig): KyInstance {
       limit: 2,
       statusCodes: [429, 500, 503],
     },
-  })
+  });
 }

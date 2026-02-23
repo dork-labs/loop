@@ -1,13 +1,13 @@
-import type { KyInstance } from 'ky'
+import type { KyInstance } from 'ky';
 
 export interface LoopMcpConfig {
-  apiKey: string
-  apiUrl?: string
+  apiKey: string;
+  apiUrl?: string;
 }
 
 export interface ApiClientConfig {
-  apiKey: string
-  apiUrl: string
+  apiKey: string;
+  apiUrl: string;
 }
 
-export type ApiClient = KyInstance
+export type ApiClient = KyInstance;

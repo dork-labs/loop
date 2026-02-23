@@ -33,8 +33,8 @@ This document is a task list. Each task runs the `/ideate` command with a pre-wr
 
 ### Phase 2: Integration
 
-- [ ] 5. Connect CLI (blocked by: 1, 2, 3)
-- [ ] 6. Loop CLI (blocked by: 4)
+- [x] 5. Connect CLI (blocked by: 1, 2, 3)
+- [x] 6. Loop CLI (blocked by: 4)
 
 ### Phase 3: Polish
 
@@ -69,13 +69,13 @@ Phase 3 (depends on Phase 1 & 2):
 
 These research documents inform the prompts below. They do NOT need to be read before running — the prompts reference them directly.
 
-| Document | Focus |
-|----------|-------|
+| Document                                                      | Focus                                                       |
+| ------------------------------------------------------------- | ----------------------------------------------------------- |
 | `research/20260222_api_key_generation_onboarding_patterns.md` | How Stripe, Supabase, Auth.js, Strapi handle key generation |
-| `research/20260222_mcp_servers_developer_tools.md` | MCP adoption, design patterns, tool inventories |
-| `research/20260222_ai_agent_tool_discovery_onboarding.md` | SKILL.md, AGENTS.md, llms.txt, Cursor rules, OpenHands |
-| `research/20260222_sdk_cli_api_interaction_layers.md` | SDK/CLI/MCP priority, agent SDK patterns |
-| `research/20260222_loop_developer_onboarding.md` | Vibe coder personas, `npx init` patterns |
+| `research/20260222_mcp_servers_developer_tools.md`            | MCP adoption, design patterns, tool inventories             |
+| `research/20260222_ai_agent_tool_discovery_onboarding.md`     | SKILL.md, AGENTS.md, llms.txt, Cursor rules, OpenHands      |
+| `research/20260222_sdk_cli_api_interaction_layers.md`         | SDK/CLI/MCP priority, agent SDK patterns                    |
+| `research/20260222_loop_developer_onboarding.md`              | Vibe coder personas, `npx init` patterns                    |
 
 ---
 

@@ -176,6 +176,7 @@ options:
 ```
 
 If user selects "Yes, add all": Use the Edit tool to add the missing entries to the appropriate sections in the [Unreleased] block of CHANGELOG.md. Rewrite entries to be user-friendly using the `/writing-changelogs` skill guidelines:
+
 - Focus on what users can DO, not what files changed
 - Use imperative verbs (Add, Fix, Change, Remove)
 - Explain benefits, not just mechanisms
@@ -463,6 +464,7 @@ Edit `CHANGELOG.md` using the Edit tool:
 Update `docs/changelog.mdx` to match `CHANGELOG.md`. Use the Edit tool to replace the content of `docs/changelog.mdx`, keeping the frontmatter and intro line but replacing all version sections.
 
 The sync should:
+
 1. Read the updated `CHANGELOG.md`
 2. Extract everything after the `## [Unreleased]` empty section (skip the Unreleased heading and its empty subsections)
 3. Strip the link reference definitions at the bottom (lines like `[Unreleased]: https://...`)
@@ -607,9 +609,10 @@ Read the released version section from `CHANGELOG.md` (the `## [0.2.0]` section 
 [COPY verbatim from CHANGELOG.md — do NOT regenerate or rewrite these entries]
 
 ### Install / Update
-
 ```
+
 npm update -g loop
+
 ```
 
 **Full Changelog**: https://github.com/[owner]/loop/compare/v[prev]...v[new]
@@ -629,14 +632,14 @@ For the overall release:
 
 #### Emoji Reference
 
-| Emoji | Use For             |
-| ----- | ------------------- |
-| star  | Major new feature   |
-| art   | UI/UX, themes       |
-| folder | File handling      |
+| Emoji  | Use For             |
+| ------ | ------------------- |
+| star   | Major new feature   |
+| art    | UI/UX, themes       |
+| folder | File handling       |
 | wrench | Fixes, improvements |
-| zap   | Performance         |
-| lock  | Security            |
+| zap    | Performance         |
+| lock   | Security            |
 
 #### Create the Release
 

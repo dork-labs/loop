@@ -1,28 +1,37 @@
-import { HTTPError } from 'ky'
+import type { LoopError as LoopErrorType } from '@dork-labs/loop-sdk';
+
+/** Check if an error is a LoopError by duck-typing its properties. */
+function isLoopError(error: unknown): error is LoopErrorType {
+  return (
+    error instanceof Error &&
+    'status' in error &&
+    'code' in error &&
+    typeof (error as LoopErrorType).status === 'number' &&
+    typeof (error as LoopErrorType).code === 'string'
+  );
+}
 
 /**
  * Wrap a command action with centralized error handling.
- * Maps HTTP errors to user-friendly messages and exits with code 1.
+ * Maps SDK errors to user-friendly messages and exits with code 1.
  */
 export async function withErrorHandler(fn: () => Promise<void>): Promise<void> {
   try {
-    await fn()
+    await fn();
   } catch (error) {
-    if (error instanceof HTTPError) {
-      const status = error.response.status
-      const body = await error.response.json().catch(() => null)
-      const message = (body as Record<string, string> | null)?.error ?? error.message
-
-      if (status === 401 || status === 403) {
-        console.error('Authentication failed. Run: looped config set token <your-token>')
-      } else if (status === 404) {
-        console.error(`Not found: ${message}`)
+    if (isLoopError(error)) {
+      if (error.status === 401 || error.status === 403) {
+        console.error('Authentication failed. Run: loop auth login');
+      } else if (error.status === 404) {
+        console.error(`Not found: ${error.message}`);
       } else {
-        console.error(`API error (${status}): ${message}`)
+        console.error(`API error (${error.status}): ${error.message}`);
       }
+    } else if (error instanceof Error) {
+      console.error(`Error: ${error.message}`);
     } else {
-      console.error(`Error: ${(error as Error).message}`)
+      console.error('An unexpected error occurred');
     }
-    process.exit(1)
+    process.exit(1);
   }
 }

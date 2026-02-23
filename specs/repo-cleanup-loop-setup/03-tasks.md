@@ -18,8 +18,8 @@ P1-T2 ──↗ P2-T2 ──↗ P3-T2 ──↗ P4-T2 ──↗ P7-T2
 ```
 
 Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 7
-                                Phase 5 → Phase 7
-                                Phase 6 → Phase 7
+Phase 5 → Phase 7
+Phase 6 → Phase 7
 
 Phases 4, 5, and 6 can run in parallel after Phase 3 completes.
 
@@ -40,11 +40,13 @@ Delete all stale content from the repo that references DorkOS or is no longer ne
 **Actions:**
 
 1. **Delete `packages/` directory entirely** (already empty, remove the directory itself):
+
    ```bash
    rm -rf packages/
    ```
 
 2. **Delete `docs/` content** — remove all `.mdx` files and subdirectories. Keep `meta.json` (Fumadocs needs it):
+
    ```bash
    find docs/ -name '*.mdx' -delete
    find docs/ -mindepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
@@ -52,23 +54,27 @@ Delete all stale content from the repo that references DorkOS or is no longer ne
    ```
 
 3. **Delete `contributing/` content** — remove all `.md` files. Keep directory:
+
    ```bash
    find contributing/ -name '*.md' -delete
    ```
 
 4. **Delete `decisions/` stale content** — remove `TEMPLATE.md` and `archive/`. Keep `manifest.json` (already reset to nextNumber: 1):
+
    ```bash
    rm -f decisions/TEMPLATE.md
    rm -rf decisions/archive/
    ```
 
 5. **Delete DorkOS research files** — remove `mcp-tool-injection-patterns.md` and `20260218_roadmap-app-best-practices.md`. Keep `README.md`, `fumadocs-blog-research.md`, `20260218_repo-cleanup-loop-setup.md`:
+
    ```bash
    rm -f research/mcp-tool-injection-patterns.md
    rm -f research/20260218_roadmap-app-best-practices.md
    ```
 
 6. **Delete `scripts/`** — remove `export-openapi.ts` and any DorkOS-specific scripts:
+
    ```bash
    rm -f scripts/export-openapi.ts
    # Remove scripts/ dir if empty after deletion
@@ -201,9 +207,9 @@ npm run dev
 ## Structure
 
 apps/
-  api/     # Hono API (app.looped.me)
-  app/     # React dashboard (app.looped.me)
-  web/     # Marketing site (www.looped.me)
+api/ # Hono API (app.looped.me)
+app/ # React dashboard (app.looped.me)
+web/ # Marketing site (www.looped.me)
 ```
 
 **Verification:** README.md has no DorkOS references and describes Loop accurately.
@@ -221,6 +227,7 @@ apps/
 Rewrite `CLAUDE.md` to describe Loop's architecture. Remove ALL DorkOS content — service descriptions, transport interface details, session architecture, Obsidian plugin, CLI package, etc.
 
 **Key sections to include:**
+
 - **What This Is** — Loop product description: autonomous improvement engine, data layer + prompt engine
 - **Monorepo Structure** — `apps/api` (Hono), `apps/app` (React 19 + Vite), `apps/web` (Next.js 16 + Fumadocs)
 - **Commands** — `npm run dev`, `npm run build`, `npm run test`, `npm run typecheck`, `npm run lint`
@@ -235,6 +242,7 @@ Rewrite `CLAUDE.md` to describe Loop's architecture. Remove ALL DorkOS content �
 - **Architecture Decision Records** — `decisions/` directory
 
 **Remove completely:**
+
 - All DorkOS service descriptions (agent-manager, transcript-reader, etc.)
 - Transport interface, hexagonal architecture details
 - Session architecture, SSE streaming protocol
@@ -307,10 +315,7 @@ Changes from current: Remove `generate:api-docs` dependency, remove `dist-server
 ```typescript
 import { defineWorkspace } from 'vitest/config';
 
-export default defineWorkspace([
-  'apps/api',
-  'apps/app',
-]);
+export default defineWorkspace(['apps/api', 'apps/app']);
 ```
 
 **4. `tsconfig.json` (root)** — Replace entire contents with:
@@ -325,11 +330,7 @@ export default defineWorkspace([
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "references": [
-    { "path": "./apps/api" },
-    { "path": "./apps/app" },
-    { "path": "./apps/web" }
-  ],
+  "references": [{ "path": "./apps/api" }, { "path": "./apps/app" }, { "path": "./apps/web" }],
   "exclude": ["node_modules"]
 }
 ```
@@ -373,6 +374,7 @@ npm install
 Scaffold the Hono API starter application.
 
 **File structure:**
+
 ```
 apps/api/
 ├── package.json
@@ -382,6 +384,7 @@ apps/api/
 ```
 
 **File: `apps/api/package.json`:**
+
 ```json
 {
   "name": "@loop/api",
@@ -408,32 +411,34 @@ apps/api/
 Note: For local dev, we use `@hono/node-server`. On Vercel, Hono auto-detects and deploys as Vercel Functions with zero config.
 
 **File: `apps/api/src/index.ts`:**
-```typescript
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
 
-const app = new Hono()
+```typescript
+import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
+
+const app = new Hono();
 
 app.get('/health', (c) => {
-  return c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() })
-})
+  return c.json({ ok: true, service: 'loop-api', timestamp: new Date().toISOString() });
+});
 
 app.get('/', (c) => {
-  return c.json({ name: 'Loop API', version: '0.1.0' })
-})
+  return c.json({ name: 'Loop API', version: '0.1.0' });
+});
 
 // Local dev server (Vercel uses the default export)
 if (process.env.NODE_ENV !== 'production') {
-  const port = parseInt(process.env.PORT || '4242', 10)
+  const port = parseInt(process.env.PORT || '4242', 10);
   serve({ fetch: app.fetch, port }, (info) => {
-    console.log(`Loop API running at http://localhost:${info.port}`)
-  })
+    console.log(`Loop API running at http://localhost:${info.port}`);
+  });
 }
 
-export default app
+export default app;
 ```
 
 **File: `apps/api/tsconfig.json`:**
+
 ```json
 {
   "compilerOptions": {
@@ -472,6 +477,7 @@ export default app
 Scaffold the React 19 + Vite frontend starter application.
 
 **File structure:**
+
 ```
 apps/app/
 ├── package.json
@@ -485,6 +491,7 @@ apps/app/
 ```
 
 **File: `apps/app/package.json`:**
+
 ```json
 {
   "name": "@loop/app",
@@ -515,11 +522,12 @@ apps/app/
 ```
 
 **File: `apps/app/vite.config.ts`:**
+
 ```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -528,10 +536,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-})
+});
 ```
 
 **File: `apps/app/index.html`:**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -548,20 +557,22 @@ export default defineConfig({
 ```
 
 **File: `apps/app/src/main.tsx`:**
+
 ```tsx
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { App } from './App'
-import './index.css'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>
-)
+);
 ```
 
 **File: `apps/app/src/App.tsx`:**
+
 ```tsx
 export function App() {
   return (
@@ -571,16 +582,18 @@ export function App() {
         <p className="mt-2 text-neutral-400">The Autonomous Improvement Engine</p>
       </div>
     </div>
-  )
+  );
 }
 ```
 
 **File: `apps/app/src/index.css`:**
+
 ```css
 @import 'tailwindcss';
 ```
 
 **File: `apps/app/tsconfig.json`:**
+
 ```json
 {
   "compilerOptions": {
@@ -627,22 +640,16 @@ export default function HomePage() {
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center px-4">
       <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-          Loop
-        </h1>
-        <p className="mt-4 text-xl text-muted-foreground">
-          The Autonomous Improvement Engine
+        <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">Loop</h1>
+        <p className="text-muted-foreground mt-4 text-xl">The Autonomous Improvement Engine</p>
+        <p className="text-muted-foreground/80 mt-6 text-lg">
+          An open-source data layer and prompt engine that collects signals, organizes work into
+          issues, and tells AI agents exactly what to do next.
         </p>
-        <p className="mt-6 text-lg text-muted-foreground/80">
-          An open-source data layer and prompt engine that collects signals,
-          organizes work into issues, and tells AI agents exactly what to do next.
-        </p>
-        <p className="mt-8 text-sm text-muted-foreground/60">
-          Coming Soon
-        </p>
+        <p className="text-muted-foreground/60 mt-8 text-sm">Coming Soon</p>
       </div>
     </main>
-  )
+  );
 }
 ```
 
@@ -661,11 +668,13 @@ export default function HomePage() {
 Update metadata and clean up remaining DorkOS references in the marketing site.
 
 **1. `apps/web/src/app/layout.tsx`** — Update metadata:
+
 - `title`: `"Loop — The Autonomous Improvement Engine"`
 - `description`: `"An open-source data layer and prompt engine that closes the feedback loop for AI-powered development."`
 - Update any DorkOS references in the layout component
 
 **2. Delete `apps/web/.vercel/project.json`** — Create fresh Vercel project:
+
 ```bash
 rm -rf apps/web/.vercel/
 ```
@@ -673,11 +682,13 @@ rm -rf apps/web/.vercel/
 **3. Clear blog content** if DorkOS-specific — check `apps/web/src/app/(marketing)/blog/` for DorkOS posts.
 
 **4. Update `apps/web/src/app/robots.ts`** — Reference `looped.me`:
+
 ```typescript
 // Update sitemap URL to https://www.looped.me/sitemap.xml
 ```
 
 **5. Update `apps/web/src/app/sitemap.ts`** — Reference `looped.me`:
+
 ```typescript
 // Update base URL to https://www.looped.me
 ```
@@ -685,6 +696,7 @@ rm -rf apps/web/.vercel/
 **6. Update OG image generation** — If it references DorkOS, update to Loop branding.
 
 **7. Search all files in `apps/web/` for remaining DorkOS references:**
+
 ```bash
 grep -r "dorkos\|DorkOS\|dork-os\|Dork" apps/web/ --include='*.ts' --include='*.tsx' --include='*.json' --include='*.mdx'
 ```
@@ -750,21 +762,26 @@ Verify the entire repo builds and passes checks.
 **Steps:**
 
 1. Clean install:
+
    ```bash
    rm -rf node_modules package-lock.json
    npm install
    ```
 
 2. Type check all apps:
+
    ```bash
    npm run typecheck
    ```
+
    Fix any TypeScript errors that arise.
 
 3. Build all apps:
+
    ```bash
    npm run build
    ```
+
    Verify all three apps (api, app, web) build successfully.
 
 4. Lint all apps:
@@ -774,6 +791,7 @@ Verify the entire repo builds and passes checks.
    Fix any lint errors.
 
 **Verification:**
+
 - `npm run typecheck` exits 0
 - `npm run build` exits 0
 - `npm run lint` exits 0
@@ -795,6 +813,7 @@ Initialize a fresh git repo and push to GitHub.
 **Steps:**
 
 1. Initialize git:
+
    ```bash
    git init
    git add .
@@ -802,6 +821,7 @@ Initialize a fresh git repo and push to GitHub.
    ```
 
 2. Create new GitHub repo (ask user for preference — e.g., `dork-labs/loop` or their org):
+
    ```bash
    # User provides the repo URL
    git remote add origin <url>
@@ -813,6 +833,7 @@ Initialize a fresh git repo and push to GitHub.
    - **`loop-app`**: Root directory `apps/app`, domain `app.looped.me`
 
 **Verification:**
+
 - `git log` shows initial commit
 - `git remote -v` shows the correct origin
 - Push succeeds
@@ -821,16 +842,16 @@ Initialize a fresh git repo and push to GitHub.
 
 ## Summary
 
-| Phase | Tasks | Parallel? | Description |
-|-------|-------|-----------|-------------|
-| P1 | 2 | Yes (within phase) | Delete stale content, update .env.example |
-| P2 | 3 | Yes (within phase) | Rename packages, README, CLAUDE.md |
-| P3 | 2 | Sequential (T2 after T1) | Config files, regenerate lockfile |
-| P4 | 2 | Yes (within phase) | Create Hono API, React app |
-| P5 | 2 | Yes (within phase, parallel with P4) | Update marketing site |
-| P6 | 1 | Parallel with P4/P5 | Interactive .claude/ audit |
-| P7 | 2 | Sequential (T2 after T1) | Verify builds, git init + push |
-| **Total** | **14** | | |
+| Phase     | Tasks  | Parallel?                            | Description                               |
+| --------- | ------ | ------------------------------------ | ----------------------------------------- |
+| P1        | 2      | Yes (within phase)                   | Delete stale content, update .env.example |
+| P2        | 3      | Yes (within phase)                   | Rename packages, README, CLAUDE.md        |
+| P3        | 2      | Sequential (T2 after T1)             | Config files, regenerate lockfile         |
+| P4        | 2      | Yes (within phase)                   | Create Hono API, React app                |
+| P5        | 2      | Yes (within phase, parallel with P4) | Update marketing site                     |
+| P6        | 1      | Parallel with P4/P5                  | Interactive .claude/ audit                |
+| P7        | 2      | Sequential (T2 after T1)             | Verify builds, git init + push            |
+| **Total** | **14** |                                      |                                           |
 
 ### Parallel Execution Opportunities
 
@@ -841,5 +862,6 @@ Initialize a fresh git repo and push to GitHub.
 5. **P7-T2** runs after P7-T1
 
 ### Tasks Requiring User Input
+
 - **P6-T1**: .claude/ audit — needs user decisions on what to keep/remove
 - **P7-T2**: Git push — needs user to provide GitHub repo URL
