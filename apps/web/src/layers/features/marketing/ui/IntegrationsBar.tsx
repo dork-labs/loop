@@ -102,7 +102,7 @@ export function IntegrationsBar() {
           variants={REVEAL}
           className="text-2xs text-brand-orange mb-10 text-center font-mono tracking-[0.2em] uppercase"
         >
-          Built-in integrations
+          Signal Integrations
         </motion.p>
 
         <motion.div variants={REVEAL} className="mb-10 flex items-center justify-center gap-12">

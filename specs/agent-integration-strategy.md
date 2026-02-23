@@ -38,9 +38,9 @@ This document is a task list. Each task runs the `/ideate` command with a pre-wr
 
 ### Phase 3: Polish
 
-- [ ] 7. Documentation Update (blocked by: 1, 2, 3, 4, 5, 6)
-- [ ] 8. Marketing Site Update (blocked by: 1, 2, 3, 4, 5, 6)
-- [ ] 9. FTUE Update (blocked by: 2, 3, 5)
+- [x] 7. Documentation Update (blocked by: 1, 2, 3, 4, 5, 6)
+- [x] 8. Marketing Site Update (blocked by: 1, 2, 3, 4, 5, 6)
+- [x] 9. FTUE Update (blocked by: 2, 3, 5)
 
 ---
 

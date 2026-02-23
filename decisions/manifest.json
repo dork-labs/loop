@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 37,
+  "nextNumber": 40,
   "decisions": [
     {
       "number": 1,
@@ -271,6 +271,33 @@
       "created": "2026-02-23",
       "extractedFrom": "connect-cli",
       "specSlug": "connect-cli"
+    },
+    {
+      "number": 37,
+      "slug": "use-shiki-web-bundle-for-marketing-code-blocks",
+      "title": "Use Shiki web bundle for marketing page code blocks",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "marketing-site-agent-integration",
+      "specSlug": "marketing-site-agent-integration"
+    },
+    {
+      "number": 38,
+      "slug": "serve-llms-txt-as-static-file",
+      "title": "Serve llms.txt as static file from public directory",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "marketing-site-agent-integration",
+      "specSlug": "marketing-site-agent-integration"
+    },
+    {
+      "number": 39,
+      "slug": "additive-docs-structure-with-diataxis",
+      "title": "Use additive topic-based docs structure with Diátaxis principles",
+      "status": "draft",
+      "created": "2026-02-23",
+      "extractedFrom": "docs-agent-integration",
+      "specSlug": "docs-agent-integration"
     }
   ]
 }

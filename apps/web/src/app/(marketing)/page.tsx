@@ -1,5 +1,6 @@
 import { siteConfig } from '@/config/site';
 import {
+  AgentPlatforms,
   ContactSection,
   MarketingNav,
   MarketingHeader,
@@ -14,6 +15,7 @@ import {
 const navLinks = [
   { label: 'how it works', href: '#how-it-works' },
   { label: 'features', href: '#features' },
+  { label: 'integrations', href: '#integrations' },
   { label: 'get started', href: '#get-started' },
   { label: 'contact', href: '#contact' },
   { label: 'docs', href: '/docs' },
@@ -44,6 +46,8 @@ export default function HomePage() {
         <HowItWorksFlow />
 
         <LoopValueProps />
+
+        <AgentPlatforms />
 
         <QuickStartSection />
 

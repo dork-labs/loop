@@ -1,0 +1,36 @@
+# Loop
+
+> The Autonomous Improvement Engine — collects signals, organizes work, and tells AI agents what to do next.
+
+## Overview
+
+Loop is an open-source data layer and prompt engine for AI-powered development. It turns raw signals (errors, metrics, user feedback) into prioritized, actionable work items with fully prepared agent instructions.
+
+## API
+
+Base URL: https://app.looped.me
+Auth: Bearer token via LOOP_API_KEY header
+
+## Key Endpoints
+
+- GET /api/dispatch/next — Get highest-priority unblocked issue with instructions
+- POST /api/issues — Create an issue
+- PATCH /api/issues/:id — Update an issue
+- POST /api/signals — Ingest a signal
+- POST /api/issues/:id/comments — Add a comment
+
+## MCP Server
+
+Install: npx add-mcp https://mcp.looped.me/mcp
+Package: @dork-labs/loop-mcp
+
+## Documentation
+
+- [Getting Started](https://www.looped.me/docs/getting-started)
+- [API Reference](https://www.looped.me/docs/api)
+- [CLI Reference](https://www.looped.me/docs/cli)
+- [MCP Server](https://www.looped.me/docs/integrations)
+
+## SDK
+
+Package: @dork-labs/loop-sdk

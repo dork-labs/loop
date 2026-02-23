@@ -8,7 +8,7 @@ export const siteConfig = {
   name: 'Loop',
   tagline: 'The Autonomous Improvement Engine',
   description:
-    'Loop collects signals from your stack, organizes them into prioritized issues, and dispatches hydrated prompts to AI agents. Open-source feedback loop infrastructure for AI-powered development.',
+    'Loop collects signals, organizes work into issues, and tells AI agents exactly what to do next. Works with Claude Code, Cursor, VS Code, and any MCP-capable agent.',
   url: 'https://www.looped.me',
   contactEmail: 'hey@looped.me',
   github: 'https://github.com/dork-labs/loop',

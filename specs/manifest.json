@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "nextNumber": 16,
+  "nextNumber": 19,
   "specs": [
     {
       "number": 1,
@@ -104,6 +104,27 @@
       "number": 15,
       "slug": "loop-cli",
       "title": "Loop CLI — Terminal-Native Interface with loop next",
+      "created": "2026-02-23",
+      "status": "specification"
+    },
+    {
+      "number": 16,
+      "slug": "marketing-site-agent-integration",
+      "title": "Marketing Site — Agent Integration Showcase",
+      "created": "2026-02-23",
+      "status": "specification"
+    },
+    {
+      "number": 17,
+      "slug": "docs-agent-integration",
+      "title": "Documentation Update — Agent Integration Surfaces",
+      "created": "2026-02-23",
+      "status": "specification"
+    },
+    {
+      "number": 18,
+      "slug": "ftue-agent-integration-update",
+      "title": "FTUE Update for Agent Integration",
       "created": "2026-02-23",
       "status": "specification"
     }
