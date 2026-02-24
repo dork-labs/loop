@@ -19,10 +19,10 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 
 | Component    | Count | Location                                                                   |
 | ------------ | ----- | -------------------------------------------------------------------------- |
-| Commands     | 52    | `.claude/commands/`                                                        |
+| Commands     | 53    | `.claude/commands/`                                                        |
 | Agents       | 5     | `.claude/agents/`                                                          |
-| Skills       | 11    | `.claude/skills/`                                                          |
-| Rules        | 8     | `.claude/rules/`                                                           |
+| Skills       | 12    | `.claude/skills/`                                                          |
+| Rules        | 9     | `.claude/rules/`                                                           |
 | Claude Hooks | 9     | `.claude/hooks/`, configured in `.claude/settings.json`                    |
 | Git Hooks    | 1     | `.claude/git-hooks/`, installed via `.claude/scripts/install-git-hooks.sh` |
 | MCP Servers  | 3     | `.mcp.json`                                                                |
@@ -41,6 +41,7 @@ Slash commands are triggered explicitly by typing `/command`. They're expanded p
 | `git/`       | commit, push                                                              | Version control with validation                                                         |
 | `debug/`     | browser, types, test, api, data, logs, rubber-duck, performance           | Systematic debugging                                                                    |
 | `docs/`      | reconcile, status                                                         | Documentation drift detection, health dashboard                                         |
+| `npm/`       | audit                                                                     | npm package compliance — checks all published packages against quality standards        |
 | `roadmap/`   | show, add, open, validate, analyze, prioritize, enrich, next, work, clear | Product roadmap management                                                              |
 | `adr/`       | create, list, from-spec                                                   | Architecture Decision Records                                                           |
 | `system/`    | ask, update, review, learn, release                                       | Harness maintenance                                                                     |
@@ -96,6 +97,7 @@ Skills provide reusable expertise that Claude applies automatically when relevan
 | `organizing-fsd-architecture`  | Feature-Sliced Design layer placement, imports        | Structuring client code, creating features, reviewing architecture |
 | `executing-specs`              | Parallel spec implementation, incremental persistence | Orchestrating `/spec:execute` with batch result tracking           |
 | `writing-adrs`                 | Architecture Decision Records, decision signals       | Creating ADRs, extracting decisions from specs, ADR quality        |
+| `publishing-npm-packages`      | README structure, package.json fields, badges, keywords | Editing published package.json, writing READMEs, release prep    |
 
 ### Rules (Path-Triggered)
 
@@ -111,6 +113,7 @@ Rules inject context-specific guidance when Claude works with matching files. Ea
 | `code-quality.md`     | `**/*.ts`, `**/*.tsx`                                | DRY violations, complexity limits, naming conventions |
 | `file-size.md`        | `**/*.ts`, `**/*.tsx`                                | File size thresholds, extraction patterns             |
 | `documentation.md`    | `**/*.ts`, `**/*.tsx`                                | TSDoc standards, barrel export docs                   |
+| `npm-packages.md`     | `packages/*/package.json`, `apps/*/package.json`     | Required fields for published packages; checks manifest first |
 
 ### Hooks (Event-Triggered)
 
@@ -225,13 +228,14 @@ Project-wide documentation? ─────────────► CLAUDE.md
 ├── settings.json          # Hooks, permissions, environment
 ├── settings.local.json    # Local overrides, MCP servers
 │
-├── commands/              # Slash commands (52 total)
+├── commands/              # Slash commands (53 total)
 │   ├── adr/               # Architecture Decision Records
 │   ├── app/               # Application maintenance
 │   ├── spec/              # Specification workflow
 │   ├── git/               # Version control
 │   ├── debug/             # Debugging commands
 │   ├── docs/              # Documentation maintenance
+│   ├── npm/               # npm package quality (audit)
 │   ├── roadmap/           # Product roadmap
 │   ├── system/            # Harness maintenance
 │   ├── cc/                # Claude Code configuration
@@ -252,7 +256,7 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── product-manager.md
 │   └── research-expert.md
 │
-├── skills/                # Reusable expertise (11 total)
+├── skills/                # Reusable expertise (12 total)
 │   ├── clarifying-requirements/
 │   ├── debugging-systematically/
 │   ├── designing-frontend/
@@ -260,18 +264,20 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── styling-with-tailwind-shadcn/
 │   ├── managing-roadmap-moscow/
 │   ├── organizing-fsd-architecture/
+│   ├── publishing-npm-packages/
 │   ├── writing-adrs/
 │   ├── writing-developer-guides/
 │   ├── orchestrating-parallel-work/
 │   └── writing-changelogs/
 │
-└── rules/                 # Path-specific guidance (8 total)
+└── rules/                 # Path-specific guidance (9 total)
     ├── api.md             # API route handlers
     ├── code-quality.md    # DRY, complexity, naming
     ├── components.md      # UI components
     ├── documentation.md   # TSDoc standards
     ├── file-size.md       # File size limits
     ├── fsd-layers.md      # FSD layer imports
+    ├── npm-packages.md    # Published npm package quality
     ├── server-structure.md # Server size monitoring
     └── testing.md         # Test patterns
 ```

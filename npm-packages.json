@@ -1,0 +1,46 @@
+{
+  "packages": [
+    {
+      "name": "@dork-labs/loop-types",
+      "directory": "packages/types",
+      "publishOrder": 1,
+      "homepage": "https://www.looped.me/docs/sdk",
+      "docs": "https://www.looped.me/docs/sdk"
+    },
+    {
+      "name": "@dork-labs/loop-sdk",
+      "directory": "packages/sdk",
+      "publishOrder": 2,
+      "homepage": "https://www.looped.me/docs/sdk",
+      "docs": "https://www.looped.me/docs/sdk"
+    },
+    {
+      "name": "@dork-labs/loop-mcp",
+      "directory": "packages/mcp",
+      "publishOrder": 3,
+      "homepage": "https://www.looped.me/docs/mcp",
+      "docs": "https://www.looped.me/docs/mcp"
+    },
+    {
+      "name": "@dork-labs/loop-cli",
+      "directory": "apps/cli",
+      "publishOrder": 3,
+      "homepage": "https://www.looped.me/docs/cli",
+      "docs": "https://www.looped.me/docs/cli"
+    },
+    {
+      "name": "@dork-labs/loop-connect",
+      "directory": "packages/loop-connect",
+      "publishOrder": 3,
+      "homepage": "https://www.looped.me/docs/connect",
+      "docs": "https://www.looped.me/docs/connect"
+    },
+    {
+      "name": "@dork-labs/loop-skill",
+      "directory": "packages/loop-skill",
+      "publishOrder": 4,
+      "homepage": "https://www.looped.me",
+      "docs": "https://www.looped.me/docs"
+    }
+  ]
+}

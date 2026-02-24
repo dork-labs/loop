@@ -374,10 +374,15 @@ Present the release plan to the user:
 ### Files to be Modified
 
 1. `VERSION` - 0.1.0 -> 0.2.0
-2. `apps/cli/package.json` - 0.1.0 -> 0.2.0
-3. `package.json` - 0.1.0 -> 0.2.0
-4. `pnpm-lock.yaml` - updated by pnpm version
-5. `CHANGELOG.md` - [Unreleased] -> [0.2.0] - YYYY-MM-DD
+2. `packages/types/package.json` - 0.1.0 -> 0.2.0
+3. `packages/sdk/package.json` - 0.1.0 -> 0.2.0
+4. `packages/mcp/package.json` - 0.1.0 -> 0.2.0
+5. `apps/cli/package.json` - 0.1.0 -> 0.2.0
+6. `packages/loop-connect/package.json` - 0.1.0 -> 0.2.0
+7. `packages/loop-skill/package.json` - 0.1.0 -> 0.2.0
+8. `package.json` - 0.1.0 -> 0.2.0
+9. `pnpm-lock.yaml` - updated by pnpm version
+10. `CHANGELOG.md` - [Unreleased] -> [0.2.0] - YYYY-MM-DD
 
 ### Git Operations
 
@@ -387,7 +392,11 @@ Present the release plan to the user:
 
 ### npm Publish
 
-4. `pnpm publish --filter @dork-labs/loop-cli` (publishes `loop` to npm)
+Read `npm-packages.json` and publish all 6 packages in `publishOrder` batches:
+- Batch 1 (order 1): `@dork-labs/loop-types`
+- Batch 2 (order 2): `@dork-labs/loop-sdk`
+- Batch 3 (order 3): `@dork-labs/loop-mcp`, `@dork-labs/loop-cli`, `@dork-labs/loop-connect` (parallel)
+- Batch 4 (order 4): `@dork-labs/loop-skill`
 ```
 
 If `--dry-run` flag is present, **STOP** here.
@@ -437,15 +446,22 @@ printf "0.2.0" > VERSION
 
 ### 5.3: Sync Version to package.json Files
 
+Read `npm-packages.json` and update the version for every listed package plus the root. The `directory` field in each entry identifies the `package.json` to update — do not hardcode package names here:
+
 ```bash
-# Update apps/cli/package.json (the published npm package)
+# Update all published npm packages (read from npm-packages.json)
+pnpm version 0.2.0 --no-git-tag-version --filter @dork-labs/loop-types
+pnpm version 0.2.0 --no-git-tag-version --filter @dork-labs/loop-sdk
+pnpm version 0.2.0 --no-git-tag-version --filter @dork-labs/loop-mcp
 pnpm version 0.2.0 --no-git-tag-version --filter @dork-labs/loop-cli
+pnpm version 0.2.0 --no-git-tag-version --filter @dork-labs/loop-connect
+pnpm version 0.2.0 --no-git-tag-version --filter @dork-labs/loop-skill
 
 # Update root package.json
 pnpm version 0.2.0 --no-git-tag-version
 ```
 
-This updates `apps/cli/package.json`, `package.json`, and `pnpm-lock.yaml` in one go.
+This updates all published `package.json` files, root `package.json`, and `pnpm-lock.yaml`.
 
 ### 5.4: Update Changelog
 
@@ -537,8 +553,12 @@ The user can edit this post before the release commit. Add the blog post file to
 ### 5.6: Commit and Tag
 
 ```bash
-# Stage all version-related changes
-git add VERSION CHANGELOG.md docs/changelog.mdx apps/cli/package.json package.json pnpm-lock.yaml blog/
+# Stage all version-related changes (all published packages from npm-packages.json + root)
+git add VERSION CHANGELOG.md docs/changelog.mdx \
+  packages/types/package.json packages/sdk/package.json \
+  packages/mcp/package.json apps/cli/package.json \
+  packages/loop-connect/package.json packages/loop-skill/package.json \
+  package.json pnpm-lock.yaml blog/
 
 # Commit (use HEREDOC for message)
 git commit -m "$(cat <<'EOF'
@@ -575,13 +595,29 @@ options:
     description: "Tag is pushed, but package is not published to npm"
 ```
 
-If yes:
+If yes, first run the npm audit pre-flight, then publish in manifest order:
+
+**Pre-flight:** Run `/npm:audit` to verify all packages pass compliance checks. If any package fails required-field checks, report the failures and ask whether to continue or fix first.
+
+**Publish in `publishOrder` batches** (read from `npm-packages.json`):
 
 ```bash
-pnpm publish --filter @dork-labs/loop-cli
+# Batch 1 — publishOrder: 1 (no npm dependencies)
+pnpm publish --filter @dork-labs/loop-types --access public
+
+# Batch 2 — publishOrder: 2 (depends on types)
+pnpm publish --filter @dork-labs/loop-sdk --access public
+
+# Batch 3 — publishOrder: 3 (can publish in parallel)
+pnpm publish --filter @dork-labs/loop-mcp --filter @dork-labs/loop-cli --filter @dork-labs/loop-connect --access public
+
+# Batch 4 — publishOrder: 4 (depends on sdk)
+pnpm publish --filter @dork-labs/loop-skill --access public
 ```
 
-The `prepublishOnly` hook in `apps/cli/package.json` will automatically build before publishing.
+Wait for each batch to complete before starting the next. Each package's `prepublishOnly` hook will build automatically before publishing.
+
+If any package fails to publish, report the error and allow retrying individual packages.
 
 ### 5.9: GitHub Release Notes
 
@@ -716,15 +752,18 @@ To undo local changes:
 ```
 ## npm Publish Failed
 
-The git tag was pushed but pnpm publish failed.
+The git tag was pushed but pnpm publish failed for [package].
 Error: [error message]
 
-To retry:
-- `pnpm publish --filter @dork-labs/loop-cli`
+To retry individual packages:
+- `pnpm publish --filter @dork-labs/loop-types --access public`
+- `pnpm publish --filter @dork-labs/loop-sdk --access public`
+- etc.
 
 Common fixes:
 - `npm login` (if auth expired)
 - Check npm token: `npm whoami`
+- Ensure packages publish in order (types → sdk → mcp/cli/connect → loop-skill)
 ```
 
 ### No GitHub CLI
