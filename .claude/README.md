@@ -19,10 +19,10 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 
 | Component    | Count | Location                                                                   |
 | ------------ | ----- | -------------------------------------------------------------------------- |
-| Commands     | 53    | `.claude/commands/`                                                        |
+| Commands     | 62    | `.claude/commands/`                                                        |
 | Agents       | 5     | `.claude/agents/`                                                          |
-| Skills       | 12    | `.claude/skills/`                                                          |
-| Rules        | 9     | `.claude/rules/`                                                           |
+| Skills       | 13    | `.claude/skills/`                                                          |
+| Rules        | 6     | `.claude/rules/`                                                           |
 | Claude Hooks | 9     | `.claude/hooks/`, configured in `.claude/settings.json`                    |
 | Git Hooks    | 1     | `.claude/git-hooks/`, installed via `.claude/scripts/install-git-hooks.sh` |
 | MCP Servers  | 3     | `.mcp.json`                                                                |
@@ -45,6 +45,9 @@ Slash commands are triggered explicitly by typing `/command`. They're expanded p
 | `roadmap/`   | show, add, open, validate, analyze, prioritize, enrich, next, work, clear | Product roadmap management                                                              |
 | `adr/`       | create, list, from-spec                                                   | Architecture Decision Records                                                           |
 | `system/`    | ask, update, review, learn, release                                       | Harness maintenance                                                                     |
+| `journey/`   | create, generate, review                                                  | User journey map creation and maintenance                                               |
+| `persona/`   | create, generate, list, review                                            | User persona creation and maintenance                                                   |
+| `changelog/` | backfill                                                                  | Backfill missing changelog entries from git history                                     |
 | `app/`       | upgrade, cleanup                                                          | Application dependency and code management                                              |
 | `cc/notify/` | on, off, status                                                           | Notification sounds                                                                     |
 | `cc/ide/`    | set, reset                                                                | VS Code color schemes                                                                   |
@@ -98,22 +101,20 @@ Skills provide reusable expertise that Claude applies automatically when relevan
 | `executing-specs`              | Parallel spec implementation, incremental persistence | Orchestrating `/spec:execute` with batch result tracking           |
 | `writing-adrs`                 | Architecture Decision Records, decision signals       | Creating ADRs, extracting decisions from specs, ADR quality        |
 | `publishing-npm-packages`      | README structure, package.json fields, badges, keywords | Editing published package.json, writing READMEs, release prep    |
+| `building-personas`            | Persona creation, journey maps, ICP/buyer/user distinctions | Creating/reviewing personas, journey maps, user research      |
 
 ### Rules (Path-Triggered)
 
 Rules inject context-specific guidance when Claude works with matching files. Each rule has `paths:` frontmatter with glob patterns.
 
-| Rule                  | Applies To                                           | Key Guidance                                          |
-| --------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
-| `api.md`              | `apps/server/src/routes/**/*.ts`                     | Zod validation, service layer usage, error handling   |
-| `testing.md`          | `**/__tests__/**/*.ts`, `**/*.test.ts`               | Vitest patterns, mocking, component testing           |
-| `components.md`       | `apps/client/src/**/*.tsx`                           | Shadcn patterns, accessibility, styling               |
-| `fsd-layers.md`       | `apps/client/src/layers/**/*.ts(x)`                  | FSD layer dependency rules, barrel imports            |
-| `server-structure.md` | `apps/server/src/services/**/*.ts`, `routes/**/*.ts` | Service count monitoring, domain grouping thresholds  |
-| `code-quality.md`     | `**/*.ts`, `**/*.tsx`                                | DRY violations, complexity limits, naming conventions |
-| `file-size.md`        | `**/*.ts`, `**/*.tsx`                                | File size thresholds, extraction patterns             |
-| `documentation.md`    | `**/*.ts`, `**/*.tsx`                                | TSDoc standards, barrel export docs                   |
-| `npm-packages.md`     | `packages/*/package.json`, `apps/*/package.json`     | Required fields for published packages; checks manifest first |
+| Rule               | Applies To                                       | Key Guidance                                          |
+| ------------------ | ------------------------------------------------ | ----------------------------------------------------- |
+| `components.md`    | `apps/client/src/**/*.tsx`                       | Shadcn patterns, accessibility, styling               |
+| `fsd-layers.md`    | `apps/client/src/layers/**/*.ts(x)`              | FSD layer dependency rules, barrel imports            |
+| `code-quality.md`  | `**/*.ts`, `**/*.tsx`                            | DRY violations, complexity limits, naming conventions |
+| `file-size.md`     | `**/*.ts`, `**/*.tsx`                            | File size thresholds, extraction patterns             |
+| `documentation.md` | `**/*.ts`, `**/*.tsx`                            | TSDoc standards, barrel export docs                   |
+| `npm-packages.md`  | `packages/*/package.json`, `apps/*/package.json` | Required fields for published packages; checks manifest first |
 
 ### Hooks (Event-Triggered)
 
@@ -228,14 +229,17 @@ Project-wide documentation? ─────────────► CLAUDE.md
 ├── settings.json          # Hooks, permissions, environment
 ├── settings.local.json    # Local overrides, MCP servers
 │
-├── commands/              # Slash commands (53 total)
+├── commands/              # Slash commands (62 total)
 │   ├── adr/               # Architecture Decision Records
 │   ├── app/               # Application maintenance
+│   ├── changelog/         # Changelog backfill
 │   ├── spec/              # Specification workflow
 │   ├── git/               # Version control
 │   ├── debug/             # Debugging commands
 │   ├── docs/              # Documentation maintenance
+│   ├── journey/           # User journey maps
 │   ├── npm/               # npm package quality (audit)
+│   ├── persona/           # User personas
 │   ├── roadmap/           # Product roadmap
 │   ├── system/            # Harness maintenance
 │   ├── cc/                # Claude Code configuration
@@ -256,7 +260,8 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── product-manager.md
 │   └── research-expert.md
 │
-├── skills/                # Reusable expertise (12 total)
+├── skills/                # Reusable expertise (13 total)
+│   ├── building-personas/
 │   ├── clarifying-requirements/
 │   ├── debugging-systematically/
 │   ├── designing-frontend/
@@ -270,16 +275,13 @@ Project-wide documentation? ─────────────► CLAUDE.md
 │   ├── orchestrating-parallel-work/
 │   └── writing-changelogs/
 │
-└── rules/                 # Path-specific guidance (9 total)
-    ├── api.md             # API route handlers
+└── rules/                 # Path-specific guidance (6 total)
     ├── code-quality.md    # DRY, complexity, naming
     ├── components.md      # UI components
     ├── documentation.md   # TSDoc standards
     ├── file-size.md       # File size limits
     ├── fsd-layers.md      # FSD layer imports
-    ├── npm-packages.md    # Published npm package quality
-    ├── server-structure.md # Server size monitoring
-    └── testing.md         # Test patterns
+    └── npm-packages.md    # Published npm package quality
 ```
 
 ## Core Workflows
