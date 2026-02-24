@@ -1,0 +1,45 @@
+{
+  "personas": [
+    {
+      "slug": "zero-to-one-founder",
+      "name": "Lena M.",
+      "role": "primary",
+      "type": "user+buyer",
+      "confidence": "proto-persona",
+      "created": "2026-02-23",
+      "lastReviewed": "2026-02-23",
+      "nextReview": "2026-08-23",
+      "file": "meta/personas/zero-to-one-founder.md",
+      "journeyFile": null
+    },
+    {
+      "slug": "feedback-loop-engineer",
+      "name": "Luis R.",
+      "role": "secondary",
+      "type": "user",
+      "confidence": "proto-persona",
+      "created": "2026-02-23",
+      "lastReviewed": "2026-02-23",
+      "nextReview": "2026-08-23",
+      "file": "meta/personas/feedback-loop-engineer.md",
+      "journeyFile": null
+    }
+  ],
+  "icp": {
+    "file": "meta/personas/icp.md",
+    "lastReviewed": "2026-02-23"
+  },
+  "antiPersonas": [
+    {
+      "slug": "vibe-coder",
+      "created": "2026-02-23",
+      "file": "meta/personas/vibe-coder.md"
+    },
+    {
+      "slug": "enterprise-pm",
+      "created": "2026-02-23",
+      "file": "meta/personas/enterprise-pm.md"
+    }
+  ],
+  "nextReview": "2026-08-23"
+}
