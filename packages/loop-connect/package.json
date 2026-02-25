@@ -2,6 +2,8 @@
   "name": "@dork-labs/loop-connect",
   "version": "0.2.0",
   "description": "Connect any project to Loop in one command",
+  "keywords": ["loop", "setup", "onboarding", "mcp", "claude-code", "cursor", "openhands", "autonomous-improvement"],
+  "homepage": "https://www.looped.me/docs/connect",
   "license": "MIT",
   "author": "Dork Labs <hello@dork-labs.com>",
   "repository": {

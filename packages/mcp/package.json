@@ -2,6 +2,8 @@
   "name": "@dork-labs/loop-mcp",
   "version": "0.2.0",
   "description": "MCP server for Loop — the autonomous improvement engine",
+  "keywords": ["loop", "mcp", "model-context-protocol", "ai-agent", "claude", "cursor", "autonomous-improvement"],
+  "homepage": "https://www.looped.me/docs/mcp",
   "license": "MIT",
   "author": "Dork Labs <hello@dork-labs.com>",
   "repository": {

@@ -1,6 +1,9 @@
 {
   "name": "@dork-labs/loop-types",
   "version": "0.2.0",
+  "description": "TypeScript types and Zod schemas for the Loop autonomous improvement engine API",
+  "keywords": ["loop", "typescript", "types", "zod", "schema", "autonomous-improvement", "issue-tracking"],
+  "homepage": "https://www.looped.me/docs/sdk",
   "license": "MIT",
   "author": "Dork Labs <hello@dork-labs.com>",
   "repository": {

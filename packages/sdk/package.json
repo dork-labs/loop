@@ -1,6 +1,9 @@
 {
   "name": "@dork-labs/loop-sdk",
   "version": "0.2.0",
+  "description": "TypeScript SDK for the Loop API — the Autonomous Improvement Engine",
+  "keywords": ["loop", "sdk", "typescript", "api-client", "autonomous-improvement", "issue-tracking", "agents"],
+  "homepage": "https://www.looped.me/docs/sdk",
   "license": "MIT",
   "author": "Dork Labs <hello@dork-labs.com>",
   "repository": {

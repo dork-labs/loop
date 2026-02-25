@@ -1,6 +1,9 @@
 {
   "name": "@dork-labs/loop-cli",
   "version": "0.2.0",
+  "description": "Terminal CLI for Loop — manage issues, signals, and dispatch from the shell",
+  "keywords": ["loop", "cli", "terminal", "autonomous-improvement", "issue-tracking", "agents", "dispatch"],
+  "homepage": "https://www.looped.me/docs/cli",
   "license": "MIT",
   "author": "Dork Labs <hello@dork-labs.com>",
   "repository": {
