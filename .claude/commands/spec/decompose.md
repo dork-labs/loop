@@ -9,16 +9,16 @@ argument-hint: '<path-to-spec-file>'
 
 Decompose the specification at: $ARGUMENTS
 
-## Context-Saving Architecture
+## Disk-First Architecture
 
-This command uses a **background agent** to perform the heavy decomposition work. This saves ~90% of context in the main conversation by isolating all spec reading, analysis, and task creation.
+This command uses a **background agent** for heavy analysis and a **main context** for task creation. Background agents cannot use TaskCreate/TaskUpdate/TaskList — only the main context can.
 
 **Flow:**
 
 1. Main context: Extract slug, detect mode, spawn background agent
-2. Background agent: Read spec, analyze, create tasks, write breakdown
-3. Main context: Wait for results
-4. Main context: Validate task creation, auto-recover if needed, report results
+2. Background agent: Read spec, analyze, write `03-tasks.json` + `03-tasks.md` to disk
+3. Main context: Read `03-tasks.json`, create all tasks via TaskCreate, set up dependencies
+4. Main context: Quality spot-check, report results
 
 ## Phase 1: Setup (Main Context)
 
@@ -33,6 +33,7 @@ Extract the feature slug from the spec path:
 ```bash
 SPEC_FILE="$ARGUMENTS"
 SLUG=$(echo "$SPEC_FILE" | cut -d'/' -f2)
+TASKS_JSON="specs/$SLUG/03-tasks.json"
 TASKS_FILE="specs/$SLUG/03-tasks.md"
 ```
 
@@ -43,21 +44,21 @@ Perform lightweight checks to determine mode:
 1. **Check for existing tasks:**
    Use `TaskList()` and filter for tasks with subject containing `[<slug>]`
    - If no matching tasks found → **Full mode**
-   - Display: "🆕 First-time decompose - Full mode"
+   - Display: "First-time decompose - Full mode"
 
-2. **Check if task file exists:**
-   - If `specs/<slug>/03-tasks.md` doesn't exist → **Full mode**
-   - Display: "📄 Tasks file missing - Full mode"
+2. **Check if task files exist:**
+   - If `specs/<slug>/03-tasks.json` doesn't exist → **Full mode**
+   - Display: "Tasks file missing - Full mode"
 
-3. **For incremental detection** (if tasks file exists):
-   - Quick check for "Last Decompose:" line
+3. **For incremental detection** (if tasks JSON exists):
+   - Read the JSON file's `lastDecompose` field
    - If found, note the date for the background agent
    - Display mode indicator
 
 If **Skip mode** detected (no changelog changes):
 
-- Display: "✅ No changes since last decompose (<date>)"
-- Display: " To force re-decompose, delete <tasks-file>"
+- Display: "No changes since last decompose (<date>)"
+- Display: " To force re-decompose, delete <tasks-json>"
 - **Exit early** - do not spawn background agent
 
 ## Phase 2: Spawn Background Agent
@@ -76,7 +77,7 @@ Task(
 Display to user:
 
 ```
-🚀 Decomposition started in background
+Decomposition started in background
    Spec: $ARGUMENTS
    Mode: [Full/Incremental]
    Slug: [slug]
@@ -105,87 +106,135 @@ TaskOutput(task_id: "<agent-task-id>", block: true)
 
 Then proceed to Phase 4.
 
-## Phase 4: Validate Task Creation (Main Context)
+## Phase 4: Create Tasks from JSON (Main Context)
 
-After receiving results from the background agent, validate that tasks were actually created.
+This is the PRIMARY task creation path. The background agent wrote structured data to disk; now the main context reads it and creates tasks.
 
-### 4.1 Check Task Creation Status
-
-Parse the background agent's summary for the "Task Creation Status" section:
-
-- If status is `SUCCESS` and counts match → proceed to reporting
-- If status is `TASK_CREATION_INCOMPLETE` → attempt auto-recovery
-
-### 4.2 Verify Tasks Exist
-
-Independently verify using TaskList:
+### 4.1 Read and Parse JSON
 
 ```
-all_tasks = TaskList()
-feature_tasks = all_tasks.filter(t => t.subject.includes("[<slug>]"))
-actual_count = feature_tasks.length
+Read specs/[slug]/03-tasks.json
+Parse the JSON into a tasks array
 ```
 
-Compare against the "Tasks in Breakdown" count from the summary.
-
-### 4.3 Auto-Recovery (If Needed)
-
-If `actual_count < expected_count`:
-
-1. **Read the generated tasks file**: `specs/[slug]/03-tasks.md`
-2. **Parse task definitions** from the markdown (look for `### Task X.Y:` headers)
-3. **Identify missing tasks** by comparing subjects against existing tasks
-4. **Create missing tasks** using TaskCreate with content from the tasks.md file
-5. **Set up dependencies** using TaskUpdate
-
-Display during recovery:
+If the JSON file doesn't exist or is malformed:
 
 ```
-⚠️ Task creation incomplete. Auto-recovering...
-   Expected: [X] tasks
-   Found: [Y] tasks
-   Creating [X-Y] missing tasks from tasks.md...
-```
+Task creation failed - JSON file not found or invalid.
 
-After recovery:
-
-```
-✅ Recovery complete
-   Tasks now registered: [new count]
-```
-
-### 4.4 Handle Recovery Failure
-
-If auto-recovery fails (can't parse tasks.md or TaskCreate keeps failing):
-
-```
-⚠️ Task Creation Issue
-
-The task breakdown was saved to specs/[slug]/03-tasks.md
-but some tasks could not be registered in the task system.
-
-Expected: [X] tasks | Created: [Y] tasks
+The background agent may not have completed successfully.
+Check specs/[slug]/ for partial output.
 
 Options:
 1. **Retry** - Run `/spec:decompose` again
-2. **Manual sync** - Run `/spec:tasks-sync specs/[slug]/03-tasks.md`
-3. **Continue anyway** - Use `/spec:execute` (will work with available tasks)
+2. **Manual sync** - If 03-tasks.md exists, run `/spec:tasks-sync specs/[slug]/03-tasks.md`
 ```
 
-### 4.5 Report Results
+### 4.2 Quality Spot-Check
 
-Display the final summary to the user:
+Before creating tasks, inspect 2-3 task descriptions from the JSON:
 
-- Task creation status (success/recovered/incomplete)
-- Task counts by phase
-- Parallel execution opportunities
-- Next steps
+1. Pick task descriptions at random (first, middle, last)
+2. Verify they contain full implementation details (code blocks, acceptance criteria)
+3. Check for forbidden phrases: "as specified", "from spec", "see specification"
+
+If descriptions are too thin:
+
+```
+Quality check failed - task descriptions are summaries, not full implementations.
+Re-running decomposition with stricter instructions...
+```
+
+### 4.3 Create Tasks
+
+For each task in the JSON `tasks` array:
+
+```
+TaskCreate({
+  subject: task.subject,
+  description: task.description,
+  activeForm: task.activeForm
+})
+```
+
+Track the mapping of JSON task IDs (e.g., "1.1") to system task IDs for dependency resolution.
+
+Display progress:
+
+```
+Creating tasks...
+   [P1] Task title 1 → #taskId
+   [P1] Task title 2 → #taskId
+   [P2] Task title 3 → #taskId
+```
+
+### 4.4 Set Up Dependencies
+
+For each task that has `dependencies` in the JSON:
+
+```
+TaskUpdate({
+  taskId: "<system-task-id>",
+  addBlockedBy: [<resolved system task IDs from dependencies>]
+})
+```
+
+Resolve dependencies by looking up the JSON ID → system ID mapping from step 4.3.
+
+### 4.5 Handle Creation Failures
+
+If some TaskCreate calls fail:
+
+```
+Task Creation Issue
+
+Expected: [X] tasks | Created: [Y] tasks
+
+Failed tasks:
+   - [P2] Task title: <error reason>
+
+Options:
+1. **Retry failed** - Retry only the failed tasks
+2. **Continue anyway** - Use `/spec:execute` with available tasks
+3. **Re-run** - Delete JSON and run `/spec:decompose` again
+```
+
+### 4.6 Report Results
+
+Display the final summary:
+
+```
+Decomposition Complete
+
+Spec: [spec-path]
+Mode: [Full/Incremental]
+Tasks JSON: specs/[slug]/03-tasks.json
+Tasks MD: specs/[slug]/03-tasks.md
+
+Task Summary:
+   Total: [count]
+   Phase 1 (Foundation): [count] tasks
+   Phase 2 (Core Features): [count] tasks
+   Phase 3 (Testing): [count] tasks
+   Phase 4 (Documentation): [count] tasks
+
+Dependencies: [count] relationships set
+
+Parallel Execution Opportunities:
+   Tasks [X, Y, Z] can run in parallel
+   Critical path: [list]
+
+Next Steps:
+   Run `/spec:execute specs/[slug]/02-specification.md` to begin implementation.
+```
 
 ---
 
 ## BACKGROUND_AGENT_PROMPT
 
 The following is the complete prompt sent to the background agent. It contains all the detailed decomposition instructions.
+
+**IMPORTANT**: This agent writes files to DISK. It does NOT call TaskCreate, TaskUpdate, or TaskList — those tools are not available to background agents.
 
 ````
 You are decomposing a specification into actionable implementation tasks.
@@ -194,45 +243,31 @@ You are decomposing a specification into actionable implementation tasks.
 - **Spec File**: [SPEC_PATH]
 - **Feature Slug**: [SLUG]
 - **Mode**: [Full/Incremental]
-- **Tasks File**: specs/[SLUG]/03-tasks.md
+- **Tasks JSON**: specs/[SLUG]/03-tasks.json
+- **Tasks MD**: specs/[SLUG]/03-tasks.md
 - **Last Decompose Date**: [DATE or "N/A for full mode"]
 
-## Process Overview
+## Your Job
 
-Break down the specification into:
-1. Clear, actionable tasks with dependencies
-2. Implementation phases and milestones
-3. Testing and validation requirements
-4. Documentation needs
+Read the specification, break it into implementation tasks, and write TWO files to disk:
 
-## ⚠️ CRITICAL: TaskCreate is MANDATORY
+1. **`specs/[SLUG]/03-tasks.json`** — Structured task data (machine-readable)
+2. **`specs/[SLUG]/03-tasks.md`** — Human-readable breakdown (for git diffs, browsing)
 
-**Task creation via TaskCreate is NOT optional.** The decomposition is considered FAILED if tasks are not created in the task system.
+You do NOT create tasks in the task system. The main conversation will read your JSON and create tasks. Your job is analysis and file writing only.
 
-You MUST:
-1. **Create ALL tasks using TaskCreate** — Every task in your breakdown must be registered
-2. **Set up ALL dependencies using TaskUpdate** — Required for `/spec:execute` to work
-3. **Verify creation succeeded** — Call `TaskList()` at the end to confirm tasks exist
-4. **Report creation status** — Include task count verification in your summary
+## Content Preservation Requirements
 
-**If TaskCreate fails:**
-- Retry the call once
-- If still failing, continue with remaining tasks
-- Report failures in your summary with `TASK_CREATION_INCOMPLETE` status
+**THIS IS THE MOST IMPORTANT PART**: Task descriptions must be SELF-CONTAINED with ALL implementation details. Do NOT summarize or reference the spec — include the ACTUAL CODE and details.
 
-## ⚠️ CRITICAL: Content Preservation Requirements
+### Pre-Flight Checklist
 
-**THIS IS THE MOST IMPORTANT PART**: When creating tasks, you MUST copy ALL content from the task breakdown into the task descriptions. Do NOT summarize or reference the spec - include the ACTUAL CODE and details.
-
-## Pre-Flight Checklist
-
-Before creating any tasks, confirm your understanding:
+Before writing any tasks, confirm your understanding:
 - [ ] I will NOT write summaries like "Create X as specified in spec"
-- [ ] I will COPY all code blocks from the task breakdown into task descriptions
+- [ ] I will COPY all code blocks from the spec into task descriptions
 - [ ] I will INCLUDE complete implementations, not references
-- [ ] Each task will be self-contained with ALL details from the breakdown
-- [ ] I will call TaskCreate for EVERY task in my breakdown
-- [ ] I will verify tasks were created using TaskList() before finishing
+- [ ] Each task will be self-contained with ALL details
+- [ ] I will write files to disk, NOT call TaskCreate
 
 **If you find yourself typing phrases like "as specified", "from spec", or "see specification" - STOP and copy the actual content instead!**
 
@@ -256,9 +291,7 @@ Before creating any tasks, confirm your understanding:
 
 When running in incremental mode:
 
-**Get Completed Tasks for Preservation:**
-- Use `TaskList()` and filter for tasks where subject contains `[SLUG]` and status is `completed`
-- These tasks will be marked with ✅ DONE and preserved as-is
+**Read existing 03-tasks.json** to understand prior task structure.
 
 **Extract New Changelog Entries:**
 - Read the spec file's "## 18. Changelog" section
@@ -266,9 +299,9 @@ When running in incremental mode:
 - Extract: Issue, Decision, Changes to Specification, Implementation Impact
 
 **Categorize Existing Tasks:**
-1. **Preserve Tasks (✅ DONE):** All completed tasks - no changes
-2. **Update Tasks (🔄 UPDATED):** In-progress/pending tasks affected by changelog
-3. **Create Tasks (⏳ NEW):** New work identified in changelog
+1. **Preserve Tasks (DONE):** All completed tasks - no changes
+2. **Update Tasks (UPDATED):** In-progress/pending tasks affected by changelog
+3. **Create Tasks (NEW):** New work identified in changelog
 
 ### Step 3: Create Task Breakdown
 
@@ -297,16 +330,50 @@ Task structure:
 - Testing tasks: Unit, integration, and E2E tests
 - Documentation tasks: API docs, user guides, code comments
 
-### Step 3.5: Incremental Task Breakdown Adjustments (if MODE=incremental)
+### Step 4: Write 03-tasks.json
 
-- **Mark Preserved Tasks**: Add ✅ DONE marker to completed tasks
-- **Mark Updated Tasks**: Add 🔄 UPDATED marker with update note
-- **Mark New Tasks**: Add ⏳ NEW marker and continue task numbering
-- **Include Re-decompose Metadata**: Add metadata section showing history
+Write the structured task data to `specs/[SLUG]/03-tasks.json` using this exact schema:
 
-### Step 4: Generate Task Document
+```json
+{
+  "spec": "specs/[SLUG]/02-specification.md",
+  "slug": "[SLUG]",
+  "generatedAt": "ISO 8601 timestamp",
+  "mode": "full|incremental",
+  "lastDecompose": "ISO 8601 date or null",
+  "tasks": [
+    {
+      "id": "1.1",
+      "phase": 1,
+      "phaseName": "Foundation",
+      "subject": "[SLUG] [P1] Imperative task title",
+      "description": "Full implementation details including code blocks, acceptance criteria, everything needed to implement. This must be SELF-CONTAINED.",
+      "activeForm": "Present continuous form for spinner",
+      "size": "small|medium|large",
+      "priority": "high|medium|low",
+      "dependencies": [],
+      "parallelWith": ["1.2", "1.3"]
+    }
+  ]
+}
+```
 
-Create a comprehensive task breakdown document with this structure:
+**Field requirements:**
+
+- `id`: Phase.Task format (e.g., "1.1", "2.3")
+- `phase`: Integer phase number
+- `phaseName`: Human-readable phase name
+- `subject`: MUST follow format `[SLUG] [P<phase>] Imperative title`
+- `description`: FULL implementation details — this is what the implementing agent reads. Include ALL code, ALL requirements, ALL acceptance criteria. NEVER summarize.
+- `activeForm`: Present continuous (e.g., "Implementing user schema")
+- `size`: Estimate — small (<30min), medium (30-60min), large (1-2h)
+- `priority`: high (blocking), medium (important), low (nice-to-have)
+- `dependencies`: Array of task IDs this task depends on (e.g., ["1.1", "1.2"])
+- `parallelWith`: Array of task IDs that can run simultaneously with this task
+
+### Step 5: Write 03-tasks.md
+
+Write the human-readable breakdown to `specs/[SLUG]/03-tasks.md`:
 
 ```markdown
 # Task Breakdown: [Specification Name]
@@ -349,86 +416,9 @@ Last Decompose: [Today's Date]
 
 ## Phase 2: Core Features
 [Continue pattern...]
-````
-
-### Step 5: Create Task Management Entries
-
-Use Claude Code's built-in task tools to create tasks.
-
-**For each task in your breakdown:**
-
-```
-TaskCreate({
-  subject: "[SLUG] [P<phase>] <imperative title>",
-  description: "<FULL implementation details - COPY from breakdown, don't summarize>",
-  activeForm: "<present continuous form for spinner>"
-})
 ```
 
-🚨 **WRONG** (Don't do this):
-
-```
-TaskCreate({
-  subject: "[auth-flow] [P1] Implement utilities",
-  description: "Create shared utilities module for all hooks",
-  activeForm: "Creating utilities"
-})
-```
-
-✅ **CORRECT** (Do this):
-
-```
-TaskCreate({
-  subject: "[auth-flow] [P1] Implement utilities",
-  description: `Create cli/hooks/utils.ts with the following implementations:
-
-## Code Implementation
-
-\`\`\`typescript
-import { exec } from 'child_process';
-// ... FULL CODE from task breakdown ...
-\`\`\`
-
-## Technical Requirements
-- Standard input reader with timeout
-- Project root discovery using git
-// ... ALL requirements ...
-
-## Acceptance Criteria
-- [ ] readStdin with 1-second timeout
-// ... ALL criteria ...`,
-  activeForm: "Implementing hook utilities"
-})
-```
-
-**Setting up dependencies:**
-
-```
-TaskUpdate({
-  taskId: "<new-task-id>",
-  addBlockedBy: ["<dependency-task-id-1>", "<dependency-task-id-2>"]
-})
-```
-
-### Step 6: Save Task Breakdown
-
-- Save the detailed task breakdown document to `specs/[SLUG]/03-tasks.md`
-- Ensure "Last Decompose: [Today's Date]" is included for future incremental detection
-
-### Step 7: Verify Task Creation
-
-**Before returning, verify tasks were created:**
-
-```
-# Get all tasks and filter for this feature
-all_tasks = TaskList()
-feature_tasks = all_tasks.filter(t => t.subject.includes("[SLUG]"))
-created_count = feature_tasks.length
-```
-
-Compare `created_count` against the number of tasks in your breakdown.
-
-### Step 8: Return Summary
+### Step 6: Return Summary
 
 **IMPORTANT**: Return a structured summary for the main conversation:
 
@@ -437,14 +427,8 @@ Compare `created_count` against the number of tasks in your breakdown.
 
 **Spec**: [spec-path]
 **Mode**: [Full/Incremental]
-**Tasks File**: specs/[SLUG]/03-tasks.md
-
-### Task Creation Status
-- **Status**: [SUCCESS / TASK_CREATION_INCOMPLETE]
-- **Tasks in Breakdown**: [count]
-- **Tasks Created**: [count from TaskList verification]
-- **Dependencies Set**: [count]
-- **Creation Failures**: [list task numbers that failed, or "None"]
+**Tasks JSON**: specs/[SLUG]/03-tasks.json
+**Tasks MD**: specs/[SLUG]/03-tasks.md
 
 ### Task Summary
 - **Total Tasks**: [count]
@@ -461,11 +445,7 @@ Compare `created_count` against the number of tasks in your breakdown.
 - **Preserved**: [count] tasks (completed, no changes)
 - **Updated**: [count] tasks (affected by changelog)
 - **Created**: [count] tasks (new from changelog)
-
-### Next Steps
-Run `/spec:execute specs/[SLUG]/02-specification.md` to begin implementation.
 ```
-
 ````
 
 ---
@@ -473,37 +453,36 @@ Run `/spec:execute specs/[SLUG]/02-specification.md` to begin implementation.
 ## Success Criteria
 
 The decomposition is complete when:
-- ✅ Background agent has finished execution
-- ✅ Task breakdown document saved to specs directory
-- ✅ All tasks created using built-in task tools (TaskCreate)
-- ✅ **Tasks preserve ALL implementation details including:**
+- Background agent finished and wrote both `03-tasks.json` and `03-tasks.md`
+- Main context read JSON and created all tasks via TaskCreate
+- **Tasks preserve ALL implementation details including:**
   - Complete code blocks and examples (not summarized)
   - Full technical requirements and specifications
   - Detailed step-by-step implementation instructions
   - All configuration examples
   - Complete acceptance criteria with test scenarios
-- ✅ Foundation tasks identified and prioritized
-- ✅ Dependencies between tasks documented (TaskUpdate with addBlockedBy)
-- ✅ All tasks include testing requirements
-- ✅ Parallel execution opportunities identified
-- ✅ **Tasks use proper structure:**
+- Foundation tasks identified and prioritized
+- Dependencies between tasks set up (TaskUpdate with addBlockedBy)
+- All tasks include testing requirements
+- Parallel execution opportunities identified
+- **Tasks use proper structure:**
   - `subject`: `[<slug>] [P<phase>] Brief imperative title`
   - `description`: Complete technical implementation (ACTUAL CODE, not references)
   - `activeForm`: Present continuous form for spinner
-- ✅ **Quality check passed**: TaskGet displays full code implementations
-- ✅ **No summary phrases**: Tasks don't contain "as specified", "from spec", etc.
+- **Quality spot-check passed**: 2-3 task descriptions verified as self-contained
+- **No summary phrases**: Tasks don't contain "as specified", "from spec", etc.
 
 ## Post-Completion Validation
 
-After receiving results from the background agent:
+After creating tasks from JSON:
 
 1. **Sample Task Review**:
-   - Use `TaskGet({ taskId })` on a random task
+   - Use `TaskGet({ taskId })` on 2-3 tasks (first, middle, last)
    - Verify description contains full implementation details
    - Check for forbidden phrases: "as specified", "from spec", "see specification"
 
 2. **Report to User**:
-   - Display the summary from the background agent
+   - Display task creation summary
    - Highlight any issues found in validation
    - Provide next steps
 
@@ -514,6 +493,7 @@ After receiving results from the background agent:
 - **Progress tracking**:
   - Use `TaskList()` to see all tasks with status
   - Filter by subject prefix: tasks containing `[slug]` belong to this feature
+- **Manual sync**: Use `/spec:tasks-sync` to re-sync from JSON if tasks get lost
 
 ## Usage Examples
 
@@ -523,7 +503,7 @@ After receiving results from the background agent:
 
 # Decompose a system enhancement spec
 /spec:decompose specs/feat-api-rate-limiting/02-specification.md
-````
+```
 
 ## Incremental Mode
 
@@ -540,8 +520,8 @@ Incremental mode allows re-decomposition after feedback without recreating all t
 ### Force Full Re-decompose
 
 ```bash
-# Delete the tasks file
-rm specs/<slug>/03-tasks.md
+# Delete the task files
+rm specs/<slug>/03-tasks.json specs/<slug>/03-tasks.md
 
 # Run decompose (will use full mode)
 /spec:decompose specs/<slug>/02-specification.md
@@ -557,47 +537,37 @@ If the background agent takes too long:
 2. Use `TaskOutput(task_id, block: false)` to check progress
 3. Large specs may take several minutes - this is normal
 
-### Tasks Not Created (tasks.md exists but TaskList is empty)
+### JSON File Missing After Agent Completes
 
-**Symptom**: `03-tasks.md` file was created but `TaskList()` returns no matching tasks
+**Symptom**: Agent reported success but `03-tasks.json` doesn't exist
 
-**Cause**: Background agent wrote the document but TaskCreate calls failed or weren't executed
-
-**Solutions**:
-
-1. **Auto-recovery** should trigger automatically in Phase 4
-2. **Manual sync**: Run `/spec:tasks-sync specs/[slug]/03-tasks.md`
-3. **Re-run decompose**: Delete `03-tasks.md` and run `/spec:decompose` again
-
-### Partial Task Creation
-
-**Symptom**: Some tasks created, but fewer than expected
-
-**Cause**: Background agent may have hit context limits or TaskCreate failed for some tasks
+**Cause**: Agent may have hit context limits before writing files
 
 **Solutions**:
 
-1. Phase 4 auto-recovery will attempt to create missing tasks
-2. Check `03-tasks.md` for the complete breakdown
-3. Use `/spec:tasks-sync` to sync remaining tasks
+1. Re-run `/spec:decompose`
+2. If `03-tasks.md` exists, use `/spec:tasks-sync specs/[slug]/03-tasks.md` (falls back to markdown parsing)
 
-### TaskCreate Returning Errors
+### Tasks Not Created (JSON exists but TaskList is empty)
 
-**Symptom**: Background agent reports TaskCreate failures
+**Symptom**: `03-tasks.json` file was created but `TaskList()` returns no matching tasks
 
-**Possible causes**:
+**Cause**: Phase 4 task creation didn't run (e.g., session ended before Phase 4)
 
-- Task description too long (try splitting into smaller tasks)
-- Invalid characters in subject
-- System resource limits
+**Solutions**:
 
-**Solution**: Use `/spec:tasks-sync` which includes retry logic and error handling
+1. Run `/spec:tasks-sync specs/[slug]/03-tasks.json` to create tasks from JSON
+2. Re-run `/spec:decompose` (will detect existing JSON)
+
+### Quality Check Failed
+
+**Symptom**: Task descriptions are too thin or contain "as specified" references
+
+**Solution**: Re-run `/spec:decompose` — the agent prompt emphasizes content preservation
 
 ### Context Benefits
 
 Running decomposition in background saves ~90% context:
 
 - **Without background**: All spec content, analysis, task creation in main context
-- **With background**: Only slug extraction and summary in main context
-
-This allows you to continue working on other tasks or have a longer conversation without hitting context limits.
+- **With background**: Only slug extraction, JSON reading, and task creation in main context

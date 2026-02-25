@@ -158,7 +158,7 @@ for phase in plan.phases:
   execute_phase(phase)
 ```
 
-**Real example**: `/spec:decompose` isolates spec reading and task creation.
+**Real example**: `/spec:decompose` uses disk-first architecture — the background agent writes `03-tasks.json` + `03-tasks.md` to disk, then the main context reads the JSON and creates tasks via TaskCreate (since background agents cannot use task management tools).
 
 ## Agent Selection Guide
 
