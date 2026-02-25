@@ -54,8 +54,6 @@ const LEFT = 20;
 // Each row uses 1/0 for on/off; Boolean() converts at use-site.
 // ---------------------------------------------------------------------------
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 /** D */
 const GLYPH_D: number[][] = [
   [1, 1, 1, 0, 0],
@@ -99,8 +97,6 @@ const GLYPH_K: number[][] = [
   [1, 0, 0, 1, 0],
   [1, 0, 0, 0, 1],
 ];
-
-/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /** All four glyphs in display order. */
 const GLYPHS: number[][][] = [GLYPH_D, GLYPH_O, GLYPH_R, GLYPH_K];

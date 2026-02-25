@@ -1,3 +1,7 @@
+---
+title: NPM Package Quality System Design
+---
+
 # NPM Package Quality System — Design
 
 **Date:** 2026-02-24
