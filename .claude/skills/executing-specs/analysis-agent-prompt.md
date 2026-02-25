@@ -76,15 +76,14 @@ while remaining.length > 0:
 
 For each task, determine the appropriate specialist agent:
 
-| Task Pattern                        | Agent Type              |
-| ----------------------------------- | ----------------------- |
-| Database, Prisma, schema, migration | `prisma-expert`         |
-| React, component, UI, form          | `react-tanstack-expert` |
-| TypeScript, types, generics         | `typescript-expert`     |
-| Zod, validation, schema             | `zod-forms-expert`      |
-| API, route, endpoint                | `general-purpose`       |
-| Test, spec, coverage                | `general-purpose`       |
-| Default                             | `general-purpose`       |
+| Task Pattern                         | Agent Type              |
+| ------------------------------------ | ----------------------- |
+| Database, Drizzle, schema, migration | `general-purpose`       |
+| React, component, UI, form           | `react-tanstack-expert` |
+| TypeScript, types, generics          | `typescript-expert`     |
+| API, route, endpoint, Zod            | `general-purpose`       |
+| Test, spec, coverage                 | `general-purpose`       |
+| Default                              | `general-purpose`       |
 
 ### 5. Return Execution Plan
 

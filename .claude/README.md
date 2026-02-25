@@ -23,11 +23,11 @@ A **harness** is the underlying infrastructure that runs an AI coding agent. It 
 | Agents       | 5     | `.claude/agents/`                                                          |
 | Skills       | 13    | `.claude/skills/`                                                          |
 | Rules        | 6     | `.claude/rules/`                                                           |
-| Claude Hooks | 9     | `.claude/hooks/`, configured in `.claude/settings.json`                    |
+| Claude Hooks | 10    | `.claude/hooks/`, configured in `.claude/settings.json`                    |
 | Git Hooks    | 1     | `.claude/git-hooks/`, installed via `.claude/scripts/install-git-hooks.sh` |
 | MCP Servers  | 3     | `.mcp.json`                                                                |
-| ADRs         | 5     | `decisions/`                                                               |
-| Guides       | 15    | `contributing/` (14 guides + INDEX.md)                                     |
+| ADRs         | 28    | `decisions/`                                                               |
+| Guides       | 1     | `contributing/` (INDEX.md only — guides will be added as codebase grows)   |
 
 ## Component Types
 
@@ -130,6 +130,7 @@ Git hooks (post-commit, etc.) are separate and live in `.claude/git-hooks/`. Ins
 | `PostToolUse`      | typecheck-changed, lint-changed, check-any-changed, test-changed | Validate code after edits                                                                          |
 | `UserPromptSubmit` | thinking-level                                                   | Adjust Claude's thinking mode based on prompt complexity                                           |
 | `Stop`             | create-checkpoint, check-docs-changed, autonomous-check          | Session cleanup, checkpoint creation, doc reminders, prevent premature stop during autonomous work |
+| `SessionStart`     | check-adr-curation                                               | Check if ADRs need curation (promotion/archival)                                                   |
 
 ### MCP Servers
 
@@ -143,26 +144,7 @@ External tools available via Model Context Protocol.
 
 ### Guides
 
-All documentation lives in `contributing/`:
-
-| Guide                             | Content                                                             |
-| --------------------------------- | ------------------------------------------------------------------- |
-| `project-structure.md`            | FSD layer hierarchy, directory layout, adding features              |
-| `architecture.md`                 | Hexagonal architecture, Transport interface, Electron compatibility |
-| `design-system.md`                | Color palette, typography, spacing, motion specs                    |
-| `api-reference.md`                | OpenAPI spec, Scalar docs UI, Zod schema patterns                   |
-| `configuration.md`                | Config file system, settings reference, CLI commands, precedence    |
-| `interactive-tools.md`            | Tool approval, AskUserQuestion, TaskList flows                      |
-| `keyboard-shortcuts.md`           | Keyboard shortcuts and hotkeys                                      |
-| `obsidian-plugin-development.md`  | Plugin lifecycle, Vite build, Electron quirks                       |
-| `data-fetching.md`                | TanStack Query patterns, Transport abstraction, SSE streaming       |
-| `state-management.md`             | Zustand vs TanStack Query decision guide                            |
-| `animations.md`                   | Motion library patterns                                             |
-| `styling-theming.md`              | Tailwind v4, dark mode, Shadcn                                      |
-| `parallel-execution.md`           | Parallel agent execution patterns, batching                         |
-| `autonomous-roadmap-execution.md` | Autonomous workflow, `/roadmap:work`                                |
-
-Skills often reference these guides for detailed patterns while keeping SKILL.md files concise.
+Documentation lives in `contributing/`. Currently only `INDEX.md` exists — guides will be added as the Loop codebase grows.
 
 **Keeping guides up to date:**
 
@@ -364,7 +346,7 @@ Use `/tasks` to see running background agents and their status.
 
 ### Reference
 
-See `contributing/parallel-execution.md` for complete patterns and decision framework.
+See `.claude/skills/orchestrating-parallel-work/SKILL.md` for complete patterns and decision framework.
 
 ## Maintaining the Harness
 
