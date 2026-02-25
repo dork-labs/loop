@@ -2,6 +2,20 @@
   "name": "@dork-labs/loop-mcp",
   "version": "0.2.0",
   "description": "MCP server for Loop — the autonomous improvement engine",
+  "license": "MIT",
+  "author": "Dork Labs <hello@dork-labs.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dork-labs/loop",
+    "directory": "packages/mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/dork-labs/loop/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

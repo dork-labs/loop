@@ -2,6 +2,20 @@
   "name": "@dork-labs/loop-connect",
   "version": "0.2.0",
   "description": "Connect any project to Loop in one command",
+  "license": "MIT",
+  "author": "Dork Labs <hello@dork-labs.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dork-labs/loop",
+    "directory": "packages/loop-connect"
+  },
+  "bugs": {
+    "url": "https://github.com/dork-labs/loop/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
   "type": "module",
   "bin": {
     "loop-connect": "./dist/bin.js"
@@ -9,9 +23,6 @@
   "files": [
     "dist"
   ],
-  "engines": {
-    "node": ">=18"
-  },
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
